@@ -1,0 +1,280 @@
+# ==========================================
+# Python
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+
+
+# ==================
+# Django
+# ==================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+/static
+
+# ==========================================
+# Virtual Environments
+# ==========================================
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv
+.venv/
+*.venv/
+venv_local
+.venv_local
+*env
+# ==========================================
+# Django
+# ==========================================
+*.log
+*.pot
+*.pyc
+db.sqlite3
+db.sqlite3-journal
+local_settings.py
+media/
+staticfiles/
+static/admin
+static/flags
+static/rest_framework
+static/django_extensions
+log/
+logs/*.log
+!logs/.gitkeep
+
+# ==========================================
+# Testing & Coverage
+# ==========================================
+htmlcov/
+.tox/
+.coverage
+.cache
+.pytest_cache/
+.hypothesis/
+nosetests.xml
+coverage.xml
+*.cover
+
+# ==========================================
+# IDEs
+# ==========================================
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# General IDE files
+*.swp
+*.swo
+*~
+
+# ==========================================
+# OS Specific
+# ==========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# ==========================================
+# Environment Variables
+# ==========================================
+.env
+.env.local
+.env.*.local
+
+# ==========================================
+# Security & Certificates
+# ==========================================
+*.crt
+*.csr
+*.key
+*.pub
+
+# ==========================================
+# Archives & Backups
+# ==========================================
+*.tgz
+*.tar
+*-tar.gz
+*.bak
+*.backup
+*.orig
+*.tmp
+/backups/
+*backup-copy-log-*.txt
+*backup-*log-*.txt
+*.backup-*
+*.pre-fix-*
+
+# ==========================================
+# Databases
+# ==========================================
+*.db
+
+# ==========================================
+# Java (if applicable)
+# ==========================================
+*.class
+*.jar
+**/coffeeshop/target
+**/csthirdparty/target
+target/
+
+# ==========================================
+# Jupyter Notebooks
+# ==========================================
+*.ipynb
+
+# ==========================================
+# Documentation
+# ==========================================
+docs/_build/
+
+# ==========================================
+# Cache
+# ==========================================
+cache/
+
+# ==========================================
+# Vagrant
+# ==========================================
+.vagrant
+
+
+# ==================
+# Node (si hay frontend)
+# ==================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# ==================
+# Misc
+# ==================
+*.tar
+*.tar.gz
+*.zip
+*.rar
+.env.local
+.env.*.local
+# ==================
+# Documentation
+# ==================
+docs/_build/
+site/
+
+# ==================
+# Database
+# ==================
+*.sqlite
+*.sqlite3
+*.db
+
+# Database dumps
+*.sql
+*.dump
+
+# ==================
+# Backups
+# ==================
+*.backup
+*.bak
+*.old
+*.orig
+*.save
+
+# ==================
+# Temporary Files
+# ==================
+*.tmp
+*.temp
+.cache/
+
+# ==================
+# Secrets
+# ==================
+secrets/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.box
+infrastructure/vagrant/*.box
+
+
+## Devcontainer
+
+.init_completed
+/infrastructure/state/
+package-lock.json
+infrastructure/box/tests/**/verify_connections_*.txt
+
+infrastructure/cpython/.build_state/*docs_analysis_report/
+# Build artifacts
+infrastructure/cpython/.build_state/
+
+
+docs/
+logs/
