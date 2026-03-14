@@ -1,0 +1,26 @@
+# Sphinx build directory
+build/
+
+# Sphinx doctrees
+**/doctrees/
+**/*.doctree
+
+# Python virtual environment
+.venv/
+
+# Backup and temporary files
+*~
+*.bak
+*.swp
+
+# Editor directories
+.vscode/
+.idea/
+
+# LaTeX build artifacts (solo si usas make latex / latexpdf)
+*.aux
+*.idx
+*.log
+*.toc
+*.out
+*.tex
