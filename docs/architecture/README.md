@@ -6,6 +6,7 @@ Documentación técnica para desarrolladores y mantenedores.
 
 1. [DEVELOPMENT.md](DEVELOPMENT.md) - Guía de desarrollo
 2. [PROVISIONERS.md](PROVISIONERS.md) - Sistema de provisioning
+3. [MIGRACION-VAGRANT-A-SHELL.md](MIGRACION-VAGRANT-A-SHELL.md) - Plan de migración de Vagrant a shell scripts puros
 
 ## Audiencia
 
