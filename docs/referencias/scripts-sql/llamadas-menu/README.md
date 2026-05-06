@@ -115,3 +115,53 @@ condición debe ser `AND` (ambos) u `OR` (cualquiera).
 | `cMenu` | Valor normalizado (UPPER) o sentinel |
 | `cantidad_registros` | COUNT(*) por combinación |
 
+
+---
+
+## v2 — q_REPTRIM121_LLAMADAS_MENU.sql (versión corregida)
+
+Versión corregida del script `q_REPTRIM021_LLAMADAS_MENU.sql`.
+Cambios respecto a la v1:
+
+**Corrección del bug @ONacionalB:** Por primera vez incluye Nacional B correctamente.
+
+```sql
+-- v1 (REPTRIM021): solo Nacional A
+SET @ONacional = 19028031;
+AND cDID_800Transfer IN (@OPuebla, @ONacional)   -- omite Nacional B
+
+-- v2 (REPTRIM121): los tres DIDs
+SET @ONacionalA = 19028031;
+SET @ONacionalB = 19020001;
+AND cDID_800Transfer IN (@OPuebla, @ONacionalA, @ONacionalB)
+```
+
+**Detección mejorada de telefono_cMenu:** ahora incluye también cualquier
+`cMenu` que sea un número (no solo cuando coincide con los teléfonos):
+
+```sql
+-- v1: solo cuando cMenu = ambos teléfonos
+WHEN cTelefono_Digitado = cMenu AND cTelefono_Origen = cMenu THEN 'telefono_cMenu'
+
+-- v2: también cuando cMenu es puramente numérico
+WHEN cTelefono_Digitado = cMenu AND cTelefono_Origen = cMenu
+  OR cMenu REGEXP '^[0-9]+$' THEN 'telefono_cMenu'
+```
+
+Esto unifica la detección de anomalías numéricas en un solo sentinel,
+lo que debería considerarse para `sp_rpt_cMENU_ERROR` también.
+
+**Bug nuevo introducido en v2:** el chequeo de NULL usa sintaxis incorrecta:
+
+```sql
+OR cMenu = NULL   -- NUNCA es TRUE en SQL — debería ser: cMenu IS NULL
+```
+
+Este bug significa que los NULL en cMenu no se capturan en la condición
+de VACIO de la capa CASE exterior. Sin embargo, la condición previa
+`cMenu IN ('', 'sin cMenu')` sí captura los strings vacíos, por lo que
+el impacto es solo en registros donde cMenu es literalmente NULL.
+
+**Para el SP de producción:** usar `cMenu IS NULL` — `base_ivr_detalle`
+ya almacena `'VACIO'` en lugar de NULL, por lo que este bug no afecta
+al SP siempre que el ETL normalice correctamente.
