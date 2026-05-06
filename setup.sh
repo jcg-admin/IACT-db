@@ -41,6 +41,13 @@ if ! validate_root; then
     log_fatal "Ejecuta con: sudo bash setup.sh"
 fi
 
+# Arrancar BDs si no están corriendo
+bash "${PROJECT_ROOT}/start.sh" || {
+    log_error "No se pudieron arrancar las bases de datos"
+    log_error "  Verifica la instalación: bash verify.sh"
+    exit 1
+}
+
 ensure_dir "${PROJECT_ROOT}/logs"
 
 log_header "IACT-db Setup (sin instalación de paquetes)"
