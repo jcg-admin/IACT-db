@@ -23,3 +23,6 @@ No mapean a los 7 SPs de producción pero son valiosos como referencia:
 - Evidencian los bugs y edge cases descubiertos en el proceso
 - Proveen contexto cuando surjan preguntas sobre el comportamiento del sistema
 
+
+| `tasa-abandono-duracion/` | `q_analisis_centros_transfer_tasa_abandono_010925.sql` | Abandono definido por duración < 30 seg |
+| `redireciones-analisis/` | `q_analisis_redireciones_total_290825.sql` | Frecuencia de redirecciones — 2 bugs de lógica |
