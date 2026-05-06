@@ -386,6 +386,40 @@ CALL sp_seed_historico(
 );
 SELECT COUNT(*) AS total_q3_2025 FROM tbl_historico_t3_2025;
 
+-- Q4 2025
+SELECT CONCAT('Sembrando Q4 2025 (', @SEED_ROWS, ' registros)...') AS info;
+CALL sp_seed_historico(
+    'tbl_historico_t4_2025',
+    '2025-10-01',
+    '2025-12-31',
+    @SEED_ROWS
+);
+SELECT COUNT(*) AS total_q4_2025 FROM tbl_historico_t4_2025;
+
+-- Q1 2026
+SELECT CONCAT('Sembrando Q1 2026 (', @SEED_ROWS, ' registros)...') AS info;
+CALL sp_seed_historico(
+    'tbl_historico_t1_2026',
+    '2026-01-01',
+    '2026-03-31',
+    @SEED_ROWS
+);
+SELECT COUNT(*) AS total_q1_2026 FROM tbl_historico_t1_2026;
+
+-- Q2 2026 (parcial — datos hasta 2026-05-06, dia actual)
+-- Volumen proporcional: 36 dias de 91 del trimestre (~40%)
+SET @SEED_ROWS_PARCIAL = GREATEST(500, FLOOR(@SEED_ROWS * 36 / 91));
+SELECT CONCAT('Sembrando Q2 2026 parcial (', @SEED_ROWS_PARCIAL,
+              ' registros — 2026-04-01 a 2026-05-06)...') AS info;
+CALL sp_seed_historico(
+    'tbl_historico_t2_2026',
+    '2026-04-01',
+    '2026-05-06',
+    @SEED_ROWS_PARCIAL
+);
+SELECT COUNT(*) AS total_q2_2026_parcial FROM tbl_historico_t2_2026;
+
+
 -- =============================================================================
 -- Verificacion de calidad del seed
 -- =============================================================================

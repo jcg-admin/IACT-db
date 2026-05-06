@@ -1,7 +1,7 @@
 #!/bin/bash
 # =============================================================================
 # provisioners/mariadb/schema_historico.sh
-# Crea y siembra las tablas tbl_historico_tN_2025 en ivr_legacy
+# Crea y siembra las tablas tbl_historico_tN_YYYY en ivr_legacy
 # =============================================================================
 # Ejecuta en orden:
 #   1. schema_historico.sql  — CREATE TABLE IF NOT EXISTS (idempotente)
@@ -11,6 +11,9 @@
 #   · tbl_historico_t1_2025  Q1 2025  (2025-01-01 → 2025-03-31)
 #   · tbl_historico_t2_2025  Q2 2025  (2025-04-01 → 2025-06-30)
 #   · tbl_historico_t3_2025  Q3 2025  (2025-07-01 → 2025-09-30)
+#   · tbl_historico_t4_2025  Q4 2025  (2025-10-01 → 2025-12-31)
+#   · tbl_historico_t1_2026  Q1 2026  (2026-01-01 → 2026-03-31)
+#   · tbl_historico_t2_2026  Q2 2026  (2026-04-01 → en curso, datos hasta 2026-05-06)
 #
 # Columnas reales (confirmadas en analisis 2026-05-02):
 #   dFecha, dHoraInicio, dHoraFin, cDID_800Transfer,
@@ -115,21 +118,30 @@ main() {
     my_exec_file "$SEED_SQL"
 
     # Resumen final
-    Q1=$(my_exec -e "SELECT COUNT(*) FROM tbl_historico_t1_2025;" | tail -1)
-    Q2=$(my_exec -e "SELECT COUNT(*) FROM tbl_historico_t2_2025;" | tail -1)
-    Q3=$(my_exec -e "SELECT COUNT(*) FROM tbl_historico_t3_2025;" | tail -1)
+    Q1_25=$(my_exec -e "SELECT COUNT(*) FROM tbl_historico_t1_2025;" | tail -1)
+    Q2_25=$(my_exec -e "SELECT COUNT(*) FROM tbl_historico_t2_2025;" | tail -1)
+    Q3_25=$(my_exec -e "SELECT COUNT(*) FROM tbl_historico_t3_2025;" | tail -1)
+    Q4_25=$(my_exec -e "SELECT COUNT(*) FROM tbl_historico_t4_2025;" | tail -1)
+    Q1_26=$(my_exec -e "SELECT COUNT(*) FROM tbl_historico_t1_2026;" | tail -1)
+    Q2_26=$(my_exec -e "SELECT COUNT(*) FROM tbl_historico_t2_2026;" | tail -1)
     TOTAL=$(my_exec -e \
         "SELECT SUM(t.cnt) FROM (
              SELECT COUNT(*) cnt FROM tbl_historico_t1_2025
              UNION ALL SELECT COUNT(*) FROM tbl_historico_t2_2025
              UNION ALL SELECT COUNT(*) FROM tbl_historico_t3_2025
+             UNION ALL SELECT COUNT(*) FROM tbl_historico_t4_2025
+             UNION ALL SELECT COUNT(*) FROM tbl_historico_t1_2026
+             UNION ALL SELECT COUNT(*) FROM tbl_historico_t2_2026
          ) t;" | tail -1)
 
     echo ""
     log_success "Schema y seed completados"
-    log_info "  tbl_historico_t1_2025 (Q1 2025): ${Q1} registros"
-    log_info "  tbl_historico_t2_2025 (Q2 2025): ${Q2} registros"
-    log_info "  tbl_historico_t3_2025 (Q3 2025): ${Q3} registros"
+    log_info "  tbl_historico_t1_2025 (Q1 2025):         ${Q1_25} registros"
+    log_info "  tbl_historico_t2_2025 (Q2 2025):         ${Q2_25} registros"
+    log_info "  tbl_historico_t3_2025 (Q3 2025):         ${Q3_25} registros"
+    log_info "  tbl_historico_t4_2025 (Q4 2025):         ${Q4_25} registros"
+    log_info "  tbl_historico_t1_2026 (Q1 2026):         ${Q1_26} registros"
+    log_info "  tbl_historico_t2_2026 (Q2 2026 parcial): ${Q2_26} registros"
     log_info "  Total: ${TOTAL} registros"
     echo ""
     log_info "Verificar con Django:"
