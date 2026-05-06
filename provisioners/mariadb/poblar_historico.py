@@ -367,15 +367,29 @@ def run_mysql(args, stmt=None, file_path=None):
 # ===========================================================================
 # TABLAS Y RANGOS
 # ===========================================================================
+#
+# Factor de escala relativo a Q01_25 (base = 1.000).
+# Refleja el volumen relativo real de producción por quarter.
+#
+# Fuente de los factores:
+#   Q01_25: 11,643,679 registros reales  → base 1.000
+#   Q02_25: 13,612,375 registros reales  → 1.169  (Q2 es el pico del año)
+#   Q03_25: 11,482,117 registros reales  → 0.986
+#   Q04_25: sin dato real                → 0.993  (estimado: promedio Q1+Q3)
+#   Q01_26: sin dato real                → 1.000  (proxy Q01_25)
+#   Q02_26: parcial 36/91 días           → 0.462  (Q02_25 × 36/91)
+#
+# Con --rows 50000 el script genera:
+#   Q01_25: 50,000   Q02_25: ~58,450   Q03_25: ~49,300
+#   Q04_25: ~49,650  Q01_26: ~50,000   Q02_26: ~23,125
 
 TABLAS_CONFIG = [
-    ('Q01_25', 'tbl_historico_t1_2025', date(2025, 1, 1),  date(2025, 3, 31),  1.0),
-    ('Q02_25', 'tbl_historico_t2_2025', date(2025, 4, 1),  date(2025, 6, 30),  1.0),
-    ('Q03_25', 'tbl_historico_t3_2025', date(2025, 7, 1),  date(2025, 9, 30),  1.0),
-    ('Q04_25', 'tbl_historico_t4_2025', date(2025, 10, 1), date(2025, 12, 31), 1.0),
-    ('Q01_26', 'tbl_historico_t1_2026', date(2026, 1, 1),  date(2026, 3, 31),  1.0),
-    # Q02_26 parcial: ~36 días de 91 → factor de escala
-    ('Q02_26', 'tbl_historico_t2_2026', date(2026, 4, 1),  date(2026, 5, 6),   36/91),
+    ('Q01_25', 'tbl_historico_t1_2025', date(2025, 1, 1),  date(2025, 3, 31),  1.000),
+    ('Q02_25', 'tbl_historico_t2_2025', date(2025, 4, 1),  date(2025, 6, 30),  1.169),
+    ('Q03_25', 'tbl_historico_t3_2025', date(2025, 7, 1),  date(2025, 9, 30),  0.986),
+    ('Q04_25', 'tbl_historico_t4_2025', date(2025, 10, 1), date(2025, 12, 31), 0.993),
+    ('Q01_26', 'tbl_historico_t1_2026', date(2026, 1, 1),  date(2026, 3, 31),  1.000),
+    ('Q02_26', 'tbl_historico_t2_2026', date(2026, 4, 1),  date(2026, 5, 6),   0.462),
 ]
 
 
