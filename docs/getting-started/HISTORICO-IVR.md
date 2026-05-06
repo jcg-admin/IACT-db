@@ -146,6 +146,9 @@ Variables de entorno disponibles:
 | `SEED_ROWS` | `5000` | Filas por quarter completo |
 | `FORCE_RESEED` | `0` | `1` = TRUNCATE antes de insertar |
 | `SKIP_SEED` | `0` | `1` = solo DDL, omitir seed |
+| `STABILITY_CHECKS` | `3` | Pings consecutivos requeridos antes del seed |
+| `STABILITY_INTERVAL` | `2` | Segundos entre cada ping |
+| `STABILITY_TIMEOUT` | `30` | Segundos máximos esperando estabilidad |
 
 ### schema_historico.sql — DDL
 
@@ -279,34 +282,91 @@ En producción cada quarter tiene 11-14 millones de filas.
 
 ---
 
-## Pendiente
+## Verificación de estabilidad de MariaDB
 
-El seed requiere una sesión de MariaDB estable durante toda la
-ejecución. En entornos sin systemd (contenedores, sandboxes), MariaDB
-puede caer si el proceso padre termina antes de que el seed concluya.
+El seed puede tardar varios minutos. En entornos sin systemd
+(contenedores, sandboxes), MariaDB puede caer después de unos
+segundos si el proceso padre termina o si InnoDB/Aria aún está
+en recovery. Una caída a mitad del seed produce una ejecución
+parcial silenciosa: algunas tablas con datos y otras vacías.
 
-El flujo recomendado para esos entornos es:
+El script detecta y previene esta situación mediante tres mecanismos:
+
+### 1. Verificación de estabilidad antes del seed
+
+Antes de ejecutar cualquier `INSERT`, el script envía
+`STABILITY_CHECKS` pings consecutivos con `STABILITY_INTERVAL`
+segundos de pausa entre cada uno. Si todos son exitosos, la
+conexión se considera estable.
+
+```
+Ping 1/3 OK (0s transcurridos)
+Ping 2/3 OK (2s transcurridos)
+Ping 3/3 OK (4s transcurridos)
+MariaDB estable — 3 pings consecutivos exitosos
+```
+
+Si un ping falla el contador vuelve a cero. Si se supera
+`STABILITY_TIMEOUT` sin conseguir los pings requeridos, el script
+aborta con un mensaje explícito y no ejecuta el seed:
+
+```
+ERROR MariaDB no estable. Seed abortado para evitar ejecucion parcial.
+```
+
+### 2. Detección de caída durante el seed
+
+Si MariaDB cae mientras el seed está en curso, `my_exec_vars`
+retorna error y el script aborta inmediatamente:
+
+```
+ERROR El seed falló o fue interrumpido.
+ERROR Probable causa: MariaDB cayó durante la ejecucion.
+ERROR Para re-intentar: FORCE_RESEED=1 sudo bash schema_historico.sh
+```
+
+### 3. Verificación posterior al seed
+
+Después de que el seed concluye, `verificar_seed_completo` revisa
+que cada tabla tenga datos y que `seed_executions` registre la
+acción correspondiente. Si alguna tabla quedó vacía y la acción
+no es `SKIP`, el script lo reporta como fallo:
+
+```
+ERROR FALLO: tbl_historico_t3_2025 tiene 0 registros y accion='SEED'
+```
+
+### Variables de control de estabilidad
+
+| Variable | Default | Descripción |
+|---|---|---|
+| `STABILITY_CHECKS` | `3` | Pings consecutivos exitosos requeridos |
+| `STABILITY_INTERVAL` | `2` | Segundos entre cada ping |
+| `STABILITY_TIMEOUT` | `30` | Segundos máximos antes de abortar |
+
+Ajustar si MariaDB tarda más en estabilizarse en el entorno:
 
 ```bash
-# 1. Asegurar que MariaDB está corriendo y estable
-sudo pg_ctlcluster 16 main status  # PostgreSQL (referencia)
-sudo service mariadb status         # MariaDB
+# MariaDB con recovery lento — esperar hasta 60 segundos
+STABILITY_TIMEOUT=60 sudo bash provisioners/mariadb/schema_historico.sh
 
-# 2. Si no está corriendo, iniciarlo y esperar a que esté listo
+# Entorno ya verificado — reducir la espera
+STABILITY_CHECKS=1 sudo bash provisioners/mariadb/schema_historico.sh
+```
+
+### Flujo recomendado en entornos sin systemd
+
+```bash
+# 1. Iniciar MariaDB
 sudo service mariadb start
-sleep 5
 
-# 3. Verificar antes de ejecutar el seed
-mysqladmin -h 127.0.0.1 -u django_user -pdjango_pass ping
-
-# 4. Ejecutar el script completo
+# 2. Ejecutar — el propio script verifica la estabilidad
 sudo bash provisioners/mariadb/schema_historico.sh
 ```
 
-Queda pendiente agregar esta verificación de estabilidad dentro del
-propio `schema_historico.sh` para que el script falle de forma
-explícita si MariaDB no está disponible durante el seed, en lugar
-de producir una ejecución parcial silenciosa.
+No es necesario añadir `sleep` manual ni llamar a
+`mysqladmin ping` por separado: el script lo hace internamente
+antes de iniciar el seed.
 
 ---
 
@@ -316,6 +376,8 @@ de producir una ejecución parcial silenciosa.
 |---|---|
 | `b187a01` | feat: tablas tbl_historico_t1..t3_2025 — schema y seed inicial |
 | `34c1770` | fix: agregar t4_2025, t1_2026 y t2_2026 — cobertura completa |
+| `d3fe8c6` | docs: HISTORICO-IVR.md — documentación inicial |
+| siguiente | feat: verificación de estabilidad de MariaDB en schema_historico.sh |
 
 ## Ver también
 

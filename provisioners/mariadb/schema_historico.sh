@@ -3,34 +3,44 @@
 # provisioners/mariadb/schema_historico.sh
 # Crea y siembra las tablas tbl_historico_tN_YYYY en ivr_legacy
 # =============================================================================
-# Ejecuta en orden:
-#   1. schema_historico.sql  — CREATE TABLE IF NOT EXISTS (idempotente)
-#   2. seed_historico.sql    — Siembra datos representativos
+# Tablas generadas:
+#   tbl_historico_t1_2025  Q1 2025  2025-01-01 → 2025-03-31
+#   tbl_historico_t2_2025  Q2 2025  2025-04-01 → 2025-06-30
+#   tbl_historico_t3_2025  Q3 2025  2025-07-01 → 2025-09-30
+#   tbl_historico_t4_2025  Q4 2025  2025-10-01 → 2025-12-31
+#   tbl_historico_t1_2026  Q1 2026  2026-01-01 → 2026-03-31
+#   tbl_historico_t2_2026  Q2 2026  2026-04-01 → en curso (2026-05-06)
 #
-# Las tablas replican la estructura real del IVR del cliente:
-#   · tbl_historico_t1_2025  Q1 2025  (2025-01-01 → 2025-03-31)
-#   · tbl_historico_t2_2025  Q2 2025  (2025-04-01 → 2025-06-30)
-#   · tbl_historico_t3_2025  Q3 2025  (2025-07-01 → 2025-09-30)
-#   · tbl_historico_t4_2025  Q4 2025  (2025-10-01 → 2025-12-31)
-#   · tbl_historico_t1_2026  Q1 2026  (2026-01-01 → 2026-03-31)
-#   · tbl_historico_t2_2026  Q2 2026  (2026-04-01 → en curso, datos hasta 2026-05-06)
+# IDEMPOTENCIA:
+#   · CREATE TABLE IF NOT EXISTS → seguro ejecutar N veces.
+#   · seed: por defecto SKIP si la tabla ya tiene datos.
+#   · Con FORCE_RESEED=1 → TRUNCATE + re-seed.
+#   · Cada ejecucion queda registrada en seed_executions.
 #
-# Columnas reales (confirmadas en analisis 2026-05-02):
-#   dFecha, dHoraInicio, dHoraFin, cDID_800Transfer,
-#   cDID_Centro_Transferencia, cMenu, cOpcion,
-#   cTelefono_Origen, cTelefono_Digitado, cEtiquetacliente
+# ESTABILIDAD DE MARIADB:
+#   El seed puede tardar varios minutos. Antes de iniciar se verifica que
+#   MariaDB responda de forma estable (STABILITY_CHECKS pings consecutivos
+#   en STABILITY_INTERVAL segundos). Si el servidor cae durante el seed,
+#   el script detecta el fallo y aborta con un mensaje claro en lugar de
+#   producir una ejecucion parcial silenciosa.
 #
-# Sin indices (produccion opera con full table scans — CNST-ETL-005)
+# TRACKING:
+#   Tabla seed_executions en ivr_legacy registra:
+#   timestamp, tabla, accion, filas_antes, filas_despues,
+#   seed_rows_cfg, script_version, commit_hash.
 #
 # USO:
+#   # Normal (idempotente — salta si ya hay datos)
 #   sudo bash provisioners/mariadb/schema_historico.sh
-#   # o con conteo personalizado:
+#
+#   # Con mas registros
 #   SEED_ROWS=50000 sudo bash provisioners/mariadb/schema_historico.sh
 #
-# SEED_ROWS (filas por quarter, default 5000):
-#   Desarrollo:   5000   (~5  seg)
-#   Integracion: 50000   (~1  min)
-#   Staging:    500000   (~10 min)
+#   # Forzar re-seed (TRUNCATE + reinsertar)
+#   FORCE_RESEED=1 sudo bash provisioners/mariadb/schema_historico.sh
+#
+#   # Solo el schema (sin seed)
+#   SKIP_SEED=1 sudo bash provisioners/mariadb/schema_historico.sh
 # =============================================================================
 
 set -euo pipefail
@@ -54,13 +64,34 @@ DB_PASS="${DB_MARIADB_PASSWORD:-django_pass}"
 DB_HOST="${MARIADB_HOST:-127.0.0.1}"
 DB_PORT="${MARIADB_PORT:-3306}"
 SEED_ROWS="${SEED_ROWS:-5000}"
+FORCE_RESEED="${FORCE_RESEED:-0}"
+SKIP_SEED="${SKIP_SEED:-0}"
+
+# Verificacion de estabilidad antes del seed:
+#   STABILITY_CHECKS:   numero de pings consecutivos exitosos requeridos
+#   STABILITY_INTERVAL: segundos de espera entre cada ping
+#   STABILITY_TIMEOUT:  segundos maximos de espera total antes de abortar
+STABILITY_CHECKS="${STABILITY_CHECKS:-3}"
+STABILITY_INTERVAL="${STABILITY_INTERVAL:-2}"
+STABILITY_TIMEOUT="${STABILITY_TIMEOUT:-30}"
 
 SCHEMA_SQL="${SCRIPT_DIR}/schema_historico.sql"
 SEED_SQL="${SCRIPT_DIR}/seed_historico.sql"
 
+COMMIT_HASH="$(cd "${PROJECT_ROOT}" && git rev-parse HEAD 2>/dev/null || echo 'sin-git')"
+SCRIPT_VERSION="2.1.0"
+
 # ---------------------------------------------------------------------------
-# Helper MySQL
+# Helpers MySQL
 # ---------------------------------------------------------------------------
+my_ping() {
+    # Retorna 0 si MariaDB responde, 1 si no
+    mysql --batch --connect-timeout=3 \
+          -h "${DB_HOST}" -P "${DB_PORT}" \
+          -u "${DB_USER}" -p"${DB_PASS}" \
+          -e "SELECT 1;" >/dev/null 2>&1
+}
+
 my_exec() {
     mysql --batch \
           -h "${DB_HOST}" -P "${DB_PORT}" \
@@ -75,78 +106,244 @@ my_exec_file() {
           "${DB_NAME}" < "$1" 2>&1
 }
 
+my_exec_vars() {
+    local sql_file="$1"
+    {
+        echo "SET @SEED_ROWS    = ${SEED_ROWS};"
+        echo "SET @FORCE_RESEED = ${FORCE_RESEED};"
+        echo "SET @COMMIT_HASH  = '${COMMIT_HASH}';"
+        echo "SET @SCRIPT_VER   = '${SCRIPT_VERSION}';"
+        cat "$sql_file"
+    } | mysql --batch \
+              -h "${DB_HOST}" -P "${DB_PORT}" \
+              -u "${DB_USER}" -p"${DB_PASS}" \
+              "${DB_NAME}" 2>&1
+}
+
+# ---------------------------------------------------------------------------
+# verificar_estabilidad_mariadb
+#
+# Envía STABILITY_CHECKS pings consecutivos con STABILITY_INTERVAL segundos
+# entre cada uno. Si todos pasan, la conexión se considera estable.
+# Si alguno falla o se supera STABILITY_TIMEOUT, el script aborta.
+#
+# Esto detecta el caso donde MariaDB arrancó recientemente pero todavía
+# está en proceso de recovery (Aria/InnoDB), o donde el proceso cae después
+# de unos segundos en entornos sin systemd.
+# ---------------------------------------------------------------------------
+verificar_estabilidad_mariadb() {
+    local checks="${STABILITY_CHECKS}"
+    local interval="${STABILITY_INTERVAL}"
+    local timeout_total="${STABILITY_TIMEOUT}"
+    local elapsed=0
+    local consecutivos=0
+
+    log_info "Verificando estabilidad de MariaDB"
+    log_info "  Requiere ${checks} pings exitosos consecutivos"
+    log_info "  Intervalo entre pings: ${interval}s"
+    log_info "  Timeout total: ${timeout_total}s"
+
+    while true; do
+        if (( elapsed >= timeout_total )); then
+            log_error "Timeout de ${timeout_total}s superado esperando estabilidad de MariaDB."
+            log_error "El proceso puede estar arrancando, en recovery o no disponible."
+            log_error "Opciones:"
+            log_error "  1. Iniciar MariaDB:  sudo service mariadb start"
+            log_error "  2. Esperar más:      STABILITY_TIMEOUT=60 bash ${BASH_SOURCE[0]}"
+            log_error "  3. Desactivar check: STABILITY_CHECKS=1 bash ${BASH_SOURCE[0]}"
+            log_fatal "MariaDB no estable. Seed abortado para evitar ejecucion parcial."
+        fi
+
+        if my_ping; then
+            (( consecutivos++ ))
+            log_info "  Ping ${consecutivos}/${checks} OK (${elapsed}s transcurridos)"
+            if (( consecutivos >= checks )); then
+                log_success "MariaDB estable — ${checks} pings consecutivos exitosos"
+                return 0
+            fi
+        else
+            if (( consecutivos > 0 )); then
+                log_warn "  Ping fallido tras ${consecutivos} exitosos — reiniciando contador"
+            fi
+            consecutivos=0
+        fi
+
+        sleep "${interval}"
+        (( elapsed += interval ))
+    done
+}
+
+# ---------------------------------------------------------------------------
+# verificar_seed_completo
+#
+# Después del seed, comprueba que seed_executions registró exactamente
+# una fila por cada tabla esperada en la última ejecucion (no SKIP).
+# Si alguna tabla no tiene registro o el conteo es 0, el script lo reporta.
+# ---------------------------------------------------------------------------
+verificar_seed_completo() {
+    local tablas=(
+        tbl_historico_t1_2025
+        tbl_historico_t2_2025
+        tbl_historico_t3_2025
+        tbl_historico_t4_2025
+        tbl_historico_t1_2026
+        tbl_historico_t2_2026
+    )
+    local ok=1
+
+    log_info "Verificando integridad del seed:"
+
+    for tabla in "${tablas[@]}"; do
+        local cnt
+        cnt=$(my_exec -e "SELECT COUNT(*) FROM ${tabla};" 2>/dev/null | tail -1 || echo "0")
+
+        local ultima_accion
+        ultima_accion=$(my_exec -e \
+            "SELECT accion FROM seed_executions
+             WHERE tabla='${tabla}'
+             ORDER BY id DESC LIMIT 1;" 2>/dev/null | tail -1 || echo "N/A")
+
+        if [[ "${cnt}" == "0" && "${ultima_accion}" != "SKIP" ]]; then
+            log_error "  FALLO: ${tabla} tiene 0 registros y accion='${ultima_accion}'"
+            ok=0
+        elif [[ "${cnt}" == "0" ]]; then
+            log_warn "  SKIP:  ${tabla} sin datos (accion=${ultima_accion})"
+        else
+            log_info "  OK:    ${tabla} — ${cnt} registros (accion=${ultima_accion})"
+        fi
+    done
+
+    if [[ "${ok}" == "0" ]]; then
+        log_error ""
+        log_error "Una o más tablas quedaron sin datos tras el seed."
+        log_error "Probable causa: MariaDB cayó durante la ejecucion."
+        log_error "Soluciones:"
+        log_error "  1. Asegurar que MariaDB esté estable (sudo service mariadb start)"
+        log_error "  2. Re-ejecutar: FORCE_RESEED=1 sudo bash ${BASH_SOURCE[0]}"
+        log_fatal "Seed incompleto."
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# main
 # ---------------------------------------------------------------------------
 main() {
-    log_header "IVR Historico — Schema y Seed"
+    log_header "IVR Historico — Schema y Seed (6 quarters)"
 
-    # Paso 1: verificar acceso
+    log_info "Configuracion:"
+    log_info "  DB:                  ${DB_HOST}:${DB_PORT}/${DB_NAME}"
+    log_info "  Usuario:             ${DB_USER}"
+    log_info "  SEED_ROWS:           ${SEED_ROWS} por quarter"
+    log_info "  FORCE_RESEED:        ${FORCE_RESEED}"
+    log_info "  SKIP_SEED:           ${SKIP_SEED}"
+    log_info "  STABILITY_CHECKS:    ${STABILITY_CHECKS}"
+    log_info "  STABILITY_TIMEOUT:   ${STABILITY_TIMEOUT}s"
+    log_info "  Commit hash:         ${COMMIT_HASH}"
+    log_info "  Script ver:          ${SCRIPT_VERSION}"
+    echo ""
+
+    # ------------------------------------------------------------------
+    # Paso 1: verificar acceso inicial
+    # ------------------------------------------------------------------
     log_step 1 3 "Verificar acceso a MariaDB"
-    if ! my_exec -e "SELECT 1;" > /dev/null; then
-        log_fatal "No se puede conectar a ${DB_HOST}:${DB_PORT} como ${DB_USER}"
+    if ! my_ping; then
+        log_error "MariaDB no responde en ${DB_HOST}:${DB_PORT}"
+        log_error "Iniciar con: sudo service mariadb start"
+        log_fatal "No se puede continuar sin conexion a MariaDB."
     fi
-    log_success "Acceso OK — ${DB_HOST}:${DB_PORT} ${DB_NAME}"
+    log_success "Acceso OK"
 
-    # Paso 2: crear tablas
-    log_step 2 3 "Crear tablas tbl_historico_tN_2025"
+    # ------------------------------------------------------------------
+    # Paso 2: crear tablas (idempotente — no requiere estabilidad prolongada)
+    # ------------------------------------------------------------------
+    log_step 2 3 "Crear tablas tbl_historico_tN_YYYY (CREATE TABLE IF NOT EXISTS)"
 
     if [[ ! -f "$SCHEMA_SQL" ]]; then
-        log_fatal "No se encontro: ${SCHEMA_SQL}"
+        log_fatal "No encontrado: ${SCHEMA_SQL}"
     fi
 
-    my_exec_file "$SCHEMA_SQL"
-    log_success "Tablas creadas (o ya existentes)"
+    my_exec_file "$SCHEMA_SQL" | grep -v "^$" | while IFS= read -r line; do
+        log_info "  ${line}"
+    done || true
 
-    # Mostrar estado antes del seed
-    EXISTING=$(my_exec -e \
-        "SELECT SUM(t.cnt) FROM (
-             SELECT COUNT(*) cnt FROM tbl_historico_t1_2025
-             UNION ALL SELECT COUNT(*) FROM tbl_historico_t2_2025
-             UNION ALL SELECT COUNT(*) FROM tbl_historico_t3_2025
-         ) t;" | tail -1)
-    log_info "Registros existentes en las 3 tablas: ${EXISTING}"
+    log_success "Schema aplicado"
 
-    # Paso 3: sembrar datos
-    log_step 3 3 "Sembrar datos (${SEED_ROWS} registros por quarter)"
+    # ------------------------------------------------------------------
+    # Paso 3: seed
+    # ------------------------------------------------------------------
+    if [[ "${SKIP_SEED}" == "1" ]]; then
+        log_info "SKIP_SEED=1 — seed omitido."
+    else
+        log_step 3 3 "Seed de datos"
 
-    if [[ ! -f "$SEED_SQL" ]]; then
-        log_fatal "No se encontro: ${SEED_SQL}"
+        # Verificar estabilidad ANTES de iniciar el seed.
+        # El seed puede tardar minutos — si MariaDB cae a mitad se
+        # generaria una ejecucion parcial sin advertencia.
+        verificar_estabilidad_mariadb
+
+        if [[ "${FORCE_RESEED}" == "1" ]]; then
+            log_warn "FORCE_RESEED=1 — las tablas seran truncadas antes de sembrar."
+        fi
+
+        if [[ ! -f "$SEED_SQL" ]]; then
+            log_fatal "No encontrado: ${SEED_SQL}"
+        fi
+
+        log_info "Ejecutando seed (esto puede tardar varios minutos)..."
+
+        if ! my_exec_vars "$SEED_SQL" | grep -v "^$" | while IFS= read -r line; do
+            log_info "  ${line}"
+        done; then
+            log_error "El seed falló o fue interrumpido."
+            log_error "Probable causa: MariaDB cayó durante la ejecucion."
+            log_error "Para re-intentar: FORCE_RESEED=1 sudo bash ${BASH_SOURCE[0]}"
+            log_fatal "Seed incompleto."
+        fi
+
+        # Verificar que todas las tablas tienen datos tras el seed
+        verificar_seed_completo
+
+        log_success "Seed completado y verificado"
     fi
 
-    # Inyectar SEED_ROWS en el SQL via variable de sesion
-    my_exec -e "SET @SEED_ROWS = ${SEED_ROWS};" 2>/dev/null || true
+    # ------------------------------------------------------------------
+    # Resumen de registros por tabla
+    # ------------------------------------------------------------------
+    echo ""
+    log_info "Estado de las tablas:"
+    for tabla in \
+        tbl_historico_t1_2025 \
+        tbl_historico_t2_2025 \
+        tbl_historico_t3_2025 \
+        tbl_historico_t4_2025 \
+        tbl_historico_t1_2026 \
+        tbl_historico_t2_2026; do
+        CNT=$(my_exec -e "SELECT COUNT(*) FROM ${tabla};" 2>/dev/null | tail -1 || echo "N/A")
+        log_info "  ${tabla}: ${CNT} registros"
+    done
 
-    my_exec_file "$SEED_SQL"
-
-    # Resumen final
-    Q1_25=$(my_exec -e "SELECT COUNT(*) FROM tbl_historico_t1_2025;" | tail -1)
-    Q2_25=$(my_exec -e "SELECT COUNT(*) FROM tbl_historico_t2_2025;" | tail -1)
-    Q3_25=$(my_exec -e "SELECT COUNT(*) FROM tbl_historico_t3_2025;" | tail -1)
-    Q4_25=$(my_exec -e "SELECT COUNT(*) FROM tbl_historico_t4_2025;" | tail -1)
-    Q1_26=$(my_exec -e "SELECT COUNT(*) FROM tbl_historico_t1_2026;" | tail -1)
-    Q2_26=$(my_exec -e "SELECT COUNT(*) FROM tbl_historico_t2_2026;" | tail -1)
-    TOTAL=$(my_exec -e \
-        "SELECT SUM(t.cnt) FROM (
-             SELECT COUNT(*) cnt FROM tbl_historico_t1_2025
-             UNION ALL SELECT COUNT(*) FROM tbl_historico_t2_2025
-             UNION ALL SELECT COUNT(*) FROM tbl_historico_t3_2025
-             UNION ALL SELECT COUNT(*) FROM tbl_historico_t4_2025
-             UNION ALL SELECT COUNT(*) FROM tbl_historico_t1_2026
-             UNION ALL SELECT COUNT(*) FROM tbl_historico_t2_2026
-         ) t;" | tail -1)
+    # ------------------------------------------------------------------
+    # Historial de ejecuciones (ultimas 10)
+    # ------------------------------------------------------------------
+    echo ""
+    log_info "Ultimas 10 ejecuciones registradas en seed_executions:"
+    my_exec -e "
+        SELECT
+            id,
+            DATE_FORMAT(ejecutado_en,'%Y-%m-%d %H:%i:%s') AS cuando,
+            tabla,
+            accion,
+            filas_antes,
+            filas_despues,
+            seed_rows_cfg,
+            LEFT(COALESCE(commit_hash,'N/A'),8) AS commit
+        FROM seed_executions
+        ORDER BY id DESC
+        LIMIT 10;" 2>/dev/null | column -t \
+    || log_warn "seed_executions no disponible aun"
 
     echo ""
-    log_success "Schema y seed completados"
-    log_info "  tbl_historico_t1_2025 (Q1 2025):         ${Q1_25} registros"
-    log_info "  tbl_historico_t2_2025 (Q2 2025):         ${Q2_25} registros"
-    log_info "  tbl_historico_t3_2025 (Q3 2025):         ${Q3_25} registros"
-    log_info "  tbl_historico_t4_2025 (Q4 2025):         ${Q4_25} registros"
-    log_info "  tbl_historico_t1_2026 (Q1 2026):         ${Q1_26} registros"
-    log_info "  tbl_historico_t2_2026 (Q2 2026 parcial): ${Q2_26} registros"
-    log_info "  Total: ${TOTAL} registros"
-    echo ""
-    log_info "Verificar con Django:"
-    log_info "  cd IACT-api/callcentersite && source venv/bin/activate"
-    log_info "  python manage.py check --database ivr"
+    log_success "Script completado. Commit: ${COMMIT_HASH}"
 }
 
 main
