@@ -1,0 +1,181 @@
+trimestre,segmento,cMenu,cDID_Centro_Transferencia,nota
+Q01_25,Nacional,,cliente_colgo,VACIO/NULL -> abandono
+Q01_25,Nacional,cliente_colgo,19020086,
+Q01_25,Nacional,Desborde_Cabecera,cliente_colgo,Q01 Nacional -> abandono (cambia en Q02)
+Q01_25,Nacional,Desborde_Promocional,19020086,
+Q01_25,Nacional,Marque3,19020086,
+Q01_25,Nacional,NOTMX-CONT-Contratacion,15070059,
+Q01_25,Nacional,NOTMX-CONT-Portabilidad,10728485,
+Q01_25,Nacional,NOTMX-SeguimientoInstalacion,10728487,cambia a 19020088 en Q03
+Q01_25,Nacional,RES-Aparatos,15070007,
+Q01_25,Nacional,RES-AsistenciaTelmexcom,10728009,
+Q01_25,Nacional,RES-ClaroDrive,15070006,
+Q01_25,Nacional,RES-ContratacionInfinitum,15070013,cambia Q02->15070012 Q03->15070006
+Q01_25,Nacional,RES-DISH,10728494,
+Q01_25,Nacional,RES-Entr,10728382,
+Q01_25,Nacional,RES-Falla-AntivirusMcAfee,10928137,
+Q01_25,Nacional,RES-Falla-Dish,1.30806E+24_EXCEL_CORRUPT,NK90 corrompido por Excel (E+24 anomalo)
+Q01_25,Nacional,RES-Falla-MVSHUB,14928960,
+Q01_25,Nacional,RES-FallaEntretiene,19020033,cambia a 10728381 en Q03
+Q01_25,Nacional,RES-FallaInternet,10828091,
+Q01_25,Nacional,RES-FallaSegQja,10928253,
+Q01_25,Nacional,RES-FallasLinea,15070019,
+Q01_25,Nacional,RES-MADT-Detalle,15070013,
+Q01_25,Nacional,RES-MADT-MVSHUB,10828073,
+Q01_25,Nacional,RES-SaldooPagos,NK90_1309XXX_len17,Excel corrompio como 1.309E+16
+Q01_25,Nacional,RES-Saldos-WT,NK90_1309XXX_len17,Excel corrompio como 1.309E+16
+Q01_25,Nacional,RES-SegurosInbursa,10728493,
+Q01_25,Nacional,RES-StartGo,15070013,
+Q01_25,Nacional,RES-TAE,NK90_1309010_len17,Excel corrompio como 1.30901E+16
+Q01_25,Nacional,RES_CambioDom,15070004,
+Q01_25,Nacional,RES_Cambios,10628002,
+Q01_25,Nacional,RES_CambioTit,15070071,
+Q01_25,Nacional,RES_OcultaVta,cliente_colgo,siempre abandono
+Q01_25,Nacional,RES_Otros,15070002,cambia a 15070012 en Q03
+Q01_25,Nacional,SinOpcion_Cabecera,19020086,
+Q01_25,Puebla,,cliente_colgo,VACIO/NULL -> abandono
+Q01_25,Puebla,cliente_colgo,19020086,
+Q01_25,Puebla,Desborde_Cabecera,10928253,cambia Q02->10428174 Q03->15070013
+Q01_25,Puebla,Desborde_Promocional,19020086,
+Q01_25,Puebla,Marque3,19020086,
+Q01_25,Puebla,NOTMX-CONT-Contratacion,15070059,
+Q01_25,Puebla,NOTMX-CONT-Portabilidad,10728485,
+Q01_25,Puebla,NOTMX-SeguimientoInstalacion,10728487,cambia a 19020088 en Q03
+Q01_25,Puebla,RES-ContratacionInfinitum_2024,15070013,cambia a 15070006 en Q02
+Q01_25,Puebla,RES-FallaInternet_2024,10828091,
+Q01_25,Puebla,RES-Fallas_2024,10828091,
+Q01_25,Puebla,RES-SaldosPagos_2024,NK90_309004_len16,Excel corrompio como 3.09004E+15
+Q01_25,Puebla,RES-SegInst_2024,10728487,
+Q01_25,Puebla,SinOpcion_Cabecera,19020086,
+Q02_25,Nacional,,cliente_colgo,
+Q02_25,Nacional,cliente_colgo,19020086,
+Q02_25,Nacional,Desborde_Cabecera,10928253,diferente de Q01 (era cliente_colgo)
+Q02_25,Nacional,Desborde_Promocional,19020086,
+Q02_25,Nacional,MASI_RepiteBoleta,cliente_colgo,NUEVO Q02 -> siempre abandono
+Q02_25,Nacional,Marque3,19020086,
+Q02_25,Nacional,NOTMX-CONT-Contratacion,15070059,
+Q02_25,Nacional,NOTMX-CONT-Portabilidad,14929014,diferente de Q01 (era 10728485)
+Q02_25,Nacional,NOTMX-SeguimientoInstalacion,10728487,
+Q02_25,Nacional,NoTMX_SinOp,15070013,NUEVO Q02
+Q02_25,Nacional,RES-Aparatos,15070013,diferente de Q01 (era 15070007)
+Q02_25,Nacional,RES-AsistenciaTelmexcom,10728009,
+Q02_25,Nacional,RES-ClaroDrive,15070006,
+Q02_25,Nacional,RES-ContratacionInfinitum,15070012,diferente de Q01 (era 15070013)
+Q02_25,Nacional,RES-ContratacionInfinitum_FM,15070006,NUEVO Q02
+Q02_25,Nacional,RES-DISH,10728494,
+Q02_25,Nacional,RES-Entr,10728382,
+Q02_25,Nacional,RES-Falla-AntivirusMcAfee,10928137,
+Q02_25,Nacional,RES-Falla-Dish,1.30806E+24_EXCEL_CORRUPT,
+Q02_25,Nacional,RES-Falla-MVSHUB,14928960,
+Q02_25,Nacional,RES-FallaEntretiene,19020033,
+Q02_25,Nacional,RES-FallaInternet,10828091,
+Q02_25,Nacional,RES-FallaSegQja,10928253,
+Q02_25,Nacional,RES-FallasLinea,15070019,
+Q02_25,Nacional,RES-MADT-Detalle,15070013,
+Q02_25,Nacional,RES-MADT-MVSHUB,10828073,
+Q02_25,Nacional,RES-SaldooPagos,NK90_1309XXX_len17,1.309E+16
+Q02_25,Nacional,RES-Saldos-WT,NK90_1309XXX_len17,1.309E+16
+Q02_25,Nacional,RES-SaldosPagos_FM,NK90_1309XXX_len17,NUEVO Q02 - 1.309E+16
+Q02_25,Nacional,RES-SegurosInbursa,10728493,
+Q02_25,Nacional,RES-StartGo,15070006,diferente de Q01 (era 15070013)
+Q02_25,Nacional,RES-TAE,NK90_1309010_len17,1.30901E+16
+Q02_25,Nacional,RES_CambioDom,15070004,
+Q02_25,Nacional,RES_Cambios,10628002,
+Q02_25,Nacional,RES_CambioTit,15070071,
+Q02_25,Nacional,RES_FALLA_STOP,19010000,NUEVO Q02
+Q02_25,Nacional,RES_OcultaVta,cliente_colgo,
+Q02_25,Nacional,RES_Otros,15070002,
+Q02_25,Nacional,SinOpcion_Cabecera,19020086,
+Q02_25,Puebla,,cliente_colgo,
+Q02_25,Puebla,ANI,0,VDN=0 (no completa transferencia)
+Q02_25,Puebla,cliente_colgo,19020086,
+Q02_25,Puebla,default,0,VDN=0 (anomalia 5 registros)
+Q02_25,Puebla,Desborde_Cabecera,10428174,diferente Q01(10928253) Q03(15070013)
+Q02_25,Puebla,Desborde_Promocional,19020086,
+Q02_25,Puebla,MASI_RepiteBoleta,cliente_colgo,
+Q02_25,Puebla,Marque3,19020086,
+Q02_25,Puebla,NOTMX-CONT-Contratacion,15070059,
+Q02_25,Puebla,NOTMX-CONT-Portabilidad,14929014,
+Q02_25,Puebla,NOTMX-SeguimientoInstalacion,10728487,
+Q02_25,Puebla,NoTMX_SinOp,15070013,
+Q02_25,Puebla,Numero Telmex,0,VDN=0 (no completa transferencia)
+Q02_25,Puebla,RES-ContratacionInfinitum_2024,15070006,diferente de Q01 (era 15070013)
+Q02_25,Puebla,RES-ContratacionInfinitum_FM,15070006,NUEVO Q02
+Q02_25,Puebla,RES-Fallas_2024,10828091,
+Q02_25,Puebla,RES-SaldosPagos_2024,NK90_309004_len16,3.09004E+15
+Q02_25,Puebla,RES-SaldosPagos_FM,NK90_309004_len16,NUEVO Q02 - 3.09004E+15
+Q02_25,Puebla,RES-SegInst_2024,10728487,
+Q02_25,Puebla,RES_FALLA_STOP,19010000,NUEVO Q02
+Q02_25,Puebla,SinOpcion_Cabecera,19020086,
+Q02_25,Puebla,Tmx_SOMO,14929961,NUEVO Q02
+Q03_25,Nacional,,cliente_colgo,
+Q03_25,Nacional,cliente_colgo,19020086,
+Q03_25,Nacional,Desborde_Cabecera,cliente_colgo,vuelve a abandono (igual Q01)
+Q03_25,Nacional,Desborde_Promocional,19020086,
+Q03_25,Nacional,KIPSOLCOM,10928357,NUEVO Q03
+Q03_25,Nacional,Marque3,19020086,
+Q03_25,Nacional,MASI_RepiteBoleta,cliente_colgo,
+Q03_25,Nacional,NOTMX-CONT-Contratacion,15070059,
+Q03_25,Nacional,NOTMX-CONT-Portabilidad,14929014,
+Q03_25,Nacional,NOTMX-SeguimientoInstalacion,19020088,CAMBIO desde 10728487
+Q03_25,Nacional,NoTMX_SinOp,15070013,
+Q03_25,Nacional,RES-Aparatos,15070007,vuelve a Q01
+Q03_25,Nacional,RES-AsistenciaTelmexcom,10728009,
+Q03_25,Nacional,RES-ClaroDrive,15070006,
+Q03_25,Nacional,RES-ContratacionInfinitum,15070006,diferente de Q01/Q02
+Q03_25,Nacional,RES-ContratacionInfinitum_FM,15070006,
+Q03_25,Nacional,RES-DISH,10728494,
+Q03_25,Nacional,RES-Entr,10728382,
+Q03_25,Nacional,RES-Falla-AntivirusMcAfee,10928137,
+Q03_25,Nacional,RES-Falla-Dish,1.30806E+24_EXCEL_CORRUPT,consistente en todos los quarters
+Q03_25,Nacional,RES-Falla-MVSHUB,14928960,
+Q03_25,Nacional,RES-FallaEntretiene,10728381,CAMBIO desde 19020033
+Q03_25,Nacional,RES-FallaInternet,10828091,
+Q03_25,Nacional,RES-FallaSegQja,10928253,
+Q03_25,Nacional,RES-FallasLinea,15070019,
+Q03_25,Nacional,RES-MADT-Detalle,15070013,
+Q03_25,Nacional,RES-MADT-MVSHUB,10828073,
+Q03_25,Nacional,RES-SaldooPagos,NK90_1309XXX_len17,1.309E+16
+Q03_25,Nacional,RES-Saldos-WT,NK90_1309XXX_len17,1.309E+16
+Q03_25,Nacional,RES-SaldosPagos_FM,NK90_1309XXX_len17,1.309E+16
+Q03_25,Nacional,RES-SegurosInbursa,10728493,
+Q03_25,Nacional,RES-StartGo,15070006,
+Q03_25,Nacional,RES-TAE,NK90_1309010_len17,1.30901E+16
+Q03_25,Nacional,RES_CambioDom,15070004,
+Q03_25,Nacional,RES_Cambios,10628002,
+Q03_25,Nacional,RES_CambioTit,15070071,
+Q03_25,Nacional,RES_FALLA_STOP,19010000,
+Q03_25,Nacional,RES_OcultaVta,cliente_colgo,
+Q03_25,Nacional,RES_Otros,15070012,diferente de Q01/Q02 (era 15070002)
+Q03_25,Nacional,SinOpcion_Cabecera,19020086,
+Q03_25,Nacional,ANI,19020086,
+Q03_25,Nacional,Numero Telmex,19020086,
+Q03_25,Nacional,Saldos1_Pagar,14928994,NUEVO Q03
+Q03_25,Nacional,Saldos3_Otra,14928994,NUEVO Q03
+Q03_25,Nacional,telefono_cMenu_AGREGADO,19020086,~100 numeros de tel como cMenu -> todos a 19020086
+Q03_25,Puebla,,0,Puebla Q03 -> 0 (diferente de otros quarters que van a cliente_colgo)
+Q03_25,Puebla,ANI,0,
+Q03_25,Puebla,cliente_colgo,19020086,
+Q03_25,Puebla,Desborde_Cabecera,15070013,diferente de Q01(10928253) Q02(10428174)
+Q03_25,Puebla,Desborde_Promocional,19020086,
+Q03_25,Puebla,KIPSOLCOM,10928357,NUEVO Q03
+Q03_25,Puebla,Marque3,19020086,
+Q03_25,Puebla,MenuSaldosCabecera,0,NUEVO Q03 VDN=0
+Q03_25,Puebla,NOTMX-CONT-Contratacion,15070059,
+Q03_25,Puebla,NOTMX-CONT-Portabilidad,14929014,
+Q03_25,Puebla,NOTMX-SeguimientoInstalacion,19020088,CAMBIO desde 10728487
+Q03_25,Puebla,NoTMX_SinOp,15070013,
+Q03_25,Puebla,Numero Telmex,19020086,diferente de Q02 (era 0)
+Q03_25,Puebla,RES-ContratacionInfinitum_2024,15070006,
+Q03_25,Puebla,RES-ContratacionInfinitum_FM,15070006,
+Q03_25,Puebla,RES-Fallas_2024,10828091,
+Q03_25,Puebla,RES-SaldosPagos_2024,NK90_309005_len16,3.09005E+15
+Q03_25,Puebla,RES-SaldosPagos_FM,NK90_309004_len16,3.09004E+15
+Q03_25,Puebla,RES-SegInst_2024,10728487,
+Q03_25,Puebla,RES_FALLA_STOP,19010000,
+Q03_25,Puebla,SaldoCabecera,0,NUEVO Q03 VDN=0
+Q03_25,Puebla,Saldos1_Pagar,14928994,NUEVO Q03
+Q03_25,Puebla,Saldos3_Otra,0,NUEVO Q03 VDN=0
+Q03_25,Puebla,SinOpcion_Cabecera,19020086,
+Q03_25,Puebla,Tmx_SOMO,14929961,
+Q03_25,Puebla,telefono_cMenu_AGREGADO,19020086,~300 numeros de tel como cMenu -> todos a 19020086
