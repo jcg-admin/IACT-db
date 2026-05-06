@@ -287,3 +287,7 @@ Thumbs.db
 *.backup
 
 /config/certs/ca/
+# Credenciales locales
+.env
+logs/
+*.log

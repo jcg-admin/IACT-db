@@ -6,7 +6,12 @@
 set -euo pipefail
 
 # Load utilities
-source /vagrant/utils/provisioning.sh
+
+# Detectar PROJECT_ROOT (sin dependencia de /vagrant)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+source "${PROJECT_ROOT}/utils/provisioning.sh"
 
 # Initialize
 init_all
@@ -17,19 +22,19 @@ init_log "mariadb_bootstrap"
 # Define steps with unique names (avoid collision with provisioning.sh functions)
 mariadb_system() {
     init_log "system_prepare"
-    source /vagrant/utils/system.sh
+    source "${PROJECT_ROOT}/utils/system.sh"
     main
 }
 
 mariadb_install() {
     init_log "mariadb_install"
-    source /vagrant/provisioners/mariadb/install.sh
+    source "${PROJECT_ROOT}/provisioners/mariadb/install.sh"
     main
 }
 
 mariadb_setup() {
     init_log "mariadb_setup"
-    source /vagrant/provisioners/mariadb/setup.sh
+    source "${PROJECT_ROOT}/provisioners/mariadb/setup.sh"
     main
 }
 

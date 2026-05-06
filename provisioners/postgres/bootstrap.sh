@@ -6,7 +6,12 @@
 set -euo pipefail
 
 # Load utilities
-source /vagrant/utils/provisioning.sh
+
+# Detectar PROJECT_ROOT (sin dependencia de /vagrant)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+source "${PROJECT_ROOT}/utils/provisioning.sh"
 
 # Initialize
 init_all
@@ -17,19 +22,19 @@ init_log "postgres_bootstrap"
 # Define steps with unique names (avoid collision with provisioning.sh functions)
 postgres_system() {
     init_log "system_prepare"
-    source /vagrant/utils/system.sh
+    source "${PROJECT_ROOT}/utils/system.sh"
     main
 }
 
 postgres_install() {
     init_log "postgres_install"
-    source /vagrant/provisioners/postgres/install.sh
+    source "${PROJECT_ROOT}/provisioners/postgres/install.sh"
     main
 }
 
 postgres_setup() {
     init_log "postgres_setup"
-    source /vagrant/provisioners/postgres/setup.sh
+    source "${PROJECT_ROOT}/provisioners/postgres/setup.sh"
     main
 }
 

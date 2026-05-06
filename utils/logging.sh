@@ -61,7 +61,7 @@ set_log_file() {
 
 init_log() {
     local script_name=$1
-    local log_dir="${2:-/vagrant/logs}"
+    local log_dir="${2:-${PROJECT_ROOT:-/tmp}/logs}"
 
     # Set log file
     set_log_file "${log_dir}/${script_name}.log"

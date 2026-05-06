@@ -6,10 +6,15 @@
 set -euo pipefail
 
 # Load utilities
-source /vagrant/utils/core.sh
-source /vagrant/utils/logging.sh
-source /vagrant/utils/network.sh
-source /vagrant/utils/validation.sh
+
+# Detectar PROJECT_ROOT (sin dependencia de /vagrant)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+source "${PROJECT_ROOT}/utils/core.sh"
+source "${PROJECT_ROOT}/utils/logging.sh"
+source "${PROJECT_ROOT}/utils/network.sh"
+source "${PROJECT_ROOT}/utils/validation.sh"
 
 # Main function
 main() {
@@ -24,7 +29,7 @@ main() {
     require_vars ADMINER_VERSION ADMINER_IP
 
     # Ensure log directory
-    if ! ensure_dir /vagrant/logs; then
+    if ! ensure_dir "${PROJECT_ROOT}/logs"; then
         log_error "Failed to create log directory"
         return 1
     fi
@@ -215,7 +220,7 @@ configure_apache() {
     log_info "Configuring Apache for Adminer"
 
     local vhost_config="/etc/apache2/sites-available/adminer.conf"
-    local vhost_template="/vagrant/config/vhost.conf"
+    local vhost_template="${PROJECT_ROOT}/config/vhost.conf"
 
     # Check if configuration template exists
     if [[ ! -f "$vhost_template" ]]; then

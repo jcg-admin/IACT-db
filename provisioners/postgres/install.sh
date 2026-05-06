@@ -6,11 +6,16 @@
 set -euo pipefail
 
 # Load utilities
-source /vagrant/utils/core.sh
-source /vagrant/utils/database.sh
-source /vagrant/utils/logging.sh
-source /vagrant/utils/network.sh
-source /vagrant/utils/validation.sh
+
+# Detectar PROJECT_ROOT (sin dependencia de /vagrant)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+source "${PROJECT_ROOT}/utils/core.sh"
+source "${PROJECT_ROOT}/utils/database.sh"
+source "${PROJECT_ROOT}/utils/logging.sh"
+source "${PROJECT_ROOT}/utils/network.sh"
+source "${PROJECT_ROOT}/utils/validation.sh"
 
 # Main function
 main() {
@@ -25,7 +30,7 @@ main() {
     require_vars POSTGRES_VERSION POSTGRES_PASSWORD
 
     # Ensure log directory
-    if ! ensure_dir /vagrant/logs; then
+    if ! ensure_dir "${PROJECT_ROOT}/logs"; then
         log_error "Failed to create log directory"
         return 1
     fi
@@ -201,14 +206,16 @@ configure_postgresql() {
         return 1
     fi
 
-    # Add rule to allow connections from 192.168.56.0/24 with md5 authentication
-    local remote_rule="host    all             all             192.168.56.0/24         md5"
+    # Permitir conexiones desde localhost (loopback) — suficiente para desarrollo local
+    # Para acceso remoto, ajustar POSTGRES_REMOTE_CIDR en .env
+    local remote_cidr="${POSTGRES_REMOTE_CIDR:-127.0.0.1/32}"
+    local remote_rule="host    all             all             ${remote_cidr}         md5"
 
-    if ! grep -q "192.168.56.0/24" "$pg_hba_conf"; then
+    if ! grep -q "$remote_cidr" "$pg_hba_conf"; then
         echo "" >> "$pg_hba_conf"
-        echo "# Allow connections from host-only network" >> "$pg_hba_conf"
+        echo "# Allow connections from configured CIDR" >> "$pg_hba_conf"
         echo "$remote_rule" >> "$pg_hba_conf"
-        log_success "Added remote access rule to pg_hba.conf"
+        log_success "Added remote access rule for ${remote_cidr} to pg_hba.conf"
     else
         log_warn "Remote access rule already exists in pg_hba.conf"
     fi

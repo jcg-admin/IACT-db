@@ -6,13 +6,18 @@
 set -euo pipefail
 
 # Load utilities
-source /vagrant/utils/core.sh
-source /vagrant/utils/logging.sh
-source /vagrant/utils/network.sh
-source /vagrant/utils/validation.sh
+
+# Detectar PROJECT_ROOT (sin dependencia de /vagrant)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+source "${PROJECT_ROOT}/utils/core.sh"
+source "${PROJECT_ROOT}/utils/logging.sh"
+source "${PROJECT_ROOT}/utils/network.sh"
+source "${PROJECT_ROOT}/utils/validation.sh"
 
 # Certificate paths
-readonly CONFIG_CERTS_DIR="/vagrant/config/certs"
+readonly CONFIG_CERTS_DIR="${PROJECT_ROOT}/config/certs"
 readonly CA_DIR="${CONFIG_CERTS_DIR}/ca"
 readonly CA_CERT="${CA_DIR}/ca.crt"
 readonly CA_KEY="${CA_DIR}/ca.key"
@@ -34,7 +39,7 @@ main() {
     require_vars ADMINER_IP SSL_DAYS SSL_COUNTRY SSL_STATE SSL_CITY SSL_ORG SSL_OU SSL_CN
 
     # Ensure log directory
-    if ! ensure_dir /vagrant/logs; then
+    if ! ensure_dir "${PROJECT_ROOT}/logs"; then
         log_error "Failed to create log directory"
         return 1
     fi
@@ -320,7 +325,7 @@ configure_ssl_vhost() {
     log_info "Configuring Apache SSL VirtualHost"
 
     local ssl_vhost_config="/etc/apache2/sites-available/adminer-ssl.conf"
-    local ssl_template="/vagrant/config/vhost_ssl.conf"
+    local ssl_template="${PROJECT_ROOT}/config/vhost_ssl.conf"
 
     # Check if configuration template exists
     if [[ ! -f "$ssl_template" ]]; then
@@ -454,7 +459,7 @@ show_windows_instructions() {
     log_info "  1. Install the CA certificate to Windows Trusted Root"
     log_info "  2. Remove browser SSL warnings for:"
     log_info "     - https://adminer.devbox"
-    log_info "     - https://192.168.56.12"
+    log_info "     - https://${ADMINER_DOMAIN:-adminer.local}"
     log_info ""
     log_info "CA Certificate location:"
     log_info "  ${CA_CERT}"
