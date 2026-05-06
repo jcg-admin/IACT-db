@@ -114,3 +114,26 @@ DATABASES = {
 
 Ver [MIGRACION-VAGRANT-A-SHELL.md](../architecture/MIGRACION-VAGRANT-A-SHELL.md)
 para el análisis técnico completo de la migración desde Vagrant.
+
+## Verificar la conexión desde Django (IACT-api)
+
+Una vez que las BDs están corriendo, confirmar que Django puede
+conectar a ambas. Este paso se ejecuta desde el repo `IACT-api`:
+
+```bash
+cd /ruta/a/IACT-api/callcentersite
+source venv/bin/activate
+
+# BD principal — PostgreSQL
+python manage.py check --database default
+# Esperado: System check identified no issues (0 silenced).
+
+# BD legacy — MariaDB (solo lectura)
+python manage.py check --database ivr
+# Esperado: System check identified no issues (0 silenced).
+
+# Migraciones pendientes (debe retornar vacío)
+python manage.py showmigrations --database default | grep '\[ \]'
+```
+
+Ver `VERIFICACION-LOCAL-SIN-VAGRANT.md` para el checklist completo.
