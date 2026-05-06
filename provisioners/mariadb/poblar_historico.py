@@ -10,10 +10,19 @@ este script está diseñado para añadir volumen incremental. Cuantos más regis
 menor el error estadístico de las distribuciones.
 
 PROPORCIONES CALIBRADAS (datos reales Q1-Q3 2025, 36.7M llamadas):
-    dHoraInicio > dHoraFin          38.8%  (bug G-29, MariaDB IVR del cliente)
+    dHoraInicio > dHoraFin          38.8%  (bug G-29, IVR del cliente)
     cTelefono_Digitado IS NULL       21.2%  (no_digito_telefono)
     Digitado = Origen (misma_linea)  28.2%  (número A llama y digita su mismo número)
     Digitado ≠ Origen (linea_dif)    50.6%
+
+ANOMALÍAS DE CALIDAD DE DATOS REPLICADAS (ver TBL-HISTORICO-ANOMALIAS.md):
+    CASO_NULL          1.3%   cDID_Centro_Transferencia NULL o vacío
+    CLIENTE_COLGO     27.4%   cDID_Centro_Transferencia = 'cliente_colgo'
+    NK90 len_17        5.3%   VDN 7 dig + teléfono 10 dig (formato dominante en prod)
+    NK90 len_16        0.3%   VDN 6 dig + teléfono 10 dig
+    cMENU_ERROR        1.2%   cMenu contiene número de teléfono
+    CASO_ERROR_CEROS   3.0%   cDID solo ceros — Puebla Q02+ únicamente
+    ERROR_CARACTER     0.05%  cDID con carácter no numérico inicial
 
 TABLAS Y RANGOS:
     tbl_historico_t1_2025   Q01_25   2025-01-01 → 2025-03-31
@@ -76,6 +85,32 @@ P_MISMA_GIVEN_NOT_NULL = P_MISMA / (1 - P_NULL)   # ≈ 0.358
 
 # Probabilidad de que dHoraInicio > dHoraFin (bug G-29)
 P_HORAS_INVERTIDAS = 0.388
+
+# ---- Anomalías de cDID_Centro_Transferencia --------------------------------
+
+# CASO_ERROR_CEROS: cDID = solo ceros (ej: '0000000')
+# Solo Puebla (DID 19020084), solo Q02_25 en adelante. Ausente en Q01_25.
+P_ERROR_CEROS_PUEBLA = 0.030   # 3% del volumen Puebla Q02+
+
+# ERROR_CARACTER_INICIAL: cDID empieza con carácter no numérico
+# Presente en todos los quarters, volumen muy bajo (< 0.05% total).
+P_ERROR_CARACTER = 0.0005
+
+# NK90 — proporciones reales Q1 2025 (fuente: clasificacion_cDID Q1 2025)
+#   len_17 (VDN 7 dig + tel 10 dig) → 5.33% del total = 94% de casos NK90
+#   len_16 (VDN 6 dig + tel 10 dig) → 0.34% del total =  6% de casos NK90
+#   len_18+ (VDN 8+ dig + tel 10)   → no se observa en producción
+#
+# P_NK90 debe compensar que solo ~57% de los registros son elegibles para NK90
+# (se excluyen: CLIENTE_COLGO ~27%, CASO_NULL ~1%, tel_digitado IS NULL ~21%).
+# Elegibles ≈ (1-0.27) × (1-0.013) × (1-0.212) ≈ 0.57
+# Target total NK90 = 5.67% → P_NK90 = 0.0567 / 0.57 ≈ 0.099
+P_NK90 = 0.099
+P_NK90_LEN17_COND = 0.94   # dado NK90, 94% son len_17 (VDN 7 dígitos)
+# VDNs de 7 dígitos usados en NK90 (reales de producción)
+VDN_NK90_7DIG = ['1309004', '1308066', '1307200', '1907000', '1308100']
+# VDN de 6 dígitos usado en NK90 (real de producción)
+VDN_NK90_6DIG = ['309004']
 
 # Prefijos telefónicos MX reales observados en producción
 PREFIJOS = [
@@ -287,12 +322,19 @@ def gen_vdn(menu):
         return tabla[0]
     return pick_from(tabla)
 
-def gen_registro(fecha_ini, fecha_fin):
+def gen_registro(fecha_ini, fecha_fin, error_ceros=False):
+    """
+    Genera un registro que replica las condiciones de producción.
+
+    error_ceros : True si el quarter/segmento puede generar CASO_ERROR_CEROS
+                  (Puebla, Q02_25 en adelante). False para Q01_25.
+    """
     dias = (fecha_fin - fecha_ini).days + 1
     fecha = fecha_ini + timedelta(days=random.randint(0, dias - 1))
     base  = datetime(fecha.year, fecha.month, fecha.day)
 
-    # Horario 07:00-21:00
+    # Horario 07:00-21:00 (main window)
+    # ~0.3% de llamadas cruzan medianoche (23:45 → 00:05) — impacto mínimo
     h   = 7 * 3600 + random.randint(0, 50400)
     dur = random.randint(5, 895)
     ts_ini = base + timedelta(seconds=h)
@@ -300,11 +342,9 @@ def gen_registro(fecha_ini, fecha_fin):
 
     # Bug G-29: 38.8% de registros con dHoraInicio > dHoraFin
     if random.random() < P_HORAS_INVERTIDAS:
-        ts_fin = base + timedelta(seconds=h - random.randint(5, 890))
+        ts_fin = base + timedelta(seconds=max(0, h - random.randint(5, 890)))
 
-    # Segmento
-    did = pick_from([(s, w) for s, w in SEGMENTOS])
-    # Convertir a tabla de acumulados
+    # Segmento — DID de entrada
     did_opts = []
     cum = 0
     for s, w in SEGMENTOS:
@@ -312,26 +352,58 @@ def gen_registro(fecha_ini, fecha_fin):
         did_opts.append((s, cum))
     did = pick_from(did_opts)
 
-    # Teléfonos
+    # Teléfonos (BR-CLIENT-001)
     tel_origen = gen_phone()
     r_tel = random.random()
     if r_tel < P_NULL:
         tel_digitado = None
     elif r_tel < P_NULL + P_MISMA:
-        tel_digitado = tel_origen          # misma_linea
+        tel_digitado = tel_origen          # misma_linea: número A confirma su número
     else:
         tel_digitado = gen_phone()         # linea_diferente
 
     # Menú y opción
     menu, opcion = gen_menu_opcion()
 
-    # VDN destino
+    # VDN destino — puede ser sobreescrito por anomalías abajo
     centro_raw = gen_vdn(menu)
 
-    # NK90: ~6.5% de registros con teléfono embebido en el VDN
-    if (centro_raw and centro_raw != 'cliente_colgo'
-            and tel_digitado and random.random() < 0.065):
-        centro_raw = centro_raw + tel_digitado
+    # ---- Anomalías de cDID_Centro_Transferencia ----------------------------
+
+    # CASO_ERROR_CEROS: solo Puebla, solo Q02+ (documentado en P-22)
+    if (error_ceros
+            and did == '19020084'          # solo Puebla
+            and random.random() < P_ERROR_CEROS_PUEBLA):
+        centro_raw = '0' * random.choice([7, 8])   # '0000000' o '00000000'
+
+    # ERROR_CARACTER_INICIAL: carácter no numérico al inicio (muy raro, todos los quarters)
+    elif (centro_raw
+            and centro_raw not in ('cliente_colgo', None)
+            and random.random() < P_ERROR_CARACTER):
+        # Caracteres no numéricos observados en producción (errores de encoding/captura).
+        # Solo ASCII imprimible — evitar byte nulo (\x00) que MariaDB rechaza en SQL.
+        prefijo = random.choice(['@', ' ', '#', '!', 'E', 'X'])
+        centro_raw = prefijo + (centro_raw[:6] if len(centro_raw) >= 6 else centro_raw)
+
+    # NK90 — concatenar VDN + teléfono (BR-ROUTING-001)
+    # Usar VDNs de 7 u 8 dígitos según proporciones reales:
+    #   len_17 (7-dig VDN) = 94% de casos NK90
+    #   len_16 (6-dig VDN) =  6% de casos NK90
+    elif (centro_raw
+            and centro_raw not in ('cliente_colgo',)
+            and not centro_raw.startswith('0' * 4)   # no NK90 sobre CASO_ERROR_CEROS
+            and tel_digitado
+            and random.random() < P_NK90):
+        if random.random() < P_NK90_LEN17_COND:
+            # len_17: VDN de 7 dígitos + 10 dígitos de teléfono
+            vdn_7 = random.choice(VDN_NK90_7DIG)
+            centro_raw = vdn_7 + tel_digitado
+        else:
+            # len_16: VDN de 6 dígitos + 10 dígitos de teléfono
+            vdn_6 = random.choice(VDN_NK90_6DIG)
+            centro_raw = vdn_6 + tel_digitado
+
+    # -----------------------------------------------------------------------
 
     etiqueta = random.choices(ETIQUETAS, weights=PESOS_ETQ)[0]
 
@@ -384,12 +456,15 @@ def run_mysql(args, stmt=None, file_path=None):
 #   Q04_25: ~49,650  Q01_26: ~50,000   Q02_26: ~23,125
 
 TABLAS_CONFIG = [
-    ('Q01_25', 'tbl_historico_t1_2025', date(2025, 1, 1),  date(2025, 3, 31),  1.000),
-    ('Q02_25', 'tbl_historico_t2_2025', date(2025, 4, 1),  date(2025, 6, 30),  1.169),
-    ('Q03_25', 'tbl_historico_t3_2025', date(2025, 7, 1),  date(2025, 9, 30),  0.986),
-    ('Q04_25', 'tbl_historico_t4_2025', date(2025, 10, 1), date(2025, 12, 31), 0.993),
-    ('Q01_26', 'tbl_historico_t1_2026', date(2026, 1, 1),  date(2026, 3, 31),  1.000),
-    ('Q02_26', 'tbl_historico_t2_2026', date(2026, 4, 1),  date(2026, 5, 6),   0.462),
+    # (quarter, tabla, fecha_ini, fecha_fin, escala, error_ceros)
+    # error_ceros: CASO_ERROR_CEROS aplica a Puebla Q02_25 en adelante.
+    #              Ausente en Q01_25 (no se observó en datos reales de Q1).
+    ('Q01_25', 'tbl_historico_t1_2025', date(2025, 1, 1),  date(2025, 3, 31),  1.000, False),
+    ('Q02_25', 'tbl_historico_t2_2025', date(2025, 4, 1),  date(2025, 6, 30),  1.169, True),
+    ('Q03_25', 'tbl_historico_t3_2025', date(2025, 7, 1),  date(2025, 9, 30),  0.986, True),
+    ('Q04_25', 'tbl_historico_t4_2025', date(2025, 10, 1), date(2025, 12, 31), 0.993, True),
+    ('Q01_26', 'tbl_historico_t1_2026', date(2026, 1, 1),  date(2026, 3, 31),  1.000, True),
+    ('Q02_26', 'tbl_historico_t2_2026', date(2026, 4, 1),  date(2026, 5, 6),   0.462, True),
 ]
 
 
@@ -486,12 +561,15 @@ def main():
         print(f"  rows={args.rows:,}  chunk={args.chunk}  truncate={args.truncate}")
     print(f"  Objetivos: inv={P_HORAS_INVERTIDAS*100:.1f}%  "
           f"null={P_NULL*100:.1f}%  misma={P_MISMA*100:.1f}%")
+    print(f"  NK90: len_17={P_NK90*P_NK90_LEN17_COND*100:.1f}%  "
+          f"len_16={P_NK90*(1-P_NK90_LEN17_COND)*100:.1f}%  "
+          f"CASO_ERROR_CEROS Puebla Q02+={P_ERROR_CEROS_PUEBLA*100:.1f}%")
     print("=" * 70)
     print(f"\n  {'Quarter':7}  {'Tabla':25}  {'Estado':>7}  "
           f"{'inv':>6}  {'null':>6}  {'msm':>5}  {'dif':>5}  σ_inv")
     print("  " + "-"*65)
 
-    for q_name, tabla, d_ini, d_fin, escala in tablas:
+    for q_name, tabla, d_ini, d_fin, escala, err_ceros in tablas:
         st = estado_tabla(conn, tabla)
         print_estado(q_name, tabla, st)
 
@@ -501,16 +579,17 @@ def main():
 
     # Poblar
     print()
-    for q_name, tabla, d_ini, d_fin, escala in tablas:
+    for q_name, tabla, d_ini, d_fin, escala, err_ceros in tablas:
         n_objetivo = max(1, round(args.rows * escala))
-        print(f"\n  [{q_name}] {tabla} — generando {n_objetivo:,} registros...")
+        print(f"\n  [{q_name}] {tabla} — generando {n_objetivo:,} registros"
+              f"{' (CASO_ERROR_CEROS activo para Puebla)' if err_ceros else ''}...")
 
         if args.truncate:
             run_mysql(conn, stmt=f"TRUNCATE TABLE {tabla};")
             print(f"    TRUNCATE ejecutado")
 
-        total_insertado = 0
-        rows = [gen_registro(d_ini, d_fin) for _ in range(n_objetivo)]
+        rows = [gen_registro(d_ini, d_fin, error_ceros=err_ceros)
+                for _ in range(n_objetivo)]
 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.sql', delete=False) as f:
             fname = f.name
@@ -527,7 +606,6 @@ def main():
         os.unlink(fname)
 
         if code == 0:
-            total_insertado = n_objetivo
             st_post = estado_tabla(conn, tabla)
             if st_post:
                 n = st_post['total']
