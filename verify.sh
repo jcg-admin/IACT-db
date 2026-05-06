@@ -56,9 +56,9 @@ DB_POSTGRES_PASSWORD="${DB_POSTGRES_PASSWORD:-django_pass}"
 # =============================================================================
 OK=0; WARN=0; ERR=0
 
-ok()   { log_success "$1"; (( OK++ ));   }
-warn() { log_warn    "$1"; (( WARN++ )); }
-fail() { log_error   "$1"; (( ERR++ ));  }
+ok()   { log_success "$1"; OK=$(( OK + 1 ));   }
+warn() { log_warn    "$1"; WARN=$(( WARN + 1 )); }
+fail() { log_error   "$1"; ERR=$(( ERR + 1 ));  }
 
 # =============================================================================
 # Sección 1 — Variables de .env

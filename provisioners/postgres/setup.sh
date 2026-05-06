@@ -43,13 +43,13 @@ main() {
     local port="${POSTGRES_PORT:-5432}"
 
     # --- Helper: ejecutar SQL como superusuario postgres ---
-    pg_super()       { sudo -u postgres psql -v ON_ERROR_STOP=1 "$@" 2>&1; }
-    pg_super_quiet() { sudo -u postgres psql -v ON_ERROR_STOP=1 -tAq "$@" 2>/dev/null; }
+    pg_super()       { runuser -u postgres -- psql -v ON_ERROR_STOP=1 "$@" 2>&1 || su -c "psql -v ON_ERROR_STOP=1 $*" postgres 2>&1; }
+    pg_super_quiet() { runuser -u postgres -- psql -v ON_ERROR_STOP=1 -tAq "$@" 2>/dev/null || su -c "psql -v ON_ERROR_STOP=1 -tAq $*" postgres 2>/dev/null; }
 
     # PASO 1 — Verificar que PostgreSQL responde
     log_step 1 5 "Verificando acceso a PostgreSQL"
 
-    if ! sudo -u postgres pg_isready -h "$host" -p "$port" -q 2>/dev/null; then
+    if ! pg_isready -h "$host" -p "$port" -q 2>/dev/null; then
         log_fatal "PostgreSQL no responde en ${host}:${port}"
     fi
     log_success "PostgreSQL activo en ${host}:${port}"
@@ -128,3 +128,5 @@ SQL
     echo "  Django settings:"
     echo "    DATABASE default: HOST=${host} PORT=${port} NAME=${db_name} USER=${db_user}"
 }
+
+main

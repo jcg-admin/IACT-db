@@ -45,8 +45,8 @@ main() {
     local test_db_name="test_${db_name}"
 
     # --- Helper: ejecutar SQL como root via socket (sin contraseña) ---
-    my_root()        { sudo mysql --batch "$@" 2>&1; }
-    my_root_silent() { sudo mysql --batch --silent --skip-column-names "$@" 2>/dev/null; }
+    my_root()        { mysql --batch "$@" 2>&1; }
+    my_root_silent() { mysql --batch --silent --skip-column-names "$@" 2>/dev/null; }
 
     # PASO 1 — Verificar acceso root
     log_step 1 5 "Verificando acceso root a MariaDB"
@@ -149,3 +149,5 @@ main() {
     echo "  Django settings:"
     echo "    DATABASE ivr: HOST=${host} PORT=${port} NAME=${db_name} USER=${db_user}"
 }
+
+main

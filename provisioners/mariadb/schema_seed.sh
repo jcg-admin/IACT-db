@@ -47,8 +47,8 @@ TOTAL_STEPS=4
 # =============================================================================
 # Helpers
 # =============================================================================
-my_root()        { sudo mysql --batch "$@" 2>&1; }
-my_root_silent() { sudo mysql --batch --silent --skip-column-names "$@" 2>/dev/null; }
+my_root()        { mysql --batch "$@" 2>&1; }
+my_root_silent() { mysql --batch --silent --skip-column-names "$@" 2>/dev/null; }
 
 # =============================================================================
 # PASO 1 — Prerequisitos
@@ -56,8 +56,8 @@ my_root_silent() { sudo mysql --batch --silent --skip-column-names "$@" 2>/dev/n
 check_prerequisites() {
     log_step 1 $TOTAL_STEPS "Verificando prerequisitos"
 
-    if ! validate_root; then
-        log_fatal "Ejecuta con: sudo bash provisioners/mariadb/schema_seed.sh"
+    if [[ $EUID -ne 0 ]]; then
+        log_fatal "Ejecuta como root"
     fi
 
     command -v mysql &>/dev/null \
@@ -119,25 +119,33 @@ seed_data() {
     local rows_to_insert=$(( TARGET_ROWS - current_count ))
     log_info "Registros actuales: ${current_count} — insertando ${rows_to_insert} más"
 
-    my_root "${DB_NAME}" << ENDSQL
-DROP PROCEDURE IF EXISTS sp_seed_tbl_temp_prueba_ivr;
+    # Insertar en lotes de 500 filas para evitar timeouts
+    local batch=500
+    local inserted=0
 
-CREATE PROCEDURE sp_seed_tbl_temp_prueba_ivr(IN p_rows INT)
-BEGIN
-    DECLARE i INT DEFAULT 0;
-    WHILE i < p_rows DO
-        INSERT INTO \`tbl_temp_prueba_ivr\` (\`numero\`)
-        VALUES (LPAD(FLOOR(RAND() * 9999999999), 10, '0'));
-        SET i = i + 1;
-    END WHILE;
-END;
+    while [[ $inserted -lt $rows_to_insert ]]; do
+        local remaining=$(( rows_to_insert - inserted ))
+        local chunk=$(( remaining < batch ? remaining : batch ))
 
-CALL sp_seed_tbl_temp_prueba_ivr(${rows_to_insert});
+        # Construir VALUES con bash
+        local values=""
+        for (( j=0; j<chunk; j++ )); do
+            local num
+            num=$(printf "%010d" $(( RANDOM * RANDOM % 9999999999 )))
+            if [[ -z "$values" ]]; then
+                values="('${num}')"
+            else
+                values="${values},('${num}')"
+            fi
+        done
 
-DROP PROCEDURE IF EXISTS sp_seed_tbl_temp_prueba_ivr;
-ENDSQL
+        my_root "${DB_NAME}"             -e "INSERT INTO \`tbl_temp_prueba_ivr\` (\`numero\`) VALUES ${values};"             >/dev/null
 
-    log_success "SP ejecutado: ${rows_to_insert} registros insertados"
+        inserted=$(( inserted + chunk ))
+        log_info "  Insertados: ${inserted}/${rows_to_insert}"
+    done
+
+    log_success "Seed completado: ${rows_to_insert} registros insertados"
 }
 
 # =============================================================================
