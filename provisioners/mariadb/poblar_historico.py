@@ -133,11 +133,33 @@ PREFIJOS = [
 PESOS_PREFIJOS = [0.15, 0.12, 0.10, 0.18, 0.08, 0.07,
                   0.05, 0.04, 0.03, 0.03, 0.04, 0.04, 0.04, 0.03]
 
-# Segmentos: DIDs de entrada con sus proporciones reales
+# Segmentos — DIDs de entrada con sus proporciones reales
+#
+# cDID_800Transfer almacena el número DID numérico crudo. Los reportes
+# aplican un CASE WHEN que transforma el DID en una etiqueta de segmento:
+#
+#   DID en tbl_historico_*   Etiqueta en reportes   Proporcion real Q1-Q3
+#   19028031              ->  'nacional_A'           45% del trafico total
+#   19020001              ->  'nacional_B'           30% del trafico total
+#   19020084              ->  'puebla'               25% del trafico total
+#
+# CASE canonico en los SPs de reporte:
+#   CASE cDID_800Transfer
+#       WHEN 19028031 THEN 'nacional_A'
+#       WHEN 19020001 THEN 'nacional_B'
+#       WHEN 19020084 THEN 'puebla'
+#   END AS segmento
+#
+# ADVERTENCIA — Bug G-30 en scripts originales de produccion:
+#   @ONacionalB = 19028031  <- INCORRECTO (duplica Nacional A)
+#   @ONacionalB = 19020001  <- CORRECTO
+# El bug causo que Q01_25 de clientes_unicos etiquetara Nacional A como
+# 'nacional_B', quedando el real Nacional B (19020001) excluido del reporte.
+# Este script usa los DIDs correctos.
 SEGMENTOS = [
-    ('19028031', 0.45),   # Nacional A — dominante
-    ('19020001', 0.30),   # Nacional B
-    ('19020084', 0.25),   # Puebla
+    ('19028031', 0.45),   # nacional_A — linea 800 dominante
+    ('19020001', 0.30),   # nacional_B
+    ('19020084', 0.25),   # puebla
 ]
 
 # Menús con sus proporciones reales — calibrado con prom_llamadas Q1_2025
