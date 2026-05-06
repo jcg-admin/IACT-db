@@ -140,16 +140,19 @@ SEGMENTOS = [
     ('19020084', 0.25),   # Puebla
 ]
 
-# Menús con sus proporciones reales (Q1-Q3 2025)
+# Menús con sus proporciones reales — calibrado con prom_llamadas Q1_2025
+# Fuente: prom_llamadas_Q1Q2Q3_2025.csv (11.6M llamadas Q1, ambos segmentos)
 # Formato: (nombre, probabilidad_acumulada, opciones_ponderadas)
+# El SP de reporte normaliza cMenu con UPPER(TRIM()) — ej: RES-FallaInternet → RES-FALLAINTERNET
 MENUS = [
-    # Abandono (35%)
-    ('cliente_colgo',               0.220, [None]),
-    (None,                          0.290, [None]),           # NULL/VACIO
-    ('SinOpcion_Cabecera',          0.320, [None]),
-    ('Marque3',                     0.340, [None]),
-    # Desborde (16.4%)
-    ('Desborde_Cabecera',           0.454, [
+    # --- Abandono (35.6%) ---------------------------------------------------
+    ('cliente_colgo',               0.225, [None]),  # 22.5% real Q1
+    (None,                          0.305, [None]),  # VACIO 8.0% (NULL/vacío/sin cMenu)
+    ('SinOpcion_Cabecera',          0.338, [None]),  # 3.3%
+    ('Marque3',                     0.359, [None]),  # 2.1%
+
+    # --- Desborde (16.2%) ---------------------------------------------------
+    ('Desborde_Cabecera',           0.492, [         # 13.3% real Q1
         ('QJA_AB_DAT_1',0.149),('TELECOBRA',0.300),('TELVICOBRA',0.430),
         ('ECATEPEC',0.514),('QJA_AB_2',0.618),('MES_1',0.649),
         ('QJA_AB_3',0.703),('QJA_AB_VSI_1',0.743),('QJA_AB_VSI_2',0.783),
@@ -162,86 +165,99 @@ MENUS = [
         ('CLIENTESAPP',0.987),('MEGACABLE',0.990),('RETARGETING',0.993),
         ('QJA_AB_1',0.996),('BLACKLIST',0.998),(None,1.000),
     ]),
-    ('Desborde_Promocional',        0.484, [None]),
-    # Fallas (20.1%)
-    ('RES-FallaInternet',           0.564, [
+    ('Desborde_Promocional',        0.521, [None]),  # 2.9%
+
+    # --- Fallas (22.5%) -----------------------------------------------------
+    # RES-FallaInternet: 14.2% real Q1 (CORREGIDO — era 8%)
+    ('RES-FallaInternet',           0.663, [
         ('DEFAULT',0.799),('NOBOT',0.870),('POSIBLE_FALLA_DSLAM_P',0.935),
         ('FM_CFE_P',0.952),('FM_ROBO_P',0.968),('FALLA_AMBAS_P',0.981),
         ('ADEUDO22222',0.987),('CECOR',0.993),('FALLA_CENTRAL_P',1.000),
     ]),
-    ('RES-FallasLinea',             0.613, [
+    # RES-FallasLinea: 2.9% real Q1 (CORREGIDO — era 4.9%)
+    ('RES-FallasLinea',             0.692, [
         ('DEFAULT',0.917),('ML',0.941),('FM_CFE_P',0.957),
         ('FM_ROBO_P',0.971),('CECOR',0.979),('CASE_41',0.987),(None,1.000),
     ]),
-    ('RES_FALLA_STOP',              0.635, [('DEFAULT',1.000)]),
-    ('RES-Fallas_2024',             0.648, [('VSI',0.500),('DEFAULT',1.000)]),
-    ('RES-FallaInternet_2024',      0.657, [('DEFAULT',1.000)]),
-    ('RES-FallaEntretiene',         0.666, [('DEFAULT',0.770),('NOBOT',1.000)]),
-    ('RES-FallaSegQja',             0.675, [
+    ('RES_FALLA_STOP',              0.714, [('DEFAULT',1.000)]),  # Q02+ 2.2%
+    ('RES-Fallas_2024',             0.723, [('VSI',0.500),('DEFAULT',1.000)]),
+    ('RES-FallaInternet_2024',      0.730, [('DEFAULT',1.000)]),
+    ('RES-FallaEntretiene',         0.737, [('DEFAULT',0.770),('NOBOT',1.000)]),
+    ('RES-FallaSegQja',             0.747, [
         ('DEFAULT',0.960),('QJA_AB_VOZ_2',0.970),
         ('QJA_AB_DAT_1',0.980),('QJA_AB_VSI_1',1.000),
     ]),
-    # NOTMX — instalaciones y contrataciones (14.1%)
-    ('NOTMX-SeguimientoInstalacion',0.746, [('DEFAULT',1.000)]),
-    ('NOTMX-CONT-Contratacion',     0.773, [('DEFAULT',1.000)]),
-    ('NOTMX-CONT-Portabilidad',     0.787, [('DEFAULT',1.000)]),
-    ('RES-SegInst_2024',            0.794, [('DEFAULT',1.000)]),
-    # Saldos (5.5%)
-    ('RES-SaldooPagos',             0.820, [('DEFAULT',1.000)]),
-    ('RES-Saldos-WT',               0.832, [('DEFAULT',1.000)]),
-    ('RES-SaldosPagos_2024',        0.838, [('DEFAULT',1.000)]),
-    ('RES-SaldosPagos_FM',          0.843, [('DEFAULT',1.000)]),
-    # MADT y Entr (6%)
-    ('RES-MADT-Detalle',            0.865, [
+
+    # --- NOTMX — instalaciones y contrataciones (13.4%) --------------------
+    # NOTMX-SeguimientoInstalacion: 9.9% real Q1 (CORREGIDO — era 7%)
+    ('NOTMX-SeguimientoInstalacion',0.846, [('DEFAULT',1.000)]),
+    ('NOTMX-CONT-Contratacion',     0.873, [('DEFAULT',1.000)]),  # 2.7%
+    ('NOTMX-CONT-Portabilidad',     0.887, [('DEFAULT',1.000)]),  # 1.4%
+    ('RES-SegInst_2024',            0.892, [('DEFAULT',1.000)]),  # Puebla
+
+    # --- Saldos y Pagos (5.4%) ---------------------------------------------
+    # RES-SaldooPagos: 4.1% real Q1 (CORREGIDO — era 3.2%)
+    ('RES-SaldooPagos',             0.933, [('DEFAULT',1.000)]),
+    ('RES-Saldos-WT',               0.942, [('DEFAULT',1.000)]),
+    ('RES-SaldosPagos_2024',        0.945, [('DEFAULT',1.000)]),
+    ('RES-SaldosPagos_FM',          0.947, [('DEFAULT',1.000)]),
+
+    # --- MADT y Entr (5.3%) ------------------------------------------------
+    # RES-MADT-Detalle 4.6%: prev=0.947, cum=0.947+0.046=0.993
+    ('RES-MADT-Detalle',            0.993, [
         ('DEFAULT',0.917),('2L',0.975),('PQ_389',0.990),('CECOR',1.000),
     ]),
-    ('RES-Entr',                    0.876, [
+    # RES-Entr 0.8%: prev=0.993, cum=0.993+0.008=1.001 — los siguientes dividen el 0.7%
+    ('RES-Entr',                    0.994, [
         ('DEFAULT',0.920),('NOBOT',0.960),('2L',1.000),
     ]),
-    # Contrataciones (4%)
-    ('RES-ContratacionInfinitum_2024',0.886,[('DEFAULT',0.860),('2L',0.930),('CECOR',1.000)]),
-    ('RES-ContratacionInfinitum_FM',  0.892,[('DEFAULT',1.000)]),
-    ('RES-ContratacionInfinitum',     0.895,[
+
+    # --- Contrataciones (0.5% combinado — comparten la cola) --------------
+    ('RES-ContratacionInfinitum_2024',0.995,[('DEFAULT',0.860),('2L',0.930),('CECOR',1.000)]),
+    ('RES-ContratacionInfinitum_FM',  0.996,[('DEFAULT',1.000)]),
+    ('RES-ContratacionInfinitum',     0.996,[
         ('DEFAULT',0.860),('2L',0.920),('CECOR',0.950),
         ('LAREDO',0.970),('PQ_389',0.985),('SUS_COM',1.000),
     ]),
-    # Cambios (1%)
-    ('RES_CambioDom',               0.900, [('DEFAULT',0.920),('2L',0.960),('CECOR',1.000)]),
-    ('RES_Cambios',                 0.904, [('DEFAULT',0.920),('2L',0.960),('CECOR',1.000)]),
-    ('RES_CambioTit',               0.907, [('DEFAULT',0.920),('2L',0.960),('CECOR',1.000)]),
-    # Anomalías cMENU_ERROR (1.2%): cMenu = número de teléfono
-    ('__CMENU_ERROR__',             0.919, [None]),
-    # Resto
-    ('RES_Otros',                   0.925, [('DEFAULT',0.910),('2L',0.960),('CECOR',1.000)]),
-    ('RES-AsistenciaTelmexcom',     0.930, [('DEFAULT',1.000)]),
-    ('MASI_RepiteBoleta',           0.934, [None]),
-    ('NoTMX_SinOp',                 0.938, [None]),
-    ('Tmx_SOMO',                    0.942, [None]),
-    ('RES-Aparatos',                0.945, [('DEFAULT',1.000)]),
-    ('RES-Falla-AntivirusMcAfee',   0.948, [('DEFAULT',1.000)]),
-    ('Numero Telmex',               0.952, [None]),
-    ('ANI',                         0.956, [None]),
-    ('KIPSOLCOM',                   0.960, [None]),
-    ('RES-DISH',                    0.963, [('DEFAULT',1.000)]),
-    ('RES-SegurosInbursa',          0.966, [('DEFAULT',0.960),('CECOR',1.000)]),
-    ('RES-TAE',                     0.968, [('DEFAULT',1.000)]),
-    ('RES_OcultaVta',               0.970, [('DEFAULT',1.000)]),
-    ('RES-Falla-Dish',              0.972, [('DEFAULT',1.000)]),
-    ('RES-Falla-MVSHUB',            0.974, [('DEFAULT',1.000)]),
-    ('RES-ClaroDrive',              0.976, [('DEFAULT',1.000)]),
-    ('RES-StartGo',                 0.978, [('DEFAULT',1.000)]),
-    ('RES-MADT-MVSHUB',             0.980, [('DEFAULT',1.000)]),
-    ('MenuSaldosCabecera',          0.982, [None]),
-    ('Saldos1_Pagar',               0.984, [None]),
-    ('Saldos3_Otra',                0.986, [None]),
-    ('RES_CAMBIODOMICILIO',         0.988, [('DEFAULT',1.000)]),
-    ('RES-FallaInternet',           0.990, [('CECOR',0.500),('ACUNA',1.000)]),  # variante extra
-    ('RES-Entr',                    0.992, [('2L',1.000)]),
-    ('SaldoCabecera',               0.994, [None]),
-    ('default',                     1.000, [None]),
+
+    # --- Cambios (0.3%) ----------------------------------------------------
+    ('RES_CambioDom',               0.997, [('DEFAULT',0.920),('2L',0.960),('CECOR',1.000)]),
+    ('RES_Cambios',                 0.997, [('DEFAULT',0.920),('2L',0.960),('CECOR',1.000)]),
+    ('RES_CambioTit',               0.997, [('DEFAULT',0.920),('2L',0.960),('CECOR',1.000)]),
+
+    # --- Anomalías cMENU_ERROR (1.2%) -------------------------------------
+    # El SP de reporte normaliza estos como 'telefono_cMenu' (no MENU_10_NUMEROS)
+    ('__CMENU_ERROR__',             0.997, [None]),
+
+    # --- Menús de menor volumen (cola larga) --------------------------------
+    ('RES_Otros',                   0.994, [('DEFAULT',0.910),('2L',0.960),('CECOR',1.000)]),
+    ('RES-AsistenciaTelmexcom',     0.995, [('DEFAULT',1.000)]),
+    ('MASI_RepiteBoleta',           0.995, [None]),
+    ('NoTMX_SinOp',                 0.995, [None]),   # NOTMX_SINOP en el reporte (UPPER)
+    ('Tmx_SOMO',                    0.995, [None]),
+    ('RES-Aparatos',                0.995, [('DEFAULT',1.000)]),
+    ('RES-Falla-AntivirusMcAfee',   0.996, [('DEFAULT',1.000)]),
+    ('Numero Telmex',               0.996, [None]),   # Puebla Q02+, Nacional Q03+
+    ('ANI',                         0.996, [None]),
+    ('KIPSOLCOM',                   0.996, [None]),
+    ('RES-DISH',                    0.997, [('DEFAULT',1.000)]),
+    ('RES-SegurosInbursa',          0.997, [('DEFAULT',0.960),('CECOR',1.000)]),
+    ('RES-TAE',                     0.997, [('DEFAULT',1.000)]),
+    ('RES_OcultaVta',               0.997, [('DEFAULT',1.000)]),
+    ('RES-Falla-Dish',              0.997, [('DEFAULT',1.000)]),
+    ('RES-Falla-MVSHUB',            0.998, [('DEFAULT',1.000)]),
+    ('RES-ClaroDrive',              0.998, [('DEFAULT',1.000)]),
+    ('RES-StartGo',                 0.998, [('DEFAULT',1.000)]),
+    ('RES-MADT-MVSHUB',             0.998, [('DEFAULT',1.000)]),
+    ('MenuSaldosCabecera',          0.998, [None]),
+    ('Saldos1_Pagar',               0.999, [None]),
+    ('Saldos3_Otra',                0.999, [None]),
+    ('SaldoCabecera',               0.999, [None]),
+    ('RES_CAMBIODOMICILIO',         0.999, [('DEFAULT',1.000)]),
+    ('default',                     1.000, [None]),   # DEFAULT: 5 registros Puebla Q02
 ]
 
-# VDNs por menú (correspondencia real de producción)
+
 VDN_POR_MENU = {
     'cliente_colgo':                 ('cliente_colgo', 1.0),
     None:                            [('cliente_colgo',0.80),('19020086',0.97),(None,1.0)],
