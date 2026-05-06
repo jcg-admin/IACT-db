@@ -174,13 +174,15 @@ Contiene métricas aditivas: `total_llamadas`, `misma_linea`, `linea_diferente`,
 
 | SP | Fuente | Descripción |
 |---|---|---|
-| `sp_rpt_centros_transferencia` | `base_ivr_detalle` | Centros destino con métricas por segmento |
-| `sp_rpt_menu_centro` | `base_ivr_detalle` | Menús y opciones por centro |
-| `sp_rpt_llamadas_abandonadas` | `base_ivr_detalle` | Tasa de abandono (VACIO + cliente_colgo + SinOpcion_Cabecera) |
+| `sp_rpt_centros_transferencia` | `base_ivr_detalle` | Detalle de transferencias por centro, menú y opción |
+| `sp_rpt_centros_xsegmento` | `base_ivr_detalle` | KPIs de centros por segmento con clasificación SLA y días hábiles |
+| `sp_rpt_llamadas_abandonadas` | `base_ivr_detalle` | Tasa de abandono: VACIO + cliente_colgo + SinOpcion_Cabecera (~27-28%) |
+| `sp_rpt_menu_redirigidos` | `base_ivr_detalle` | Menús que dispararon redirección a un centro (perspectiva menú→centro) |
+| `sp_rpt_menu_centro` | `base_ivr_detalle` | Composición del tráfico por centro (perspectiva centro→menú+opción) |
 | `sp_rpt_cMENU_ERROR` | `base_ivr_detalle` | Anomalías: cMenu contiene número de teléfono |
-| `sp_rpt_colgadas` | `base_ivr_detalle` | Llamadas terminadas por cliente (CLIENTE_COLGO) |
-| `sp_rpt_menu_redirigidos` | `base_ivr_detalle` | Menús que redirigen por centro |
-| `sp_rpt_clientes_unicos` | `base_ivr_clientes` | Clientes únicos por segmento y quarter |
+| `sp_rpt_clientes` | `base_ivr_clientes` | Clientes únicos por segmento y quarter (COUNT DISTINCT) |
+
+> Ver `ETL-SPS-REPORTE.md` para el análisis profundo de cada SP.
 
 ---
 
