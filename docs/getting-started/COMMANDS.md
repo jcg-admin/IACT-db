@@ -6,6 +6,9 @@ Referencia completa de todos los comandos disponibles.
 
 | Script | Requiere root | Descripción |
 |---|---|---|
+| `bash start.sh` | No | Arranca MariaDB y PostgreSQL si no están corriendo |
+| `bash start.sh mariadb` | No | Arranca solo MariaDB |
+| `bash start.sh postgres` | No | Arranca solo PostgreSQL |
 | `sudo bash bootstrap.sh` | Sí | Instala y configura todo (MariaDB + PostgreSQL + Adminer) |
 | `sudo bash bootstrap.sh --no-adminer` | Sí | Solo MariaDB y PostgreSQL |
 | `sudo bash bootstrap.sh --seed` | Sí | Instala todo + siembra datos de prueba |

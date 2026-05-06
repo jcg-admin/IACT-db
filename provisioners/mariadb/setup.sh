@@ -25,6 +25,10 @@ source "${PROJECT_ROOT}/utils/network.sh"
 source "${PROJECT_ROOT}/utils/database.sh"
 source "${PROJECT_ROOT}/utils/validation.sh"
 
+# Cargar .env si las variables no vienen del entorno (ejecución directa)
+ENV_FILE="${PROJECT_ROOT}/.env"
+if [[ -f "$ENV_FILE" ]]; then set -a; source "$ENV_FILE"; set +a; fi
+
 main() {
     log_header "MariaDB Database Setup"
 

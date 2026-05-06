@@ -1,7 +1,7 @@
 # Separación de responsabilidades — IACT-db e IACT-api
 
 **Fecha:** 2026-05-05  
-**Estado:** Documentado — implementación pendiente
+**Estado:** Completado
 
 ---
 
@@ -104,18 +104,18 @@ El entorno no tiene systemd como proceso 1, por lo que las BDs no
 arrancan solas al iniciar la sesión. El orden correcto es:
 
 ```
-Paso 1 — Arrancar MariaDB (si no está corriendo)
-  bash /mnt/project/PracticaYoruba-api/scripts/provisioners/mysql/db_qa_setup.sh
-  # o directamente: mariadbd --... (ver utils/database.sh db_start_mariadb)
+Paso 1 — Arrancar MariaDB y PostgreSQL
+  bash /ruta/a/IACT-db/start.sh
+  # Maneja automáticamente: stale PIDs, socket, systemd/directo
 
-Paso 2 — Arrancar PostgreSQL (si no está corriendo)
-  pg_ctlcluster 16 main start
-
-Paso 3 — Configurar las BDs de IACT-db
+Paso 2 — Configurar las BDs (idempotente)
   bash /ruta/a/IACT-db/setup.sh
-  # idempotente: si ya están configuradas no cambia nada
+  # Si no hay root: se re-ejecuta con sudo automáticamente
 
-Paso 4 — IACT-api: migrar y testear
+# O en un solo comando desde IACT-api (v2.0.0):
+  sudo bash scripts/bootstrap.sh --iact-db=/ruta/a/IACT-db
+
+Paso 3 — IACT-api: migrar y testear
   cd /ruta/a/IACT-api/callcentersite
   DJANGO_SETTINGS_MODULE=config.settings.testing_local \
     python manage.py migrate
@@ -177,8 +177,8 @@ MARIADB_PORT=3306                → PORT: '3306'
 | Migrar de Vagrant a shell scripts puros | Completado |
 | Cerrar gaps respecto a IACT-api/scripts | Completado |
 | Verificar que IACT-api funciona con BDs de IACT-db | Completado |
-| Eliminar scripts de BD duplicados en IACT-api | Pendiente |
-| Refactorizar `phase_databases` en IACT-api/bootstrap.sh | Pendiente |
+| Eliminar scripts de BD duplicados en IACT-api | Completado — archivados en scripts/archive/ |
+| Refactorizar `phase_databases` en IACT-api/bootstrap.sh | Completado — delega en IACT-db/setup.sh v2.0.0 |
 
 ---
 

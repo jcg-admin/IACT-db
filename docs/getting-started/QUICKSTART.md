@@ -37,7 +37,10 @@ sudo bash bootstrap.sh --seed
 ## Si las BDs ya están instaladas
 
 ```bash
-# Solo crear BD, usuario y privilegios (sin instalar paquetes)
+# Arrancar los servicios (sin instalar ni configurar)
+bash start.sh
+
+# Arrancar + configurar BD/usuario/privilegios
 sudo bash setup.sh
 ```
 
