@@ -247,3 +247,110 @@ Todos los menús principales dentro de ±0.2pp tras la corrección.
 - `datos-reales/prom_llamadas_README.md` — análisis técnico del CSV
 - `provisioners/mariadb/poblar_historico.py` — seed calibrado con estos hallazgos
 
+
+---
+
+## 6. clientes_unicos — Clientes únicos por segmento y quarter
+
+**Archivo:** `clientes_unicos_Q1Q2Q3_2025.csv`
+**Total declarado:** 9,617,998
+
+### Datos
+
+| Quarter | Segmento | Clientes únicos |
+|---|---|---|
+| Q01_25 | nacional_B | 3,056,531 |
+| Q01_25 | puebla | 155,507 |
+| Q02_25 | nacional_A | 2,440,333 |
+| Q02_25 | nacional_B | 1,234,307 |
+| Q02_25 | puebla | 266,185 |
+| Q03_25 | nacional_A | 2,296,002 |
+| Q03_25 | nacional_B | 36,756 |
+| Q03_25 | puebla | 132,377 |
+
+### Hallazgo 1 — nacional_A AUSENTE en Q01_25
+
+El reporte solo muestra `nacional_B` y `puebla` para Q01. `nacional_A` (DID 19028031)
+no aparece. Q02 y Q03 sí tienen los tres segmentos.
+
+### Hallazgo 2 — Q01 `nacional_B` es probablemente `nacional_A` (mislabel)
+
+El valor de Q01 `nacional_B` (3,056,531) es 2.5× mayor que Q02 `nacional_B`
+(1,234,307) y no es consistente con la tendencia de `nacional_B` que cae
+dramáticamente en Q03 (36,756).
+
+Verificación con ratios llamadas/cliente:
+
+| Quarter | Llamadas Nacional | Clientes Nacional | Ratio |
+|---|---|---|---|
+| Q01_25 | 11,126,838 | 3,056,531 (solo "B") | **3.64** |
+| Q02_25 | 12,783,030 | 3,674,640 (A+B) | **3.48** |
+| Q03_25 | 8,422,917 | 2,332,758 (A+B) | **3.61** |
+
+El ratio de Q01 (3.64) es perfectamente consistente con Q02 (3.48) y Q03 (3.61)
+**si se asume que el `nacional_B` de Q01 es en realidad `nacional_A`**.
+
+**Causa probable:** El script que generó Q01 tenía el bug `@ONacionalB = 19028031`
+(igual que `@ONacionalA`). Esto hizo que la columna `segmento` mostrara `nacional_B`
+para registros con DID 19028031 (que es Nacional A), y el real Nacional B
+(DID 19020001) quedó excluido del reporte Q01.
+
+**Implicación para sp_rpt_clientes:** el SP debe garantizar que los tres DIDs
+estén incluidos y que la etiqueta de segmento sea correcta:
+
+```sql
+CASE cDID_800Transfer
+    WHEN 19028031 THEN 'nacional_A'   -- no 'nacional_B'
+    WHEN 19020001 THEN 'nacional_B'
+    WHEN 19020084 THEN 'puebla'
+END AS segmento
+```
+
+### Hallazgo 3 — Caída dramática de nacional_B en Q03
+
+```
+Q02_25 nacional_B: 1,234,307 clientes únicos
+Q03_25 nacional_B:    36,756 clientes únicos  (-97%)
+```
+
+Confirma el evento operativo de Nacional B documentado en BR-MENU-002: en Q03
+el DID 19020001 prácticamente dejó de recibir llamadas. Los 36,756 clientes
+únicos de Q03 son residuales — no representa un comportamiento normal.
+
+**Implicación para el ETL:** los SPs no deben filtrar Nacional B. Los datos
+existen y son válidos. La reducción es un evento real del negocio, no un
+error de datos.
+
+### Hallazgo 4 — Segmentación en lowercase
+
+Este reporte usa `nacional_a`, `nacional_b`, `puebla` (minúsculas).
+El reporte `prom_llamadas` usa `Nacional`, `Puebla` (capitalizado, A+B combinados).
+
+Los SPs deben decidir una convención interna consistente. La recomendación
+del ETL-ANALISIS.md es `'nacional_A'`, `'nacional_B'`, `'Puebla'`
+(mayúscula inicial en el nombre de segmento geográfico, distinguiendo A/B).
+
+### Hallazgo 5 — Definición de clientes únicos: cTelefono_Origen probable
+
+Total llamadas Q1-Q3 (prom_llamadas): 34,101,981
+Total clientes únicos (este reporte): 9,617,998
+Ratio: ~3.55 llamadas por cliente único por quarter
+
+BR-CLIENT-001 documenta que `sp_rpt_clientes` usa `COUNT(DISTINCT cTelefono_Digitado)`
+(número que el cliente ingresó en el IVR). Sin embargo, con 21% de registros
+con `cTelefono_Digitado IS NULL`, ese conteo excluiría muchos clientes.
+
+Los ratios calculados (3.5-3.6) son más consistentes con
+`COUNT(DISTINCT cTelefono_Origen)` (ANI, siempre presente).
+
+**Pendiente de confirmar (P-NEW-04):** ¿el reporte usa `cTelefono_Origen` o
+`cTelefono_Digitado`? La respuesta define qué columna almacena `base_ivr_clientes`.
+
+### Pendientes derivados
+
+| ID | Pregunta | Prioridad |
+|---|---|---|
+| P-NEW-04 | ¿`clientes_unicos` = COUNT(DISTINCT cTelefono_Origen) o cTelefono_Digitado? | Alta |
+| P-NEW-05 | Confirmar con equipo: ¿Q01 `nacional_B` es realmente `nacional_A` (mislabel)? | Alta |
+| P-NEW-06 | ¿Existe el dato real de Q01 `nacional_B` (DID 19020001) en algún reporte? | Media |
+

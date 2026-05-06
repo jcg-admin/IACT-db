@@ -1,0 +1,9 @@
+trimestre,segmento,clientes_unicos,nota
+Q01_25,nacional_B,3056531,POSIBLE_MISLABEL: ver análisis
+Q01_25,puebla,155507,
+Q02_25,nacional_B,1234307,
+Q02_25,puebla,266185,
+Q02_25,nacional_A,2440333,
+Q03_25,nacional_B,36756,caída dramática — evento operativo Q3
+Q03_25,puebla,132377,
+Q03_25,nacional_A,2296002,
