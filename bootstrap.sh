@@ -63,12 +63,15 @@ export POSTGRES_PASSWORD="${DB_POSTGRES_ROOT_PASSWORD:-postgrespass123}"
 # Opciones
 # =============================================================================
 INSTALL_ADMINER=true
+RUN_SEED=false
 for arg in "$@"; do
     case "$arg" in
         --no-adminer) INSTALL_ADMINER=false ;;
+        --seed)       RUN_SEED=true ;;
         --help|-h)
             echo "Uso: sudo bash bootstrap.sh [--no-adminer]"
             echo "  --no-adminer  Instala solo MariaDB y PostgreSQL"
+            echo "  --seed        Crea y siembra tbl_temp_prueba_ivr en ivr_legacy"
             exit 0
             ;;
     esac
@@ -122,6 +125,11 @@ run_provisioner() {
 
 run_provisioner "mariadb"
 run_provisioner "postgres"
+
+if [[ "$RUN_SEED" == "true" ]]; then
+    log_info "Ejecutando seed de datos de prueba (--seed)..."
+    bash "${PROJECT_ROOT}/provisioners/mariadb/schema_seed.sh"
+fi
 
 if [[ "$INSTALL_ADMINER" == "true" ]]; then
     run_provisioner "adminer"

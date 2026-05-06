@@ -130,6 +130,19 @@ main() {
 
     log_success "Conexión OK: ${result}"
 
+    # Verificar que el usuario NO tiene privilegios de escritura (CNST-003)
+    local write_privs
+    write_privs=$(mysql -h "$host" -P "$port"         -u "$db_user" -p"${db_pass}"         --batch --silent --skip-column-names         -e "SELECT COUNT(*) FROM information_schema.USER_PRIVILEGES
+            WHERE GRANTEE LIKE \\"'${db_user}'%\\"
+            AND PRIVILEGE_TYPE IN ('INSERT','UPDATE','DELETE','DROP','CREATE','ALTER');"         2>/dev/null || echo "0")
+
+    if [[ "$write_privs" -eq 0 ]]; then
+        log_success "CNST-003 verificado: ${db_user} es READ-ONLY en ${db_name}"
+    else
+        log_warn "CNST-003: ${db_user} tiene ${write_privs} privilegio(s) de escritura"
+        log_warn "  Revisa los GRANT aplicados sobre ${db_name}"
+    fi
+
     echo ""
     log_success "Setup MariaDB completado. Base ${db_name} lista (READ-ONLY para Django)."
     echo ""
