@@ -222,7 +222,12 @@ def run_mysql(args, stmt=None, file_path=None):
         r = subprocess.run(cmd, capture_output=True, text=True)
     return r.returncode, r.stdout.strip(), r.stderr.strip()
 
+# ===========================================================================
+# FUNCIONES DE DIAGNÓSTICO, VERIFICACIÓN Y DIFF
+# ===========================================================================
+
 def estado_tabla(conn, tabla):
+    """Retorna métricas de calidad de datos de la tabla."""
     code, out, _ = run_mysql(conn, stmt=f"""
         SELECT COUNT(*),
           SUM(CASE WHEN dHoraInicio > dHoraFin THEN 1 ELSE 0 END),
@@ -233,6 +238,167 @@ def estado_tabla(conn, tabla):
         return None
     total, inv, null, misma = [int(x) for x in out.split('\t')]
     return dict(total=total, inv=inv, null=null, misma=misma)
+
+
+def verificar_quarter(conn, q_name):
+    """
+    Verifica que el contenido real de la tabla coincide con el perfil esperado.
+
+    Compara las proporciones observadas (cMenu, cDID_Centro_Transferencia,
+    condiciones G-29/null/misma_linea) contra los targets del perfil.
+
+    Retorna lista de tuplas (metrica, target, observado, delta, ok).
+    """
+    if q_name not in PERFILES:
+        raise ValueError(f"Quarter desconocido: {q_name}")
+
+    cfg, menus, vdns = PERFILES[q_name]
+    tabla = cfg['tabla']
+
+    code, out, _ = run_mysql(conn, stmt=f"""
+        SELECT COUNT(*),
+          SUM(CASE WHEN dHoraInicio > dHoraFin THEN 1 ELSE 0 END),
+          SUM(CASE WHEN cTelefono_Digitado IS NULL THEN 1 ELSE 0 END),
+          SUM(CASE WHEN cTelefono_Digitado = cTelefono_Origen THEN 1 ELSE 0 END),
+          SUM(CASE WHEN cDID_Centro_Transferencia REGEXP '^0+$' THEN 1 ELSE 0 END),
+          SUM(CASE WHEN cDID_Centro_Transferencia = 'cliente_colgo' THEN 1 ELSE 0 END),
+          SUM(CASE WHEN LENGTH(cDID_Centro_Transferencia) = 17 THEN 1 ELSE 0 END),
+          SUM(CASE WHEN LENGTH(cDID_Centro_Transferencia) = 16 THEN 1 ELSE 0 END),
+          SUM(CASE WHEN cMenu REGEXP '^[0-9]+$' AND cMenu IS NOT NULL THEN 1 ELSE 0 END)
+        FROM {tabla}""")
+
+    if code != 0 or not out:
+        return []
+
+    vals = [int(x) for x in out.split('\t')]
+    n, inv, null_t, misma, err_ceros, cc, nk17, nk16, cmenu_err = vals
+
+    if n == 0:
+        return []
+
+    resultados = [
+        # (métrica, target%, observado%, tolerancia)
+        ('dHoraInicio > dHoraFin (G-29)', P_HORAS_INVERTIDAS*100, inv/n*100, 1.5),
+        ('cTelefono_Digitado IS NULL',     P_NULL*100,            null_t/n*100, 1.5),
+        ('misma_linea (D=Origen)',          P_MISMA*100,           misma/n*100, 1.5),
+        ('NK90 len_17',                    5.3,                   nk17/n*100, 1.5),
+        ('NK90 len_16',                    0.3,                   nk16/n*100, 0.5),
+        ('cMenu = numero telefono',         1.2,                   cmenu_err/n*100, 0.8),
+        ('CLIENTE_COLGO en cDID_Centro',   27.4,                  cc/n*100, 3.0),
+    ]
+
+    # CASO_ERROR_CEROS: solo si error_ceros activo (~0.75% del total = 3% Puebla * 25%)
+    target_ceros = 0.75 if cfg['error_ceros'] else 0.0
+    resultados.append(('CASO_ERROR_CEROS (Puebla)', target_ceros, err_ceros/n*100, 0.5))
+
+    return [(m, t, o, abs(o-t), abs(o-t) <= tol)
+            for m, t, o, tol in resultados]
+
+
+def mostrar_verificacion(q_name, resultados):
+    """Imprime el resultado de verificar_quarter() en formato tabla."""
+    print(f"\n  Verificación {q_name}:")
+    print(f"  {'Métrica':40} {'Target':>8}  {'Observado':>10}  {'Delta':>7}  OK")
+    print("  " + "-"*75)
+    for metrica, target, obs, delta, ok in resultados:
+        flag = "✓" if ok else "✗ REVISAR"
+        print(f"  {metrica:40} {target:>7.1f}%  {obs:>9.1f}%  {delta:>6.2f}pp  {flag}")
+
+
+def diff_perfiles(q_from, q_to):
+    """
+    Retorna los cambios entre dos perfiles de quarter.
+
+    Retorna dict con:
+        menus_nuevos   — menús que aparecen en q_to pero no en q_from
+        menus_quitados — menús que estaban en q_from pero no en q_to
+        vdns_cambiados — menús cuyo VDN dominante cambió entre perfiles
+    """
+    if q_from not in PERFILES or q_to not in PERFILES:
+        raise ValueError(f"Quarters desconocidos: {q_from}, {q_to}")
+
+    _, menus_f, vdns_f = PERFILES[q_from]
+    _, menus_t, vdns_t = PERFILES[q_to]
+
+    nombres_f = {m[0] for m in menus_f}
+    nombres_t = {m[0] for m in menus_t}
+
+    nuevos   = nombres_t - nombres_f
+    quitados = nombres_f - nombres_t
+
+    # VDNs cambiados: comparar el VDN dominante (primer elemento de la lista)
+    vdns_cambiados = {}
+    for menu in nombres_f & nombres_t:
+        def primer_vdn(vdns, m):
+            v = vdns.get(m)
+            if v is None:
+                return '(default)'
+            if isinstance(v, tuple):
+                return v[0]
+            return v[0][0] if v else '?'
+
+        vdn_f = primer_vdn(vdns_f, menu)
+        vdn_t = primer_vdn(vdns_t, menu)
+        if vdn_f != vdn_t:
+            vdns_cambiados[menu] = (vdn_f, vdn_t)
+
+    return dict(menus_nuevos=nuevos, menus_quitados=quitados,
+                vdns_cambiados=vdns_cambiados)
+
+
+def mostrar_diff(q_from, q_to):
+    """Imprime el diff entre dos perfiles en formato legible."""
+    resultado = diff_perfiles(q_from, q_to)
+    _, menus_t, _ = PERFILES[q_to]
+
+    # Probabilidades del quarter destino
+    probs = {}
+    prev = 0
+    for nombre, cum, _ in menus_t:
+        probs[nombre] = (cum - prev) * 100
+        prev = cum
+
+    print(f"\n  DIFF {q_from} → {q_to}")
+    print("  " + "="*50)
+
+    if resultado['menus_nuevos']:
+        print(f"\n  Menús NUEVOS en {q_to}:")
+        for m in sorted(resultado['menus_nuevos'], key=lambda x: -probs.get(x,0)):
+            p = probs.get(m, 0)
+            print(f"    + {m:40}  {p:.2f}%")
+    else:
+        print(f"\n  Sin menús nuevos en {q_to}")
+
+    if resultado['menus_quitados']:
+        print(f"\n  Menús QUITADOS en {q_to}:")
+        for m in sorted(resultado['menus_quitados']):
+            print(f"    - {m}")
+    else:
+        print(f"  Sin menús quitados")
+
+    if resultado['vdns_cambiados']:
+        print(f"\n  VDNs que CAMBIAN en {q_to}:")
+        for menu, (vdn_f, vdn_t) in sorted(resultado['vdns_cambiados'].items()):
+            print(f"    ~ {menu:40}  {vdn_f} → {vdn_t}")
+    else:
+        print(f"  Sin cambios de VDN")
+
+
+def mostrar_catalogo_perfiles():
+    """Muestra el catálogo completo de perfiles y su cadena de acumulación."""
+    print("\n  Catálogo de perfiles:")
+    print(f"  {'Quarter':8} {'Tabla':28} {'Menús':>6} {'VDNs':>5} {'Escala':>7} "
+          f"{'error_c':>8}  Tipo")
+    print("  " + "-"*75)
+    proxies = {
+        'Q04_25': 'proxy → q03_2025',
+        'Q01_26': 'proxy → q01_2025',
+        'Q02_26': 'proxy → q02_2025',
+    }
+    for q_name, (cfg, menus, vdns) in PERFILES.items():
+        tipo = proxies.get(q_name, 'acumulado')
+        print(f"  {q_name:8} {cfg['tabla']:28} {len(menus):>6} {len(vdns):>5} "
+              f"{cfg['escala']:>7.3f} {str(cfg['error_ceros']):>8}  {tipo}")
 
 def print_estado(quarter, tabla, st, perfil_menus):
     if st is None:
@@ -264,7 +430,14 @@ def parse_args():
     p.add_argument('--tables',   nargs='+',  default=None)
     p.add_argument('--chunk',    type=int,   default=200)
     p.add_argument('--truncate', action='store_true')
-    p.add_argument('--status',   action='store_true')
+    p.add_argument('--status',   action='store_true',
+                   help='Estado actual de las tablas sin insertar')
+    p.add_argument('--verify',   action='store_true',
+                   help='Verificar proporciones de las tablas vs perfiles esperados')
+    p.add_argument('--diff',     nargs=2, metavar=('DESDE','HASTA'),
+                   help='Mostrar cambios entre dos perfiles, ej: --diff Q01_25 Q02_25')
+    p.add_argument('--catalog',  action='store_true',
+                   help='Mostrar catálogo completo de perfiles')
     p.add_argument('--socket',   default='/run/mysqld/mysqld.sock')
     p.add_argument('--host',     default=None)
     p.add_argument('--port',     type=int,   default=3306)
@@ -311,12 +484,28 @@ def main():
         st = estado_tabla(conn, cfg['tabla'])
         print_estado(q_name, cfg['tabla'], st, menus)
 
+    if args.catalog:
+        mostrar_catalogo_perfiles()
+        return
+
+    if args.diff:
+        mostrar_diff(args.diff[0], args.diff[1])
+        return
+
     if args.status:
-        print("\n  Catálogo de perfiles:")
-        for q_name, (cfg, menus, vdns) in PERFILES.items():
-            src = q_name  # podría detectar si es proxy comparando id(menus)
-            print(f"    {q_name}: {len(menus)} menús, error_ceros={cfg['error_ceros']}, "
-                  f"escala={cfg['escala']:.3f}")
+        mostrar_catalogo_perfiles()
+        return
+
+    if args.verify:
+        print("\n  Verificando proporciones de calidad de datos...")
+        for q_name in quarters:
+            cfg, menus, _ = PERFILES[q_name]
+            resultados = verificar_quarter(conn, q_name)
+            if resultados:
+                mostrar_verificacion(q_name, resultados)
+            else:
+                print(f"\n  {q_name}: tabla vacía o sin conexión")
+        print()
         return
 
     print()
