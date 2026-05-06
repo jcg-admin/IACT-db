@@ -1,3 +1,8 @@
+> **Nota (2026-05-05):** Este documento describe la arquitectura original con Vagrant.
+> La migración a shell scripts puros está documentada en
+> [MIGRACION-VAGRANT-A-SHELL.md](MIGRACION-VAGRANT-A-SHELL.md).
+> Los nuevos puntos de entrada son `bootstrap.sh`, `setup.sh` y `verify.sh`.
+
 # IACT DevBox - Development Guide
 
 Guía para modificar y extender el sistema IACT DevBox.

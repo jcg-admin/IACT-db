@@ -1,3 +1,6 @@
+> **Nota (2026-05-05):** Este documento describe la verificación original con VMs Vagrant.
+> Usa `bash verify.sh` para la verificación actual (sin Vagrant).
+
 # Verificación Completa del Sistema IACT DevBox
 
 Checklist exhaustivo para verificar que todas las VMs, servicios y configuraciones del proyecto IACT DevBox funcionan correctamente.

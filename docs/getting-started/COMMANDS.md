@@ -1,413 +1,130 @@
-# IACT DevBox - Referencia de Comandos
-
-Referencia completa de todos los comandos disponibles en IACT DevBox.
-
-## Scripts PowerShell
-
-### check-prerequisites.ps1
-
-Verifica requisitos del sistema antes de `vagrant up`.
-
-```powershell
-# Uso básico
-.\scripts\check-prerequisites.ps1
-
-# Ver ayuda
-.\scripts\check-prerequisites.ps1 -Help
-```
-
-**Verifica:**
-- VirtualBox 7.0+
-- Vagrant 2.3+
-- RAM disponible (6 GB)
-- Espacio en disco (20 GB)
-- Adaptadores Host-Only
-- Puertos disponibles (3306, 5432, 80, 443)
-- Validez del Vagrantfile
-
-**Cuándo usar:** Antes de `vagrant up`, especialmente si es primera vez.
-
-### setup-environment.ps1
-
-Asistente interactivo de setup completo.
-
-```powershell
-# Uso normal (con confirmaciones)
-.\scripts\setup-environment.ps1
-
-# Modo automático
-.\scripts\setup-environment.ps1 -AutoConfirm
-
-# Saltar verificación de requisitos
-.\scripts\setup-environment.ps1 -SkipChecks
-
-# Ver ayuda
-.\scripts\setup-environment.ps1 -Help
-```
-
-**Ejecuta automáticamente:**
-1. check-prerequisites.ps1
-2. fix-network.ps1 (si es necesario)
-3. vagrant up
-4. verify-vms.ps1
-5. Test de conectividad
-
-**Cuándo usar:** Primera vez configurando el entorno o reset completo.
-
-### diagnose-system.ps1
-
-Diagnóstico profundo del sistema.
-
-```powershell
-# Uso básico
-.\scripts\diagnose-system.ps1
-```
-
-**Diagnostica:**
-- Adaptadores Host-Only (detecta Ghost Adapters)
-- Perfil de red (PUBLIC vs PRIVATE)
-- Conectividad a VMs (ping)
-- Estado de VMs (vagrant status)
-- Dispositivos PnP fantasma
-- Recursos del sistema (RAM, Disco)
-
-**Genera log en:** `logs/diagnose-system_TIMESTAMP.log`
-
-**Cuándo usar:** Cuando hay problemas de conectividad o comportamiento inesperado.
-
-### fix-network.ps1
-
-Elimina Ghost Network Adapters de forma segura.
-
-```powershell
-# Uso normal (pide confirmación)
-.\scripts\fix-network.ps1
-
-# Simulación
-.\scripts\fix-network.ps1 -WhatIf
-
-# Forzar sin confirmación (peligroso)
-.\scripts\fix-network.ps1 -Force
-
-# Saltar verificación de VMs
-.\scripts\fix-network.ps1 -SkipVMCheck
-
-# Ver ayuda
-.\scripts\fix-network.ps1 -Help
-```
-
-**Requiere:** Permisos de Administrador
-
-**Proceso:**
-1. Detecta adaptadores Host-Only
-2. Identifica cuáles eliminar (numerados #2, #3, etc.)
-3. Verifica que VMs estén apagadas
-4. Pide confirmación
-5. Elimina adaptadores fantasma
-6. Configura IP correcta (192.168.56.1)
-7. Verifica resultado
-
-**Genera log en:** `logs/fix-network_TIMESTAMP.log`
-
-**Cuándo usar:** Cuando `diagnose-system.ps1` detecta Ghost Network Adapters.
-
-### verify-vms.ps1
-
-Verifica que VMs estén funcionando correctamente.
-
-```powershell
-# Uso básico
-.\scripts\verify-vms.ps1
-```
-
-**Verifica:**
-- VirtualBox instalado
-- Vagrant instalado
-- Estado de VMs (running/poweroff)
-- Logs generados
-- Conectividad de red
-- Puertos de servicios (3306, 5432, 80, 443)
-- Adminer Web Interface
-- Provisioning completado
-
-**Cuándo usar:** Después de `vagrant up` para confirmar que todo funciona.
-
-### clean-logs.ps1
-
-Limpia y archiva logs antiguos.
-
-```powershell
-# Mover logs de 30+ días
-.\scripts\clean-logs.ps1
-
-# Personalizar días
-.\scripts\clean-logs.ps1 -DaysToKeep 7
-
-# Mover y comprimir
-.\scripts\clean-logs.ps1 -Compress
-
-# Mover, comprimir y eliminar originales
-.\scripts\clean-logs.ps1 -Compress -DeleteArchived
-
-# Limpiar todo (desarrollo)
-.\scripts\clean-logs.ps1 -DaysToKeep 0 -Compress -DeleteArchived
-
-# Simulación
-.\scripts\clean-logs.ps1 -WhatIf
-
-# Ver ayuda
-.\scripts\clean-logs.ps1 -Help
-```
-
-**Genera log en:** `logs/clean-logs_TIMESTAMP.log`
-
-**Cuándo usar:** Mantenimiento periódico (semanal/mensual).
-
-### generate-support-bundle.ps1
-
-Genera bundle de diagnóstico completo.
-
-```powershell
-# Bundle básico
-.\scripts\generate-support-bundle.ps1
-
-# Bundle completo
-.\scripts\generate-support-bundle.ps1 -IncludeLogs -IncludeVagrantfile
-
-# Ubicación personalizada
-.\scripts\generate-support-bundle.ps1 -OutputPath C:\Support
-
-# Sin comprimir
-.\scripts\generate-support-bundle.ps1 -CompressBundle:$false
-
-# Ver ayuda
-.\scripts\generate-support-bundle.ps1 -Help
-```
-
-**Incluye:**
-- Información del sistema
-- Versiones de software
-- Estado de VMs
-- Configuración de red
-- Tests de conectividad
-- Puertos en uso
-- Salida de scripts de diagnóstico
-- (Opcional) Logs de provisioning
-- (Opcional) Vagrantfile
-
-**Genera:** `support-bundle_TIMESTAMP.zip`
-
-**Cuándo usar:** Para reportar problemas complejos al equipo de soporte.
-
-## Comandos Vagrant
-
-### Gestión de VMs
-
-```powershell
-# Ver estado
-vagrant status
-
-# Iniciar todas las VMs
-vagrant up
-
-# Iniciar una VM específica
-vagrant up mariadb
-vagrant up postgresql
-vagrant up adminer
-
-# Detener todas las VMs
-vagrant halt
-
-# Detener una VM específica
-vagrant halt mariadb
-
-# Reiniciar VMs
-vagrant reload
-
-# Reiniciar y re-provisionar
-vagrant reload --provision
-
-# Destruir todas las VMs
-vagrant destroy
-
-# Destruir sin confirmación
-vagrant destroy -f
-
-# Suspender VMs (guardar estado)
-vagrant suspend
-
-# Reanudar VMs suspendidas
-vagrant resume
-```
-
-### SSH y Ejecución Remota
-
-```powershell
-# SSH a una VM
-vagrant ssh mariadb
-vagrant ssh postgresql
-vagrant ssh adminer
-
-# Ejecutar comando remoto
-vagrant ssh mariadb -c "mysql -u root -p'rootpass123' -e 'SHOW DATABASES;'"
-vagrant ssh postgresql -c "psql -U postgres -c '\l'"
-vagrant ssh adminer -c "sudo systemctl status apache2"
-```
-
-### Provisioning
-
-```powershell
-# Re-ejecutar provisioning en todas las VMs
-vagrant provision
-
-# Re-ejecutar provisioning en una VM
-vagrant provision mariadb
-
-# Ejecutar provisioner específico
-vagrant provision --provision-with shell
-```
-
-### Información y Debugging
-
-```powershell
-# Ver versión de Vagrant
-vagrant --version
-
-# Ver lista global de VMs
-vagrant global-status
-
-# Limpiar cache de VMs
-vagrant global-status --prune
-
-# Validar Vagrantfile
-vagrant validate
-
-# Ver configuración SSH
-vagrant ssh-config mariadb
-
-# Debugging verbose
-$env:VAGRANT_LOG="debug"
-vagrant up
-```
-
-## Comandos de Base de Datos
-
-### MariaDB
+# IACT-db — Referencia de Comandos
+
+Referencia completa de todos los comandos disponibles.
+
+## Scripts principales
+
+| Script | Requiere root | Descripción |
+|---|---|---|
+| `sudo bash bootstrap.sh` | Sí | Instala y configura todo (MariaDB + PostgreSQL + Adminer) |
+| `sudo bash bootstrap.sh --no-adminer` | Sí | Solo MariaDB y PostgreSQL |
+| `sudo bash bootstrap.sh --seed` | Sí | Instala todo + siembra datos de prueba |
+| `sudo bash setup.sh` | Sí | Solo configura BDs (sin instalar paquetes) |
+| `bash verify.sh` | No | Verifica conectividad y estado completo |
+| `sudo bash scripts/install-clients.sh` | Sí | Instala clientes mysql/psql |
+| `sudo bash provisioners/mariadb/schema_seed.sh` | Sí | Crea y siembra tbl_temp_prueba_ivr |
+
+## Verificación
 
 ```bash
-# Conectar como root
-mysql -h 192.168.56.10 -u root -p'rootpass123'
+# Estado completo (7 secciones, contadores OK/WARN/ERR)
+bash verify.sh
 
-# Conectar a base específica
-mysql -h 192.168.56.10 -u django_user -p'django_pass' ivr_legacy
-
-# Ejecutar query
-mysql -h 192.168.56.10 -u root -p'rootpass123' -e "SHOW DATABASES;"
-
-# Importar SQL
-mysql -h 192.168.56.10 -u root -p'rootpass123' ivr_legacy < backup.sql
-
-# Exportar SQL
-mysqldump -h 192.168.56.10 -u root -p'rootpass123' ivr_legacy > backup.sql
+# Verificar conexión Python a ambas BDs
+cd test
+pip install -r requirements.txt
+python check_db_connections.py
 ```
 
-### PostgreSQL
+## MariaDB
 
 ```bash
-# Conectar como postgres
-psql -h 192.168.56.11 -U postgres
+# Conexión root via socket (sin contraseña, requiere sudo)
+sudo mysql
 
-# Conectar a base específica
-psql -h 192.168.56.11 -U django_user -d iact_analytics
+# Conexión root con contraseña
+mysql -h 127.0.0.1 -u root -p'rootpass123'
 
-# Ejecutar query
-psql -h 192.168.56.11 -U postgres -c "\l"
+# Conexión Django (READ-ONLY)
+mysql -h 127.0.0.1 -u django_user -p'django_pass' ivr_legacy
 
-# Importar SQL
-psql -h 192.168.56.11 -U postgres -d iact_analytics -f backup.sql
+# Estado del servicio
+sudo systemctl status mariadb
+# o en entornos sin systemd:
+sudo service mariadb status
 
-# Exportar SQL
-pg_dump -h 192.168.56.11 -U postgres iact_analytics > backup.sql
+# Arrancar / detener
+sudo systemctl start mariadb
+sudo systemctl stop  mariadb
+
+# Importar / exportar
+mysql  -h 127.0.0.1 -u root -p'rootpass123' ivr_legacy < backup.sql
+mysqldump -h 127.0.0.1 -u root -p'rootpass123' ivr_legacy > backup.sql
 ```
 
-## Comandos de VirtualBox
+## PostgreSQL
 
-```powershell
-# Listar VMs
-VBoxManage list vms
+```bash
+# Conexión superusuario via peer auth
+sudo -u postgres psql
 
-# Listar VMs corriendo
-VBoxManage list runningvms
+# Conexión Django
+PGPASSWORD='django_pass' psql -h 127.0.0.1 -U django_user -d iact_analytics
 
-# Listar adaptadores Host-Only
-VBoxManage list hostonlyifs
+# Estado del cluster
+sudo pg_ctlcluster 16 main status
+# o:
+sudo systemctl status postgresql
 
-# Info de una VM
-VBoxManage showvminfo "db_mariadb"
+# Arrancar / detener
+sudo pg_ctlcluster 16 main start
+sudo pg_ctlcluster 16 main stop
 
-# Crear adaptador Host-Only
-VBoxManage hostonlyif create
-
-# Configurar IP de adaptador
-VBoxManage hostonlyif ipconfig "VirtualBox Host-Only Ethernet Adapter" --ip 192.168.56.1
-
-# Eliminar adaptador
-VBoxManage hostonlyif remove "VirtualBox Host-Only Ethernet Adapter #2"
+# Importar / exportar
+psql    -h 127.0.0.1 -U postgres -d iact_analytics -f backup.sql
+pg_dump -h 127.0.0.1 -U postgres    iact_analytics > backup.sql
 ```
 
-## Comandos de Windows
+## Provisioners individuales
 
-### Red
+```bash
+# Solo instalar MariaDB (sin configurar BD ni usuario)
+sudo bash provisioners/mariadb/install.sh
 
-```powershell
-# Ver adaptadores
-Get-NetAdapter | Where-Object { $_.Name -like "*VirtualBox*" }
+# Solo configurar BD/usuario en MariaDB (MariaDB ya instalado)
+sudo bash provisioners/mariadb/setup.sh
 
-# Ver IPs
-Get-NetIPAddress | Where-Object { $_.InterfaceAlias -like "*VirtualBox*" }
+# Solo instalar PostgreSQL
+sudo bash provisioners/postgres/install.sh
 
-# Ver perfil de red
-Get-NetConnectionProfile | Where-Object { $_.InterfaceAlias -like "*VirtualBox*" }
+# Solo configurar BD/usuario en PostgreSQL
+sudo bash provisioners/postgres/setup.sh
 
-# Cambiar perfil a PRIVATE
-Set-NetConnectionProfile -InterfaceAlias "VirtualBox Host-Only Network" -NetworkCategory Private
-
-# Ping
-ping 192.168.56.10
-Test-Connection -ComputerName 192.168.56.10 -Count 4
-
-# Test de puerto
-Test-NetConnection -ComputerName 192.168.56.10 -Port 3306
+# Solo Adminer
+sudo bash provisioners/adminer/bootstrap.sh
 ```
 
-### Procesos y Puertos
+## Logs
 
-```powershell
-# Ver procesos de VirtualBox
-Get-Process | Where-Object { $_.Name -like "*VBox*" }
+```bash
+# Ver todos los logs generados
+ls logs/
 
-# Ver puertos en uso
-Get-NetTCPConnection -LocalPort 3306,5432,80,443
+# Seguir el último bootstrap
+tail -f logs/mariadb_bootstrap.log
+tail -f logs/postgres_bootstrap.log
 
-# Ver proceso usando un puerto
-Get-NetTCPConnection -LocalPort 3306 | ForEach-Object {
-  Get-Process -Id $_.OwningProcess
-}
+# Buscar errores
+grep -i "error\|fatal" logs/*.log
 ```
 
-### Logs
+## Configuración (.env)
 
-```powershell
-# Buscar errores en logs
-Get-ChildItem logs\*.log | Select-String "ERROR"
+```bash
+# Ver configuración activa
+cat .env
 
-# Ver últimas 50 líneas de un log
-Get-Content logs\mariadb_bootstrap.log -Tail 50
+# Editar
+nano .env    # o vim .env
 
-# Seguir un log en tiempo real
-Get-Content logs\mariadb_bootstrap.log -Wait
+# Variables principales de BD:
+# MARIADB_HOST, MARIADB_PORT
+# DB_MARIADB_NAME, DB_MARIADB_USER, DB_MARIADB_PASSWORD
+# POSTGRES_HOST, POSTGRES_PORT
+# DB_POSTGRES_NAME, DB_POSTGRES_USER, DB_POSTGRES_PASSWORD
+# SEED_ROWS (registros a sembrar en tbl_temp_prueba_ivr)
 ```
 
 ---
 
-**Última actualización**: 2026-01-10
+**Última actualización**: 2026-05-05 — Migración Vagrant → shell scripts puros

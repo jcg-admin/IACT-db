@@ -1,98 +1,113 @@
-# IACT DevBox - Quickstart
+# IACT-db — Quickstart
 
-Comandos esenciales para usar IACT DevBox. Para más información ver [README.md](README.md).
+Guía rápida para levantar MariaDB + PostgreSQL con shell scripts puros.
+Sin Vagrant, sin Docker, sin VirtualBox.
 
-## Setup Inicial
+## Setup inicial
 
-```powershell
-# Método 1: Automático (recomendado)
-.\scripts\setup-environment.ps1
+```bash
+# 1. Clonar
+git clone https://github.com/jcg-admin/IACT-db.git
+cd IACT-db
 
-# Método 2: Manual
-vagrant up
-.\scripts\verify-vms.ps1
+# 2. Configurar credenciales
+cp .env.example .env
+# Editar .env si se quieren cambiar las credenciales por defecto
+
+# 3. Instalar clientes de BD (psql, mysql CLI)
+sudo bash scripts/install-clients.sh
+
+# 4. Instalar y configurar todo
+sudo bash bootstrap.sh
+
+# 5. Verificar
+bash verify.sh
 ```
 
-## Comandos Diarios
+## Opciones de bootstrap
 
-```powershell
-# Iniciar VMs
-vagrant up
+```bash
+# Solo MariaDB + PostgreSQL (sin Adminer)
+sudo bash bootstrap.sh --no-adminer
 
-# Ver estado
-vagrant status
-
-# Detener VMs
-vagrant halt
-
-# Reiniciar VMs
-vagrant reload
-
-# SSH a una VM
-vagrant ssh mariadb
-vagrant ssh postgresql
-vagrant ssh adminer
+# Instalar todo + sembrar datos de prueba en ivr_legacy
+sudo bash bootstrap.sh --seed
 ```
 
-## Acceso Rápido
+## Si las BDs ya están instaladas
+
+```bash
+# Solo crear BD, usuario y privilegios (sin instalar paquetes)
+sudo bash setup.sh
+```
+
+## Conexión directa (credenciales por defecto)
 
 ```bash
 # MariaDB
-mysql -h 192.168.56.10 -u root -p'rootpass123'
-mysql -h 192.168.56.10 -u django_user -p'django_pass' ivr_legacy
+mysql -h 127.0.0.1 -u django_user -p'django_pass' ivr_legacy
 
 # PostgreSQL
-psql -h 192.168.56.11 -U postgres
-psql -h 192.168.56.11 -U django_user -d iact_analytics
-
-# Adminer (navegador)
-http://192.168.56.12
+PGPASSWORD='django_pass' psql -h 127.0.0.1 -U django_user -d iact_analytics
 ```
 
-## Scripts de Diagnóstico
+## Comandos de diagnóstico
 
-```powershell
-# Problema general
-.\scripts\diagnose-system.ps1
+```bash
+# Estado completo (7 secciones con contadores OK/WARN/ERR)
+bash verify.sh
 
-# Error de red
-.\scripts\fix-network.ps1
+# Verificar conexión Python a ambas BDs
+cd test && python check_db_connections.py
 
-# Verificar VMs
-.\scripts\verify-vms.ps1
-
-# Reporte para soporte
-.\scripts\generate-support-bundle.ps1
+# Ver logs de provisioning
+ls logs/
+tail -f logs/mariadb_bootstrap.log
 ```
 
-## Mantenimiento
+## Sembrar datos de prueba en ivr_legacy
 
-```powershell
-# Limpiar logs
-.\scripts\clean-logs.ps1
+```bash
+# Crea tbl_temp_prueba_ivr con 3000 registros (idempotente)
+sudo bash provisioners/mariadb/schema_seed.sh
 
-# Comprimir logs
-.\scripts\clean-logs.ps1 -Compress
-
-# Reiniciar desde cero
-vagrant destroy -f
-.\scripts\setup-environment.ps1
+# SEED_ROWS es configurable en .env (default: 3000)
 ```
 
-## Troubleshooting Rápido
+## Django settings resultantes
 
-```powershell
-# No hay conectividad
-.\scripts\diagnose-system.ps1
-.\scripts\fix-network.ps1
-
-# VMs no arrancan
-vagrant reload --provision
-
-# Ver logs de error
-Get-ChildItem logs\*.log | Select-String "ERROR"
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'iact_analytics',
+        'USER': 'django_user',
+        'PASSWORD': 'django_pass',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
+    },
+    'ivr': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'ivr_legacy',
+        'USER': 'django_user',
+        'PASSWORD': 'django_pass',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+    }
+}
 ```
 
-## Siguiente Paso
+## Compatibilidad
 
-Ver [TROUBLESHOOTING.md](TROUBLESHOOTING.md) para problemas específicos.
+| SO | Compatible |
+|---|---|
+| Ubuntu 22.04 LTS | Sí |
+| Ubuntu 24.04 LTS | Sí |
+| Debian 12 | Sí |
+| WSL2 (Ubuntu) | Sí |
+| macOS | No |
+
+---
+
+Ver [MIGRACION-VAGRANT-A-SHELL.md](../architecture/MIGRACION-VAGRANT-A-SHELL.md)
+para el análisis técnico completo de la migración desde Vagrant.

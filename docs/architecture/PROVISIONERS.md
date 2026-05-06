@@ -1,3 +1,7 @@
+> **Nota (2026-05-05):** Los provisioners ya no se ejecutan dentro de VMs Vagrant.
+> Ahora se ejecutan directamente en el SO host vía `bootstrap.sh`.
+> Las referencias a `/vagrant/` han sido reemplazadas por `PROJECT_ROOT`.
+
 # IACT DevBox - Provisioners
 
 Explicación de cómo funcionan los scripts de provisioning de IACT DevBox.
