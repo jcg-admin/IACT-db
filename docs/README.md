@@ -36,6 +36,7 @@ Documentación esencial para comenzar a usar IACT DevBox.
 - **[COMMANDS.md](getting-started/COMMANDS.md)** - Referencia de comandos Vagrant
 - **[VERIFICACION-LOCAL-SIN-VAGRANT.md](getting-started/VERIFICACION-LOCAL-SIN-VAGRANT.md)** - Checklist para entorno local directo (sin VMs)
 - **[VERIFICACION_COMPLETA.md](getting-started/VERIFICACION_COMPLETA.md)** - Checklist de verificación con Vagrant
+- **[HISTORICO-IVR.md](getting-started/HISTORICO-IVR.md)** - Schema y seed de las tablas históricas IVR (`tbl_historico_tN_YYYY`)
 
 ### Setup (Configuración Avanzada)
 
