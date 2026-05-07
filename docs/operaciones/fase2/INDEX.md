@@ -26,3 +26,5 @@
 - [ ] (Opcional) Mejora de sp_etl_validar para cobertura temporal — ver H-ANAL-003
 
 | [HALLAZGOS-PROVISIONERS_2026-05-07T051408.md](HALLAZGOS-PROVISIONERS_2026-05-07T051408.md) | Hallazgos provisioners | 2026-05-07T051408 | 4 hallazgos — 3 corregidos en este commit |
+
+| [REVERIFICACION-FASE2_2026-05-07T144341.md](REVERIFICACION-FASE2_2026-05-07T144341.md) | Re-verificacion | 2026-05-07T144341 | 11/11 PASA — post correccion provisioners — T-037 ahora muestra 3 checkpoints |
