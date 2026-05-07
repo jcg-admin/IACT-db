@@ -463,7 +463,7 @@ PASO 8  Django DRF                 → services + views + urls (Nivel 5)
 |---|---|---|
 | CNST-ETL-001 | Solo SELECT en `tbl_historico_*` | No se crean índices en la fuente — full scan inevitable |
 | CNST-ETL-005 | Sin índices en tablas fuente | Chunks por mes para controlar undo log |
-| CNST-ETL-007 | MariaDB 10.1.48 sin window functions | Subconsultas en lugar de `OVER(PARTITION BY)` |
+| CNST-ETL-007 | Diseño compatible con MariaDB 10.1+. Instancia real: 10.11.14 (tiene window functions). No se usan OVER() para mantener compatibilidad con entornos del cliente. | Subconsultas en lugar de `OVER(PARTITION BY)` |
 | CNST-ETL-008 | Nombre de tabla dinámico | `PREPARE/EXECUTE` en sp_etl_base_detalle y sp_etl_base_clientes |
 | CNST-003 | ETL cada 6-12h | `job_config.min_intervalo_h = 6` |
 | ADR-BACK-012 | Sin Redis/RabbitMQ | Heartbeat con `threading.Thread` en el management command |
