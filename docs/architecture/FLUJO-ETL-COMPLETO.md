@@ -1,3 +1,7 @@
+> **NOTA:** Este documento fue supersedado por `FLUJO-ETL-V2.1.md`.
+> Conservado como referencia historica. Para la implementacion actual,
+> consultar `FLUJO-ETL-V2.1.md`.
+
 # Flujo ETL completo — Del origen al consumo por Django
 
 **Fecha:** 2026-05-06
