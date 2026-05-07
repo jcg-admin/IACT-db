@@ -13,6 +13,9 @@ CONFIG = {
     'quarter':     'Q02_26',
     'fecha_ini':   date(2026, 4, 1),
     'fecha_fin':   date(2026, 5, 6),    # parcial: 36 días
-    'escala':      0.462,   # Q02_2025 × (36/91 días)
+    'escala':      0.486,   # SUPUESTO: Q02_26_full con +5% YoY sobre Q02_25.
+                            # Q02_25=13,612,375 x 1.05 = 14,293,000 llamadas full.
+                            # Parcial 36/91 dias: 14,293,000 x (36/91) = 5,654,000.
+                            # Escala vs Q01_25 real: 5,654,000 / 11,643,679 = 0.486.
     'error_ceros': True,
 }

@@ -13,6 +13,9 @@ CONFIG = {
     'quarter':     'Q04_25',
     'fecha_ini':   date(2025, 10, 1),
     'fecha_fin':   date(2025, 12, 31),
-    'escala':      0.993,   # estimado: promedio Q01(1.000) + Q03(0.986) / 2
+    'escala':      1.069,   # SUPUESTO: Q4 incluye Nov-Dic con pico comercial.
+                            # Nov=dia del trabajo, Dic=campanas fin de anio.
+                            # +8% sobre Q03_25 (0.986 x 1.084 = 1.069).
+                            # Sin datos reales — proxy q03_2025 con volumen ajustado.
     'error_ceros': True,
 }

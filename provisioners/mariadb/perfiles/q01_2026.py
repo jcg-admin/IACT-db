@@ -14,6 +14,9 @@ CONFIG = {
     'quarter':     'Q01_26',
     'fecha_ini':   date(2026, 1, 1),
     'fecha_fin':   date(2026, 3, 31),
-    'escala':      1.000,   # proxy Q01_2025
+    'escala':      1.039,   # SUPUESTO: crecimiento YoY Q01_25 → Q01_26.
+                            # Telecom MX crece ~3-5% anual. Conservador: +4%.
+                            # 11,643,679 x 1.039 = 12,097,785 llamadas.
+                            # Sin datos reales — proxy q01_2025 con volumen ajustado.
     'error_ceros': True,    # se asume activo (apareció en Q02_2025)
 }
