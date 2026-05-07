@@ -90,12 +90,28 @@ HEADER
 
     idx_entry="| [HALLAZGOS-BACKUP_${TIMESTAMP}.md](HALLAZGOS-BACKUP_${TIMESTAMP}.md) | ${TIMESTAMP} | ${total} | ${SEVERIDAD_MAX} |"
 
-    # Actualizar INDEX.md — insertar entrada antes de la linea de cierre de tabla
-    if [ -f "$HALLAZGOS_INDEX" ]; then
-        # Agregar la nueva fila al final de la tabla
-        # Insertar antes de la linea vacia final del archivo
-    sed -i "$ s|$|\n${idx_entry}|" "$HALLAZGOS_INDEX"
-    fi
+    # Reconstruir INDEX.md desde los archivos existentes + entrada nueva
+    {
+        cat << 'IDXHEADER'
+# Indice de hallazgos — proceso de backup ivr_legacy
+
+Cada ejecucion del script genera su propio archivo de hallazgos
+con el mismo timestamp ISO del backup al que corresponde.
+
+Formato: HALLAZGOS-BACKUP_YYYY-MM-DDTHHMMSS.md
+
+## Ejecuciones registradas
+
+| Archivo | Fecha | Hallazgos | Severidad maxima |
+|---|---|---|---|
+IDXHEADER
+        # Filas existentes (excluir el que acabamos de crear, se agrega al final)
+        if [ -f "$HALLAZGOS_INDEX" ]; then
+            grep "^| \[HALLAZGOS-BACKUP_" "$HALLAZGOS_INDEX"                 | grep -v "HALLAZGOS-BACKUP_${TIMESTAMP}" || true
+        fi
+        # Fila nueva
+        echo "$idx_entry"
+    } > "${HALLAZGOS_INDEX}.tmp" && mv "${HALLAZGOS_INDEX}.tmp" "$HALLAZGOS_INDEX" 
 
     log "Hallazgos documentados: ${HALLAZGOS_FILE} (${total} items, max: ${SEVERIDAD_MAX})"
 }
