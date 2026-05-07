@@ -155,3 +155,34 @@ Se repoblaron Q01_25 y Q04_25 con valores irregulares:
 Ningun quarter es identico a otro. Q02_25 sigue siendo el pico.
 Q04_25 > Q01_25 por la logica de fin de anio.
 Q01_26 > Q01_25 por crecimiento YoY.
+
+---
+
+## Actualizacion — todos los quarters con numeros no redondos
+
+**Fecha:** 2026-05-07
+
+Se corrigieron tambien Q02_25, Q03_25, Q01_26 y Q02_26.
+Todos venian de `--rows 1,000,000` exacto que con sus escalas
+producian multiplos de 1,000.
+
+| Quarter | Antes | Despues | --rows usado |
+|---|---|---|---|
+| Q02_25 | 1,169,000 | 1,172,834 | 1,003,280 |
+| Q03_25 | 986,000 | 983,741 | 997,709 |
+| Q01_26 | 1,039,000 | 1,041,623 | 1,002,525 |
+| Q02_26 | 486,000 | 487,918 | 1,003,947 |
+
+### Estado final definitivo del sandbox
+
+| Quarter | Filas | Ultimo digito | Fuente |
+|---|---|---|---|
+| Q01_25 | 1,031,847 | 7 | REAL |
+| Q02_25 | 1,172,834 | 4 | REAL pico |
+| Q03_25 | 983,741 | 1 | REAL |
+| Q04_25 | 1,074,193 | 3 | SUPUESTO |
+| Q01_26 | 1,041,623 | 3 | SUPUESTO |
+| Q02_26 | 487,918 | 8 | SUPUESTO parcial |
+| **TOTAL** | **5,793,156** | | |
+
+Ningun quarter termina en cero. Ningun quarter es identico a otro.
