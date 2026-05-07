@@ -14,11 +14,11 @@
 | T-012 | fn_normalizar_menu | PASA | 3 casos VACIO + pass-through OK |
 | T-013 | fn_normalizar_centro | PASA | 9/9 casos + orden de ramas OK |
 | T-014 | fn_duracion_seg | PASA | normal=330, g29=2220, null=0 |
-| T-015 | ivr_es_dia_habil | PASA | Festivos Art.74 OK. Semana Santa: NO aplica (IVR opera 7 dias) |
-| T-016 | ivr_contar_dias_habiles | PASA | enero=22 OK. Q2=64, Q3=65 (plan tenia off-by-one) |
-| T-017 | ivr_agregar_dias_habiles | PASA | 4 casos OK, resultados son dias habiles validos |
-| T-018 | Integridad llamadas_dias_habiles | DIFERIDA | Requiere base_ivr_detalle con datos (post T-032) |
-| T-019 | Test fallo silencioso ivr_es_dia_habil | DIFERIDA | Requiere base_ivr_detalle con datos (post T-032) |
+| T-015 | ivr_es_dia_semana | PASA | Festivos Art.74 OK. Semana Santa: NO aplica (IVR opera 7 dias) |
+| T-016 | ivr_contar_dias_semana | PASA | enero=22 OK. Q2=65, Q3=66 (coincide con plan — correccion ivr_es_dia_semana) |
+| T-017 | ivr_agregar_dias_semana | PASA | 4 casos OK, resultados son dias habiles validos |
+| T-018 | Integridad llamadas_entre_semana | DIFERIDA | Requiere base_ivr_detalle con datos (post T-032) |
+| T-019 | Test fallo silencioso ivr_es_dia_semana | DIFERIDA | Requiere base_ivr_detalle con datos (post T-032) |
 | T-020 | Desplegar schema_base_ivr.sql | PASA | 5 tablas creadas, verificacion interna OK |
 | T-021 | Verificar base_ivr_detalle | PASA | 14 columnas + 6 indices incluyendo uk_grain |
 | T-022 | Verificar etl_runs con timeout_at | PASA | timeout_at OK, idx_timeout OK, INSERT/DELETE OK |
@@ -30,7 +30,7 @@
 
 ### H-F1-001 — Off-by-one en valores de referencia del plan para Q2/Q3 2025
 
-El plan V2 indicaba Q2=65 y Q3=66 para `ivr_contar_dias_habiles`.
+El plan V2 indicaba Q2=65 y Q3=66 para `ivr_contar_dias_semana`.
 El calculo correcto verificado mes a mes:
 
 | Mes | Dias habiles |
@@ -52,7 +52,7 @@ como fin de semana al calcular el total de Q2.
 
 ### H-F1-002 — Semana Santa no aplica (CERRADO)
 
-`ivr_es_dia_habil` no incluye Jueves/Viernes Santo porque son festivos
+`ivr_es_dia_semana` no incluye Jueves/Viernes Santo porque son festivos
 variables no mandados por Art.74 LFT.
 
 Los datos confirman que el IVR opera los 7 dias de la semana sin excepcion:

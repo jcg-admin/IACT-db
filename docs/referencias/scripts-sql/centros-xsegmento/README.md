@@ -17,7 +17,7 @@
 Tres queries complementarias sobre la vista `llamadas_Q3`:
 
 **Query 1 — Análisis principal por centro:** Para cada `id_CTransferencia`
-calcula métricas de volumen, distribución temporal (días hábiles vs fin de
+calcula métricas de volumen, distribución temporal (dias de semana vs fin de
 semana), duración promedio de llamada, clasificación del centro y estado SLA.
 
 **Query 2 — Centros para seguimiento inmediato:** Filtra solo los centros
@@ -50,12 +50,12 @@ de clasificación y SLA se traslada directamente.
 
 ---
 
-## Funciones de días hábiles utilizadas
+## Funciones de dias de semana utilizadas
 
 ```sql
-fn_es_dia_habil(fecha)                    -- ¿Es este día hábil? → BOOLEAN
-fn_contar_dias_habiles(fecha_ini, MAX(fecha)) -- Días hábiles entre dos fechas → INT
-fn_agregar_dias_habiles(MAX(fecha), N)    -- Fecha + N días hábiles → DATE
+fn_es_dia_semana(fecha)                    -- ¿Es este dia de semana? → BOOLEAN
+fn_contar_dias_semana(fecha_ini, MAX(fecha)) -- Dias de semana entre dos fechas → INT
+fn_agregar_dias_semana(MAX(fecha), N)    -- Fecha + N dias de semana → DATE
 ```
 
 Estas funciones son **prerequisito** de `sp_rpt_centros_xsegmento`.
@@ -69,7 +69,7 @@ cliente (no de IACT), por lo que hay que verificar su existencia.
 ### Patrón de uso del centro
 
 ```sql
-WHEN llamadas_dias_habiles / total >= 0.8 THEN 'CENTRO_EMPRESARIAL'
+WHEN llamadas_entre_semana / total >= 0.8 THEN 'CENTRO_EMPRESARIAL'
 WHEN llamadas_fines_semana / total >= 0.4 THEN 'CENTRO_MIXTO'
 ELSE                                           'CENTRO_PERSONAL'
 ```
@@ -77,9 +77,9 @@ ELSE                                           'CENTRO_PERSONAL'
 ### Clasificación por volumen y actividad reciente
 
 ```sql
-WHEN COUNT(*) >= 20 AND fn_contar_dias_habiles(MAX(fecha), CURDATE()) <= 1
+WHEN COUNT(*) >= 20 AND fn_contar_dias_semana(MAX(fecha), CURDATE()) <= 1
     THEN 'CENTRO_CRITICO_ACTIVO'
-WHEN COUNT(*) >= 20 AND fn_contar_dias_habiles(MAX(fecha), CURDATE()) >  3
+WHEN COUNT(*) >= 20 AND fn_contar_dias_semana(MAX(fecha), CURDATE()) >  3
     THEN 'CENTRO_ALTO_VOLUMEN_INACTIVO'
 WHEN COUNT(*) >= 10 THEN 'CENTRO_VOLUMEN_MEDIO'
 ELSE                     'CENTRO_BAJO_VOLUMEN'
@@ -88,9 +88,9 @@ ELSE                     'CENTRO_BAJO_VOLUMEN'
 ### Estado SLA
 
 ```sql
-WHEN fn_contar_dias_habiles(MAX(fecha), CURDATE()) = 0 THEN 'DENTRO_SLA_HOY'
-WHEN fn_contar_dias_habiles(MAX(fecha), CURDATE()) <= 3 THEN 'DENTRO_SLA_3_DIAS'
-WHEN fn_contar_dias_habiles(MAX(fecha), CURDATE()) <= 5 THEN 'FUERA_SLA_CRITICO'
+WHEN fn_contar_dias_semana(MAX(fecha), CURDATE()) = 0 THEN 'DENTRO_SLA_HOY'
+WHEN fn_contar_dias_semana(MAX(fecha), CURDATE()) <= 3 THEN 'DENTRO_SLA_3_DIAS'
+WHEN fn_contar_dias_semana(MAX(fecha), CURDATE()) <= 5 THEN 'FUERA_SLA_CRITICO'
 ELSE                                                        'FUERA_SLA_ESCALAMIENTO'
 ```
 
@@ -101,12 +101,12 @@ ELSE                                                        'FUERA_SLA_ESCALAMIE
 La query principal tiene en su ORDER BY:
 
 ```sql
-ORDER BY total_llamadas DESC, dias_habiles_desde_ultima_actividad ASC
+ORDER BY total_llamadas DESC, dias_semana_desde_ultima_actividad ASC
 ```
 
-`dias_habiles_desde_ultima_actividad` no se define en el SELECT — el
+`dias_semana_desde_ultima_actividad` no se define en el SELECT — el
 script fallará tal como está. La columna equivalente sí está definida
-en la query 2 (`dias_habiles_transcurridos`). Para el SP usar el nombre
+en la query 2 (`dias_semana_transcurridos`). Para el SP usar el nombre
 consistente definido en el SELECT.
 
 ---
@@ -121,16 +121,16 @@ consistente definido en el SELECT.
 | `menus_que_redirigen` | GROUP_CONCAT de menú:opción (denormalizado) |
 | `fecha_primera_actividad` | MIN(fecha) |
 | `fecha_ultima_actividad` | MAX(fecha) |
-| `fecha_seguimiento_1_dia` | fn_agregar_dias_habiles(MAX, 1) |
-| `fecha_seguimiento_3_dias` | fn_agregar_dias_habiles(MAX, 3) |
-| `fecha_escalamiento` | fn_agregar_dias_habiles(MAX, 5) |
-| `llamadas_dias_habiles` | COUNT donde fn_es_dia_habil = TRUE |
-| `llamadas_fines_semana` | COUNT donde fn_es_dia_habil = FALSE |
-| `porcentaje_dias_habiles` | % sobre total |
-| `dias_habiles_periodo_actividad` | fn_contar_dias_habiles(MIN, MAX) |
+| `fecha_seguimiento_1_dia` | fn_agregar_dias_semana(MAX, 1) |
+| `fecha_seguimiento_3_dias` | fn_agregar_dias_semana(MAX, 3) |
+| `fecha_escalamiento` | fn_agregar_dias_semana(MAX, 5) |
+| `llamadas_entre_semana` | COUNT donde fn_es_dia_semana = TRUE |
+| `llamadas_fines_semana` | COUNT donde fn_es_dia_semana = FALSE |
+| `porcentaje_entre_semana` | % sobre total |
+| `dias_semana_periodo_actividad` | fn_contar_dias_semana(MIN, MAX) |
 | `patron_uso_centro` | EMPRESARIAL / MIXTO / PERSONAL |
 | `duracion_promedio_segundos` | AVG de duración corrigiendo bug dHoraInicio > dHoraFin |
-| `llamadas_horario_comercial` | COUNT entre 08:00 y 18:00 en días hábiles |
+| `llamadas_horario_comercial` | COUNT entre 08:00 y 18:00 en dias de semana |
 | `clasificacion_centro` | CRITICO_ACTIVO / ALTO_VOLUMEN_INACTIVO / VOLUMEN_MEDIO / BAJO_VOLUMEN |
 
 **Nota sobre duracion_promedio_segundos:** el script corrige el bug de

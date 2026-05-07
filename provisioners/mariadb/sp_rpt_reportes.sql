@@ -96,7 +96,7 @@ BEGIN
         b.misma_linea,
         b.linea_diferente,
         b.no_digito_telefono,
-        b.llamadas_dias_habiles,
+        b.llamadas_entre_semana,
         b.llamadas_fines_semana
     FROM base_ivr_detalle b
     WHERE b.trimestre = p_quarter
@@ -298,8 +298,8 @@ END$$
 -- sp_rpt_centros_xsegmento
 -- KPIs por centro de transferencia con clasificación SLA y días hábiles.
 -- El SP más complejo — usa todas las funciones de utilidad.
--- Requiere llamadas_dias_habiles y llamadas_fines_semana en base_ivr_detalle
--- (pre-computados en el ETL con ivr_es_dia_habil).
+-- Requiere llamadas_entre_semana y llamadas_fines_semana en base_ivr_detalle
+-- (pre-computados en el ETL con ivr_es_dia_semana).
 -- UC_RPT_01, UC_RPT_15
 -- =============================================================================
 DROP PROCEDURE IF EXISTS sp_rpt_centros_xsegmento$$
@@ -319,12 +319,12 @@ BEGIN
         SUM(b.no_digito_telefono)                    AS no_digito_telefono,
 
         -- Distribución por tipo de día (pre-computada en el ETL)
-        SUM(b.llamadas_dias_habiles)                 AS llamadas_dias_habiles,
+        SUM(b.llamadas_entre_semana)                 AS llamadas_entre_semana,
         SUM(b.llamadas_fines_semana)                 AS llamadas_fines_semana,
         ROUND(
-            SUM(b.llamadas_dias_habiles)
+            SUM(b.llamadas_entre_semana)
             / NULLIF(SUM(b.total_llamadas), 0) * 100, 1
-        )                                            AS pct_dias_habiles,
+        )                                            AS pct_entre_semana,
 
         -- Rango de actividad (primer y último mes con datos)
         STR_TO_DATE(CONCAT(MIN(b.fecha), '01'), '%Y%m%d')
@@ -333,25 +333,25 @@ BEGIN
                                                      AS ultima_actividad,
 
         -- Días hábiles del periodo de actividad
-        ivr_contar_dias_habiles(
+        ivr_contar_dias_semana(
             STR_TO_DATE(CONCAT(MIN(b.fecha), '01'), '%Y%m%d'),
             LAST_DAY(STR_TO_DATE(CONCAT(MAX(b.fecha), '01'), '%Y%m%d'))
-        )                                            AS dias_habiles_periodo,
+        )                                            AS dias_semana_periodo,
 
         -- Días hábiles transcurridos desde la última actividad hasta hoy
-        ivr_contar_dias_habiles(
+        ivr_contar_dias_semana(
             LAST_DAY(STR_TO_DATE(CONCAT(MAX(b.fecha), '01'), '%Y%m%d')),
             CURDATE()
-        )                                            AS dias_habiles_sin_actividad,
+        )                                            AS dias_semana_sin_actividad,
 
         -- Fechas de seguimiento (SLA operativo del equipo)
-        ivr_agregar_dias_habiles(
+        ivr_agregar_dias_semana(
             LAST_DAY(STR_TO_DATE(CONCAT(MAX(b.fecha), '01'), '%Y%m%d')), 1
         )                                            AS fecha_seguimiento_1_dia,
-        ivr_agregar_dias_habiles(
+        ivr_agregar_dias_semana(
             LAST_DAY(STR_TO_DATE(CONCAT(MAX(b.fecha), '01'), '%Y%m%d')), 3
         )                                            AS fecha_seguimiento_3_dias,
-        ivr_agregar_dias_habiles(
+        ivr_agregar_dias_semana(
             LAST_DAY(STR_TO_DATE(CONCAT(MAX(b.fecha), '01'), '%Y%m%d')), 5
         )                                            AS fecha_escalamiento,
 
@@ -360,17 +360,17 @@ BEGIN
         -- Ref: ANALISIS-ARQUITECTURA-ETL.md, BR-016 recalibrado (D-ETL-007)
         CASE
             WHEN SUM(b.total_llamadas) >= 1000
-             AND ivr_contar_dias_habiles(
+             AND ivr_contar_dias_semana(
                      LAST_DAY(STR_TO_DATE(CONCAT(MAX(b.fecha), '01'), '%Y%m%d')),
                      CURDATE()) = 0
                 THEN 'ACTIVO_HOY'
             WHEN SUM(b.total_llamadas) >= 1000
-             AND ivr_contar_dias_habiles(
+             AND ivr_contar_dias_semana(
                      LAST_DAY(STR_TO_DATE(CONCAT(MAX(b.fecha), '01'), '%Y%m%d')),
                      CURDATE()) <= 3
                 THEN 'DENTRO_SLA'
             WHEN SUM(b.total_llamadas) >= 1000
-             AND ivr_contar_dias_habiles(
+             AND ivr_contar_dias_semana(
                      LAST_DAY(STR_TO_DATE(CONCAT(MAX(b.fecha), '01'), '%Y%m%d')),
                      CURDATE()) <= 5
                 THEN 'RIESGO_SLA'

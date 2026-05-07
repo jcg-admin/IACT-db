@@ -1,19 +1,19 @@
 -- ====================================================================
--- Script          : Centros × segmento con días hábiles (CORREGIDO)
+-- Script          : Centros × segmento con dias de semana (CORREGIDO)
 -- Original        : query_centros_transferencia_dias_habiles.sql
 -- Correcciones    :
---   C-01 MEDIO:   ORDER BY dias_habiles_desde_ultima_actividad eliminado.
+--   C-01 MEDIO:   ORDER BY dias_semana_desde_ultima_actividad eliminado.
 --                 Esa columna no existe en el SELECT principal — solo en
 --                 subconsultas internas. Se reemplaza por total_llamadas DESC.
 --   C-02 ALTO:    Tabla fuente: tbl_historico_t3_2025 en lugar de "llamadas_Q3"
 --                 (vista temporal que no existe en el entorno IACT-db).
 --   C-03 ALTO:    Normalización NK90 en id_CTransferencia.
---   C-04 INFO:    fn_es_dia_habil(), fn_contar_dias_habiles(), fn_agregar_dias_habiles()
+--   C-04 INFO:    fn_es_dia_semana(), fn_contar_dias_semana(), fn_agregar_dias_semana()
 --                 son funciones custom — PENDIENTE confirmar si existen en
 --                 MariaDB del cliente (P-14). Se mantienen pero con comentario.
 --
 -- NOTA P-14: Si las funciones fn_* no existen, usar las versiones
---            sin días hábiles hasta que se creen.
+--            sin dias de semana hasta que se creen.
 -- ====================================================================
 
 SET @Q3_nombre  = 'Q03_25';
@@ -54,22 +54,22 @@ SELECT
     MAX(dFecha)                                        AS fecha_ultima_actividad,
 
     -- P-14: funciones custom — verificar existencia antes de ejecutar
-    fn_agregar_dias_habiles(MAX(dFecha), 1)            AS fecha_seguimiento_1_dia,
-    fn_agregar_dias_habiles(MAX(dFecha), 3)            AS fecha_seguimiento_3_dias,
-    fn_agregar_dias_habiles(MAX(dFecha), 5)            AS fecha_escalamiento,
+    fn_agregar_dias_semana(MAX(dFecha), 1)            AS fecha_seguimiento_1_dia,
+    fn_agregar_dias_semana(MAX(dFecha), 3)            AS fecha_seguimiento_3_dias,
+    fn_agregar_dias_semana(MAX(dFecha), 5)            AS fecha_escalamiento,
 
-    COUNT(CASE WHEN fn_es_dia_habil(dFecha) THEN 1 END)     AS llamadas_dias_habiles,
-    COUNT(CASE WHEN NOT fn_es_dia_habil(dFecha) THEN 1 END) AS llamadas_fines_semana,
-    ROUND(COUNT(CASE WHEN fn_es_dia_habil(dFecha) THEN 1 END) * 100.0
-          / COUNT(*), 1)                               AS porcentaje_dias_habiles,
+    COUNT(CASE WHEN fn_es_dia_semana(dFecha) THEN 1 END)     AS llamadas_entre_semana,
+    COUNT(CASE WHEN NOT fn_es_dia_semana(dFecha) THEN 1 END) AS llamadas_fines_semana,
+    ROUND(COUNT(CASE WHEN fn_es_dia_semana(dFecha) THEN 1 END) * 100.0
+          / COUNT(*), 1)                               AS porcentaje_entre_semana,
 
-    fn_contar_dias_habiles(MIN(dFecha), MAX(dFecha))   AS dias_habiles_periodo,
+    fn_contar_dias_semana(MIN(dFecha), MAX(dFecha))   AS dias_semana_periodo,
     DATEDIFF(MAX(dFecha), MIN(dFecha))                 AS dias_calendario_periodo,
 
     CASE
-        WHEN COUNT(CASE WHEN fn_es_dia_habil(dFecha) THEN 1 END) * 1.0
+        WHEN COUNT(CASE WHEN fn_es_dia_semana(dFecha) THEN 1 END) * 1.0
              / NULLIF(COUNT(*), 0) >= 0.8              THEN 'CENTRO_EMPRESARIAL'
-        WHEN COUNT(CASE WHEN NOT fn_es_dia_habil(dFecha) THEN 1 END) * 1.0
+        WHEN COUNT(CASE WHEN NOT fn_es_dia_semana(dFecha) THEN 1 END) * 1.0
              / NULLIF(COUNT(*), 0) >= 0.4              THEN 'CENTRO_MIXTO'
         ELSE                                                'CENTRO_PERSONAL'
     END                                                AS patron_uso_centro,
@@ -87,20 +87,20 @@ SELECT
     ), 2)                                              AS duracion_promedio_segundos,
 
     COUNT(CASE
-        WHEN fn_es_dia_habil(dFecha)
+        WHEN fn_es_dia_semana(dFecha)
          AND TIME(dHoraInicio) BETWEEN '08:00:00' AND '18:00:00'
         THEN 1 END)                                    AS llamadas_horario_comercial,
 
     COUNT(CASE
-        WHEN fn_es_dia_habil(dFecha)
+        WHEN fn_es_dia_semana(dFecha)
          AND TIME(dHoraInicio) NOT BETWEEN '08:00:00' AND '18:00:00'
         THEN 1 END)                                    AS llamadas_fuera_horario,
 
     CASE
         WHEN COUNT(*) >= 20
-         AND fn_contar_dias_habiles(MAX(dFecha), CURDATE()) <= 1  THEN 'CENTRO_CRITICO_ACTIVO'
+         AND fn_contar_dias_semana(MAX(dFecha), CURDATE()) <= 1  THEN 'CENTRO_CRITICO_ACTIVO'
         WHEN COUNT(*) >= 20
-         AND fn_contar_dias_habiles(MAX(dFecha), CURDATE()) > 3   THEN 'CENTRO_ALTO_VOLUMEN_INACTIVO'
+         AND fn_contar_dias_semana(MAX(dFecha), CURDATE()) > 3   THEN 'CENTRO_ALTO_VOLUMEN_INACTIVO'
         WHEN COUNT(*) >= 10                                        THEN 'CENTRO_VOLUMEN_MEDIO'
         ELSE                                                            'CENTRO_BAJO_VOLUMEN'
     END                                                AS clasificacion_centro

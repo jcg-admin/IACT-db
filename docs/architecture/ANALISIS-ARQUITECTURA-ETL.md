@@ -147,8 +147,8 @@ tienen que repetirla o asumir que `base_ivr_detalle` ya la hizo.
 | `fn_normalizar_centro(vDID)` | `'190100008190983030'` | `'19010000'` | ETL + 3 SPs |
 | `fn_normalizar_menu(vMenu)` | `NULL` | `'VACIO'` | ETL + 4 SPs |
 | `fn_duracion_seg(ini, fin)` | datetimes | segundos INT | 1 SP (xsegmento) |
-| `fn_es_dia_habil(fecha)` | DATE | BOOLEAN | 1 SP (xsegmento) |
-| `fn_contar_dias_habiles(ini, fin)` | DATE, DATE | INT | 1 SP (xsegmento) |
+| `fn_es_dia_semana(fecha)` | DATE | BOOLEAN | 1 SP (xsegmento) |
+| `fn_contar_dias_semana(ini, fin)` | DATE, DATE | INT | 1 SP (xsegmento) |
 
 **En el SP maestro**: la lógica de control (concurrencia, quarter actual,
 registro de log) sí es correcta centralizarla — es orquestación, no
@@ -181,9 +181,9 @@ fn_did_segmento            — sin dependencias
 fn_normalizar_menu         — sin dependencias
 fn_normalizar_centro       — sin dependencias
 fn_duracion_seg            — sin dependencias (maneja G-29)
-fn_es_dia_habil            — puede requerir tabla de festivos
-fn_contar_dias_habiles     — depende de fn_es_dia_habil
-fn_agregar_dias_habiles    — depende de fn_es_dia_habil
+fn_es_dia_semana            — puede requerir tabla de festivos
+fn_contar_dias_semana     — depende de fn_es_dia_semana
+fn_agregar_dias_semana    — depende de fn_es_dia_semana
 ```
 
 ### Pipeline granular (SPs independientes)
@@ -197,9 +197,9 @@ NIVEL 0 — Funciones de utilidad
   fn_normalizar_centro()
   fn_normalizar_menu()
   fn_duracion_seg()
-  fn_es_dia_habil()
-  fn_contar_dias_habiles()
-  fn_agregar_dias_habiles()
+  fn_es_dia_semana()
+  fn_contar_dias_semana()
+  fn_agregar_dias_semana()
 
 NIVEL 1 — ETL granular (cada uno independiente)
   sp_etl_base_detalle(p_quarter, p_inicio, p_fin, p_table)
@@ -336,7 +336,7 @@ SET @sql_mes1 = CONCAT('INSERT INTO base_ivr_detalle ...
 | NK90 normalización | CASE inline (6 ramas) | `fn_normalizar_centro()` | Una sola versión correcta |
 | Segmento | CASE inline en cada SP | `fn_did_segmento()` | Una sola versión correcta |
 | Menu normalización | CASE inline | `fn_normalizar_menu()` | Una sola versión correcta |
-| Días hábiles | Pendiente P-14 (cliente) | Crear propias si no existen | Independencia del cliente |
+| Dias de semana | Pendiente P-14 (cliente) | Crear propias si no existen | Independencia del cliente |
 | Job único | `sp_etl_maestro` todo | Pipeline de SPs + maestro | Granularidad de error |
 | Checkpoints | Uno (inicio/fin) | Por paso (detalle/clientes/validar) | Diagnóstico preciso |
 | Crash MariaDB | etl_runs queda en 'en_ejecucion' | Heartbeat desde Django | Detección de timeout |
@@ -353,9 +353,9 @@ PASO 1 — Funciones de utilidad (todo lo demás depende de estas)
   fn_normalizar_menu
   fn_normalizar_centro
   fn_duracion_seg
-  fn_es_dia_habil (propia — no depender del cliente para P-14)
-  fn_contar_dias_habiles
-  fn_agregar_dias_habiles
+  fn_es_dia_semana (propia — no depender del cliente para P-14)
+  fn_contar_dias_semana
+  fn_agregar_dias_semana
 
 PASO 2 — Tablas de control con checkpoints
   job_execution_log (con columna step_name)
@@ -380,8 +380,8 @@ PASO 5 — SPs de reporte (leen base_ivr_* y usan funciones del Paso 1)
   sp_rpt_cMENU_ERROR               (sin funciones especiales)
   sp_rpt_menu_redirigidos          (sin funciones especiales)
   sp_rpt_menu_centro               (sin funciones especiales)
-  sp_rpt_centros_xsegmento         (usa fn_es_dia_habil, fn_contar_dias_habiles,
-                                    fn_agregar_dias_habiles, fn_duracion_seg)
+  sp_rpt_centros_xsegmento         (usa fn_es_dia_semana, fn_contar_dias_semana,
+                                    fn_agregar_dias_semana, fn_duracion_seg)
 
 PASO 6 — Event Scheduler + management command con heartbeat
 PASO 7 — Carga histórica quarter a quarter
@@ -402,7 +402,7 @@ en la instancia de MariaDB que IACT tiene acceso.
 -- Crear en el schema de IACT aunque el cliente ya las tenga
 -- Las propias tienen nombre con prefijo ivr_ para evitar colisión
 
-CREATE FUNCTION ivr_es_dia_habil(p_fecha DATE)
+CREATE FUNCTION ivr_es_dia_semana(p_fecha DATE)
 RETURNS BOOLEAN DETERMINISTIC
 BEGIN
     -- Excluye fines de semana
@@ -423,14 +423,14 @@ BEGIN
     );
 END;
 
-CREATE FUNCTION ivr_contar_dias_habiles(p_ini DATE, p_fin DATE)
+CREATE FUNCTION ivr_contar_dias_semana(p_ini DATE, p_fin DATE)
 RETURNS INT DETERMINISTIC
 BEGIN
     DECLARE v_dias INT DEFAULT 0;
     DECLARE v_fecha DATE;
     SET v_fecha = p_ini;
     WHILE v_fecha <= p_fin DO
-        IF ivr_es_dia_habil(v_fecha) THEN
+        IF ivr_es_dia_semana(v_fecha) THEN
             SET v_dias = v_dias + 1;
         END IF;
         SET v_fecha = DATE_ADD(v_fecha, INTERVAL 1 DAY);
@@ -439,9 +439,9 @@ BEGIN
 END;
 ```
 
-**Nota:** `ivr_contar_dias_habiles` con un WHILE día a día es O(n) en días.
+**Nota:** `ivr_contar_dias_semana` con un WHILE día a día es O(n) en días.
 Para rangos < 90 días (un quarter) es aceptable. Para rangos multi-quarter
-se puede optimizar con la fórmula matemática de días hábiles.
+se puede optimizar con la fórmula matemática de dias de semana.
 
 ---
 
@@ -450,5 +450,5 @@ se puede optimizar con la fórmula matemática de días hábiles.
 - `FLUJO-ETL-COMPLETO.md` — diseño base que este documento revisa
 - `TBL-HISTORICO-ANOMALIAS.md` — G-29 y otras condiciones de calidad
 - `MAPEO-DID-SEGMENTOS.md` — lógica de segmento que fn_did_segmento encapsula
-- `ETL-ANALISIS.md` — P-14 (fn_es_dia_habil del cliente) y R-05..R-10
+- `ETL-ANALISIS.md` — P-14 (fn_es_dia_semana del cliente) y R-05..R-10
 

@@ -35,7 +35,7 @@ Los SPs son la versión parametrizada y estable de esos scripts:
 | SP | Script SQL de origen | Origen del nombre |
 |---|---|---|
 | `sp_rpt_centros_transferencia` | `Script_Centros_Transferencia.sql` | Centros destino de llamadas con métricas detalladas |
-| `sp_rpt_centros_xsegmento` | `Script_Centros_Dias_Habiles.sql` | Centros **por segmento** con días hábiles y clasificación SLA |
+| `sp_rpt_centros_xsegmento` | `Script_Centros_Dias_Habiles.sql` | Centros **por segmento** con dias de semana y clasificación SLA |
 | `sp_rpt_llamadas_abandonadas` | `Script_Llamadas_Abandonadas.sql` | Tasa de abandono por menú |
 | `sp_rpt_menu_redirigidos` | `Script_Transfer_Menu_Opcion.sql` (parte) | Menús que disparan redirección a un centro |
 | `sp_rpt_menu_centro` | `q_menu_centro_transferecia_010925.sql` | Menús y opciones agrupados por centro destino |
@@ -113,7 +113,7 @@ el índice `idx_quarter_fecha` en `base_ivr_detalle` acelera la subconsulta.
 
 **Propósito:** KPIs de centros de transferencia **por segmento**,
 con clasificación de centros según patrón de uso (empresarial/mixto/
-personal) y estado SLA en días hábiles. Es el SP de nivel resumen
+personal) y estado SLA en dias de semana. Es el SP de nivel resumen
 (dashboard); `sp_rpt_centros_transferencia` es el detalle.
 
 **Firma:**
@@ -130,9 +130,9 @@ CALL sp_rpt_centros_xsegmento(@quarter);
 | `segmento` | VARCHAR(20) | 'Puebla', 'nacional_A', 'nacional_B' |
 | `centro_transferencia` | VARCHAR(100) | VDN normalizado |
 | `total_llamadas` | INT | Total del quarter para ese centro+segmento |
-| `llamadas_dias_habiles` | INT | Llamadas en días hábiles (`fn_es_dia_habil`) |
+| `llamadas_entre_semana` | INT | Llamadas en dias de semana (`fn_es_dia_semana`) |
 | `llamadas_fines_semana` | INT | Llamadas en fin de semana |
-| `dias_habiles_desde_hoy` | INT | Días hábiles desde la última llamada (`fn_contar_dias_habiles`) |
+| `dias_semana_desde_hoy` | INT | Dias de semana desde la última llamada (`fn_contar_dias_semana`) |
 | `patron_uso_centro` | VARCHAR(20) | 'CENTRO_EMPRESARIAL' / 'CENTRO_MIXTO' / 'CENTRO_PERSONAL' |
 | `clasificacion_centro` | VARCHAR(40) | 'CENTRO_CRITICO_ACTIVO' / 'CENTRO_ALTO_VOLUMEN_INACTIVO' / 'CENTRO_VOLUMEN_MEDIO' / 'CENTRO_BAJO_VOLUMEN' |
 | `estado_sla` | VARCHAR(30) | 'DENTRO_SLA_HOY' / 'DENTRO_SLA_3_DIAS' / 'FUERA_SLA_CRITICO' / 'FUERA_SLA_ESCALAMIENTO' |
@@ -140,17 +140,17 @@ CALL sp_rpt_centros_xsegmento(@quarter);
 **Lógica de clasificación (PROVEN del script):**
 
 ```sql
--- Patrón de uso por proporción de días hábiles vs fines de semana
+-- Patrón de uso por proporción de dias de semana vs fines de semana
 CASE
-    WHEN llamadas_dias_habiles / total >= 0.8 THEN 'CENTRO_EMPRESARIAL'
+    WHEN llamadas_entre_semana / total >= 0.8 THEN 'CENTRO_EMPRESARIAL'
     WHEN llamadas_fines_semana / total >= 0.4 THEN 'CENTRO_MIXTO'
     ELSE                                           'CENTRO_PERSONAL'
 END AS patron_uso_centro
 
 -- Clasificación por volumen y actividad reciente
 CASE
-    WHEN COUNT(*) >= 20 AND dias_habiles_desde_hoy <= 1 THEN 'CENTRO_CRITICO_ACTIVO'
-    WHEN COUNT(*) >= 20 AND dias_habiles_desde_hoy >  3 THEN 'CENTRO_ALTO_VOLUMEN_INACTIVO'
+    WHEN COUNT(*) >= 20 AND dias_semana_desde_hoy <= 1 THEN 'CENTRO_CRITICO_ACTIVO'
+    WHEN COUNT(*) >= 20 AND dias_semana_desde_hoy >  3 THEN 'CENTRO_ALTO_VOLUMEN_INACTIVO'
     WHEN COUNT(*) >= 10                                  THEN 'CENTRO_VOLUMEN_MEDIO'
     ELSE                                                      'CENTRO_BAJO_VOLUMEN'
 END AS clasificacion_centro
@@ -166,9 +166,9 @@ END AS estado_sla
 
 **Dependencia de funciones MySQL embebidas:**
 
-Este es el único SP que requiere las tres funciones de días hábiles:
-`fn_es_dia_habil(fecha)`, `fn_contar_dias_habiles(ini, fin)`,
-`fn_agregar_dias_habiles(fecha, n)`. Estas funciones deben crearse
+Este es el único SP que requiere las tres funciones de dias de semana:
+`fn_es_dia_semana(fecha)`, `fn_contar_dias_semana(ini, fin)`,
+`fn_agregar_dias_semana(fecha, n)`. Estas funciones deben crearse
 antes que este SP. Son propiedad de la BD IVR del cliente (no de IACT),
 por lo que su existencia debe verificarse antes de crear el SP.
 
@@ -178,7 +178,7 @@ por lo que su existencia debe verificarse antes de crear el SP.
 |---|---|---|
 | Nivel | Detalle por (fecha, segmento, centro, menu, opcion) | Resumen por (segmento, centro) |
 | Filtro | Un segmento a la vez | Todos los segmentos juntos |
-| Métricas | Conteo por combinación menú+opción | KPIs + clasificación SLA + días hábiles |
+| Métricas | Conteo por combinación menú+opción | KPIs + clasificación SLA + dias de semana |
 | UC | UC_RPT_15 (histórico detallado) | UC_RPT_01 (dashboard), UC_RPT_15 |
 | Dependencias | Solo `base_ivr_detalle` | `base_ivr_detalle` + funciones `fn_*` |
 
@@ -446,8 +446,8 @@ base_ivr_detalle (miles de filas, con índices)
   │
   ├── sp_rpt_centros_xsegmento(@quarter)
   │     Resumen: segmento × centro
-  │     Métricas: total, días hábiles, clasificación SLA
-  │     Depende de: fn_es_dia_habil, fn_contar_dias_habiles
+  │     Métricas: total, dias de semana, clasificación SLA
+  │     Depende de: fn_es_dia_semana, fn_contar_dias_semana
   │
   ├── sp_rpt_llamadas_abandonadas(@quarter)
   │     Abandono: VACIO + cliente_colgo + SinOpcion_Cabecera
@@ -480,9 +480,9 @@ El orden de creación es estricto:
 
 ```
 1. Funciones de negocio (si no existen ya en MariaDB del cliente):
-     fn_es_dia_habil(fecha)
-     fn_contar_dias_habiles(fecha_ini, fecha_fin)
-     fn_agregar_dias_habiles(fecha, n)
+     fn_es_dia_semana(fecha)
+     fn_contar_dias_semana(fecha_ini, fecha_fin)
+     fn_agregar_dias_semana(fecha, n)
    ↓
 2. Tablas base ETL:
      base_ivr_detalle
@@ -500,7 +500,7 @@ El orden de creación es estricto:
      sp_rpt_menu_centro             ← solo base_ivr_detalle
      sp_rpt_cMENU_ERROR             ← solo base_ivr_detalle
      sp_rpt_clientes                ← solo base_ivr_clientes
-     sp_rpt_centros_xsegmento      ← base_ivr_detalle + fn_es_dia_habil + fn_contar_dias
+     sp_rpt_centros_xsegmento      ← base_ivr_detalle + fn_es_dia_semana + fn_contar_dias
 ```
 
 Los primeros 6 SPs de reporte pueden crearse en cualquier orden entre ellos.
@@ -527,7 +527,7 @@ Los primeros 6 SPs de reporte pueden crearse en cualquier orden entre ellos.
 | # | Pregunta | Afecta |
 |---|---|---|
 | P-13 | ¿`sp_rpt_menu_redirigidos` necesita columnas de la vista `llamadas_QN` (etiquetas, nidMQ) que no están en `base_ivr_detalle`? | Si SÍ: el ETL necesita un 3er scan o tabla base adicional |
-| P-14 | ¿Existen las funciones `fn_es_dia_habil`, `fn_contar_dias_habiles`, `fn_agregar_dias_habiles` en MariaDB del cliente? | Si NO: deben crearse antes de `sp_rpt_centros_xsegmento` |
+| P-14 | ¿Existen las funciones `fn_es_dia_semana`, `fn_contar_dias_semana`, `fn_agregar_dias_semana` en MariaDB del cliente? | Si NO: deben crearse antes de `sp_rpt_centros_xsegmento` |
 | G-28 | ¿El reporte `llamadas_cmenu` (todos los menús, 34M llamadas) mapea a `base_ivr_detalle` completa o necesita tabla propia? | Si necesita tabla propia: 8° reporte fuera del Scope 1 original |
 | G-29 | ¿Cuál es la causa exacta del defecto en `dFecha`/`dHoraFin` en `tbl_historico_t2/t3_2025`? | Afecta la confiabilidad de cualquier cálculo de duración |
 

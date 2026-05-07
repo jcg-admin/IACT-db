@@ -25,11 +25,11 @@ flowchart LR
             f_nmu(["fn_normalizar_menu"])
             f_nce(["fn_normalizar_centro"])
             f_dur(["fn_duracion_seg"])
-            f_dh(["ivr_es_dia_habil"])
+            f_dh(["ivr_es_dia_semana"])
         end
-        subgraph C1b["Compuestas — dependen de ivr_es_dia_habil"]
-            f_cnt(["ivr_contar_dias_habiles"])
-            f_agr(["ivr_agregar_dias_habiles"])
+        subgraph C1b["Compuestas — dependen de ivr_es_dia_semana"]
+            f_cnt(["ivr_contar_dias_semana"])
+            f_agr(["ivr_agregar_dias_semana"])
         end
     end
 
@@ -261,9 +261,9 @@ flowchart LR
 | `f_nmu` | fn_normalizar_menu | fn_base | 1 | 0 | 1 | 8 nodos |
 | `f_nce` | fn_normalizar_centro | fn_base | 1 | 0 | 1 | 8 nodos |
 | `f_dur` | fn_duracion_seg | fn_base | 1 | 0 | 1 | 9 nodos |
-| `f_dh` | ivr_es_dia_habil | fn_base | 1 | 0 | 4 | **18 nodos** |
-| `f_cnt` | ivr_contar_dias_habiles | fn_comp | 1 | 1 | 1 | 9 nodos |
-| `f_agr` | ivr_agregar_dias_habiles | fn_comp | 1 | 1 | 1 | 9 nodos |
+| `f_dh` | ivr_es_dia_semana | fn_base | 1 | 0 | 4 | **18 nodos** |
+| `f_cnt` | ivr_contar_dias_semana | fn_comp | 1 | 1 | 1 | 9 nodos |
+| `f_agr` | ivr_agregar_dias_semana | fn_comp | 1 | 1 | 1 | 9 nodos |
 | `job_l` | job_execution_log | tbl_ctrl | 2 | 0 | 5 | **10 nodos** |
 | `etl_r` | etl_runs | tbl_ctrl | 2 | 0 | 4 | 4 nodos |
 | `job_c` | job_config | tbl_ctrl | 2 | 0 | 1 | 8 nodos |
@@ -339,11 +339,11 @@ base_ivr_detalle
             └── V_seg
 ```
 
-### 2. ivr_es_dia_habil — 18 nodos afectados
+### 2. ivr_es_dia_semana — 18 nodos afectados
 
-Raíz de la cadena de días hábiles. Un error aquí (festivo faltante,
+Raíz de la cadena de dias de semana. Un error aquí (festivo faltante,
 lógica incorrecta) se propaga **silenciosamente** a `sp_etl_base_detalle`
-(columnas `llamadas_dias_habiles` incorrectas), a `sp_rpt_centros_xsegmento`
+(columnas `llamadas_entre_semana` incorrectas), a `sp_rpt_centros_xsegmento`
 (clasificaciones SLA erróneas) y a todos los endpoints que los consumen.
 No lanza excepciones — el error es invisible sin datos de referencia.
 
@@ -378,7 +378,7 @@ Nodos que no dependen de ningún otro componente del sistema:
 | `fn_normalizar_menu` | fn_base | Función pura sin dependencias |
 | `fn_normalizar_centro` | fn_base | Función pura sin dependencias |
 | `fn_duracion_seg` | fn_base | Función pura sin dependencias |
-| `ivr_es_dia_habil` | fn_base | Función pura sin dependencias |
+| `ivr_es_dia_semana` | fn_base | Función pura sin dependencias |
 | `job_config` | tbl_ctrl | Tabla leída pero no escrita por el sistema |
 | `sp_etl_historico` | sp_etl | SP de entrada manual, nada lo llama |
 | `APScheduler` | scheduler | Disparador externo |
@@ -396,7 +396,7 @@ evt_etl_diario (Nivel 6)
   → sp_etl_maestro (Nivel 3)
     → sp_etl_base_detalle (Nivel 3)
       → fn_did_segmento, fn_normalizar_menu,
-        fn_normalizar_centro, ivr_es_dia_habil (Nivel 1)
+        fn_normalizar_centro, ivr_es_dia_semana (Nivel 1)
       → tbl_historico_t* (Nivel 0) — SCAN 11-14M filas
       → base_ivr_detalle (Nivel 2) — WRITE
       → job_execution_log (Nivel 2) — WRITE checkpoint
@@ -411,9 +411,9 @@ CentrosXSegmentoView (Nivel 5)
       → IVRRouter (Nivel 5)
     → sp_rpt_centros_xsegmento (Nivel 4)
       → base_ivr_detalle (Nivel 2)
-      → ivr_es_dia_habil (Nivel 1)
-        → ivr_contar_dias_habiles (Nivel 1)
-        → ivr_agregar_dias_habiles (Nivel 1)
+      → ivr_es_dia_semana (Nivel 1)
+        → ivr_contar_dias_semana (Nivel 1)
+        → ivr_agregar_dias_semana (Nivel 1)
       → fn_duracion_seg (Nivel 1)
 ```
 
@@ -451,7 +451,7 @@ El grafo confirma y refuerza el orden de `PLAN-IMPLEMENTACION.md`:
 
 3. **SPs ETL solo después de funciones y tablas.** `sp_etl_base_detalle`
    referencia `fn_did_segmento`, `fn_normalizar_menu`, `fn_normalizar_centro`
-   e `ivr_es_dia_habil`. Si alguna falta, el SP compila pero falla en
+   e `ivr_es_dia_semana`. Si alguna falta, el SP compila pero falla en
    ejecución.
 
 4. **SPs de reporte solo necesitan que base_ivr_* exista.** No necesitan

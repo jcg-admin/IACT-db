@@ -265,7 +265,7 @@ El test T-013 verifica esto explícitamente.
 
 ---
 
-**SA-002 — `ivr_es_dia_habil` — festivos hardcoded, Semana Santa excluida**
+**SA-002 — `ivr_es_dia_semana` — festivos hardcoded, Semana Santa excluida**
 
 La función tiene los 7 festivos fijos del Art. 74 LFT hardcoded:
 `01-01`, `02-05`, `03-21`, `05-01`, `09-16`, `11-02`, `11-20`, `12-25`.
@@ -300,10 +300,10 @@ inicial. Debe quedar deshabilitado en `job_config` post-backfill (T-044b).
 
 **SA-005 — `sp_rpt_centros_xsegmento` usa WHILE O(n días)**
 
-`ivr_contar_dias_habiles` y `ivr_agregar_dias_habiles` usan bucles WHILE
+`ivr_contar_dias_semana` y `ivr_agregar_dias_semana` usan bucles WHILE
 que iteran día a día. Con datos de 5 quarters y muchos centros distintos,
 esto puede ser lento. El umbral establecido es < 8s en T-083. Si supera
-ese umbral, la solución es pre-computar `dias_habiles_sin_actividad` en el ETL.
+ese umbral, la solución es pre-computar `dias_semana_sin_actividad` en el ETL.
 
 ---
 
@@ -319,7 +319,7 @@ Bloquean tasks específicas del plan.
 | P-NEW-04 | ¿`sp_etl_base_clientes` usa `cTelefono_Origen` o `cTelefono_Digitado`? | T-034 | Alta |
 | P-NEW-07 | ¿El SP original combina Nacional A+B intencionalmente o es bug? | sp_rpt_llamadas_menu | Media |
 | P-NEW-08 | ¿`llamadas_cmenu` y `prom_llamadas` son el mismo SP con distinta proyección? | documentación | Baja |
-| P-Semana-Santa | ¿Incluir Jueves/Viernes Santo en `ivr_es_dia_habil`? | T-015 | Alta |
+| P-Semana-Santa | CERRADO — IVR opera 7 dias, festivos no aplican | T-015 | — |
 
 ---
 
@@ -329,8 +329,8 @@ Todo lo generado quedó en el repositorio bajo `provisioners/mariadb/`:
 
 | Archivo | Líneas | Contenido |
 |---|---|---|
-| `funciones_utilidad.sql` | 291 | 7 funciones: fn_did_segmento, fn_normalizar_menu, fn_normalizar_centro, fn_duracion_seg, ivr_es_dia_habil, ivr_contar_dias_habiles, ivr_agregar_dias_habiles |
-| `schema_base_ivr.sql` | 225 | DDL: 5 tablas IACT (base_ivr_detalle con llamadas_dias_habiles/fines_semana, base_ivr_clientes, job_execution_log, etl_runs, job_config) |
+| `funciones_utilidad.sql` | 291 | 7 funciones: fn_did_segmento, fn_normalizar_menu, fn_normalizar_centro, fn_duracion_seg, ivr_es_dia_semana, ivr_contar_dias_semana, ivr_agregar_dias_semana |
+| `schema_base_ivr.sql` | 225 | DDL: 5 tablas IACT (base_ivr_detalle con llamadas_entre_semana/fines_semana, base_ivr_clientes, job_execution_log, etl_runs, job_config) |
 | `sp_etl_pipeline.sql` | 481 | 5 SPs ETL: sp_etl_base_detalle, sp_etl_base_clientes, sp_etl_validar, sp_etl_maestro, sp_etl_historico |
 | `sp_rpt_reportes.sql` | 419 | 7 SPs de reporte: sp_rpt_clientes, sp_rpt_centros_transferencia, sp_rpt_llamadas_abandonadas, sp_rpt_menu_redirigidos, sp_rpt_menu_centro, sp_rpt_cMENU_ERROR, sp_rpt_centros_xsegmento |
 | `poblar_historico.py` | 558 | Motor de generación de seed con perfiles por quarter |

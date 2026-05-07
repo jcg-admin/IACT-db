@@ -71,7 +71,7 @@ CREATE PROCEDURE sp_seed_historico_real(
     IN p_force      TINYINT,
     IN p_script_ver VARCHAR(20)
 )
-BEGIN
+sp_seed_historico_real: BEGIN
     DECLARE v_i           INT DEFAULT 0;
     DECLARE v_r           FLOAT;
     DECLARE v_r2          FLOAT;

@@ -74,7 +74,7 @@ etl_detalle: BEGIN
                 (trimestre, fecha, segmento, centro_transferencia,
                  menu, opcion,
                  total_llamadas, misma_linea, linea_diferente, no_digito_telefono,
-                 llamadas_dias_habiles, llamadas_fines_semana)
+                 llamadas_entre_semana, llamadas_fines_semana)
             SELECT
                 ?,                                           -- trimestre
                 DATE_FORMAT(dFecha, ''%Y%m''),               -- fecha (YYYYMM)
@@ -88,8 +88,8 @@ etl_detalle: BEGIN
                 SUM(cTelefono_Origen != cTelefono_Digitado
                     AND cTelefono_Digitado IS NOT NULL),     -- linea_diferente
                 SUM(cTelefono_Digitado IS NULL),             -- no_digito_telefono
-                SUM(ivr_es_dia_habil(dFecha)),               -- llamadas_dias_habiles
-                SUM(NOT ivr_es_dia_habil(dFecha))            -- llamadas_fines_semana
+                SUM(ivr_es_dia_semana(dFecha)),               -- llamadas_entre_semana
+                SUM(NOT ivr_es_dia_semana(dFecha))            -- llamadas_fines_semana
             FROM ', p_table, '
             WHERE dFecha BETWEEN ? AND ?
               AND cDID_800Transfer IN (''19020084'', ''19028031'', ''19020001'')
@@ -104,7 +104,7 @@ etl_detalle: BEGIN
                 misma_linea           = VALUES(misma_linea),
                 linea_diferente       = VALUES(linea_diferente),
                 no_digito_telefono    = VALUES(no_digito_telefono),
-                llamadas_dias_habiles = VALUES(llamadas_dias_habiles),
+                llamadas_entre_semana = VALUES(llamadas_entre_semana),
                 llamadas_fines_semana = VALUES(llamadas_fines_semana),
                 cargado_en         = CURRENT_TIMESTAMP
         ');

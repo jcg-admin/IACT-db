@@ -14,11 +14,11 @@ reales por quarter.
 |---|---|---|---|
 | G-29 | CASE inline en cada SP | `fn_duracion_seg()` | Una sola versión correcta para 38.8% de registros |
 | NK90 / segmento / VACIO | CASE inline duplicado | `fn_normalizar_centro()` `fn_did_segmento()` `fn_normalizar_menu()` | Cambio en un lugar afecta a todos |
-| Días hábiles | Pendiente P-14 (cliente) | `ivr_es_dia_habil()` propias | Independencia del entorno del cliente |
+| Dias de semana | Pendiente P-14 (cliente) | `ivr_es_dia_semana()` propias | Independencia del entorno del cliente |
 | Job | Un solo SP sin checkpoints | Pipeline con checkpoint por paso | Diagnóstico preciso de fallos |
 | Crash MariaDB | `etl_runs` queda en `en_ejecucion` ∞ | Heartbeat desde Django + `timeout_at` | Detección automática de timeout |
 | Transacción | DELETE+INSERT 14M filas | Por mes (chunks ~4M filas) | Undo log manejable en MariaDB 10.1 |
-| Días hábiles en reportes | Require scan a fuente | Pre-computados en ETL (`llamadas_dias_habiles`) | `sp_rpt_centros_xsegmento` sin segundo scan |
+| Dias de semana en reportes | Require scan a fuente | Pre-computados en ETL (`llamadas_entre_semana`) | `sp_rpt_centros_xsegmento` sin segundo scan |
 
 ---
 
@@ -29,8 +29,8 @@ reales por quarter.
 │  NIVEL 0 — Funciones de utilidad  (prerequisito de todo)        │
 │                                                                   │
 │  fn_did_segmento        fn_normalizar_menu    fn_duracion_seg    │
-│  fn_normalizar_centro   ivr_es_dia_habil      ivr_contar_dias_h  │
-│                         ivr_agregar_dias_h                       │
+│  fn_normalizar_centro   ivr_es_dia_semana      ivr_contar_dias_s  │
+│                         ivr_agregar_dias_s                       │
 └──────────────────────────────┬──────────────────────────────────┘
                                │ usan
 ┌──────────────────────────────▼──────────────────────────────────┐
@@ -75,7 +75,7 @@ reales por quarter.
 │  sp_rpt_menu_redirigidos     → docenas de filas                  │
 │  sp_rpt_menu_centro          → docenas de filas                  │
 │  sp_rpt_cMENU_ERROR          → < 10 filas                        │
-│  sp_rpt_centros_xsegmento   → docenas + KPIs SLA + días hábiles │
+│  sp_rpt_centros_xsegmento   → docenas + KPIs SLA + dias de semana │
 └──────────────────────────────┬──────────────────────────────────┘
                                │ cursor.callproc()
 ┌──────────────────────────────▼──────────────────────────────────┐
@@ -130,20 +130,20 @@ fn_duracion_seg(p_ini, p_fin)
   Maneja G-29 (38.8% tienen ini > fin) con ABS()
   Usada por: sp_rpt_centros_xsegmento
 
-ivr_es_dia_habil(p_fecha)
+ivr_es_dia_semana(p_fecha)
   FALSE si DAYOFWEEK IN (1, 7)  [Sáb/Dom]
   FALSE si es festivo fijo MX (Art.74 LFT)
   TRUE  en cualquier otro caso
-  Usada por: sp_etl_base_detalle, ivr_contar_dias_habiles,
-             ivr_agregar_dias_habiles, sp_rpt_centros_xsegmento
+  Usada por: sp_etl_base_detalle, ivr_contar_dias_semana,
+             ivr_agregar_dias_semana, sp_rpt_centros_xsegmento
 
-ivr_contar_dias_habiles(p_ini, p_fin)
-  COUNT de días hábiles en el rango [p_ini, p_fin] inclusive
+ivr_contar_dias_semana(p_ini, p_fin)
+  COUNT de dias de semana en el rango [p_ini, p_fin] inclusive
   O(n días) — aceptable para rangos de un quarter (≤ 92 días)
   Usada por: sp_rpt_centros_xsegmento
 
-ivr_agregar_dias_habiles(p_fecha, p_n)
-  Retorna la fecha después de N días hábiles
+ivr_agregar_dias_semana(p_fecha, p_n)
+  Retorna la fecha después de N dias de semana
   Usada por: sp_rpt_centros_xsegmento (fechas de seguimiento SLA)
 ```
 
@@ -294,7 +294,7 @@ Toda la lógica de normalización llama a las funciones del Nivel 0:
 fn_did_segmento(cDID_800Transfer)           -- DID → 'nacional_A'/'nacional_B'/'puebla'
 fn_normalizar_centro(cDID_Centro_Transferencia)  -- NK90, sentinels
 fn_normalizar_menu(cMenu)                   -- NULL/vacío → 'VACIO'
-ivr_es_dia_habil(dFecha)                   -- pre-computa días hábiles
+ivr_es_dia_semana(dFecha)                   -- pre-computa dias de semana
 ```
 
 ### ON DUPLICATE KEY UPDATE — idempotencia
@@ -357,15 +357,15 @@ aunque la fuente diga `RES-FallaInternet`.
 | Columna | Fuente | Descripción |
 |---|---|---|
 | `total_llamadas` | SUM(total_llamadas) | Volumen total en el quarter |
-| `llamadas_dias_habiles` | SUM(llamadas_dias_habiles) | Pre-computado en ETL |
+| `llamadas_entre_semana` | SUM(llamadas_entre_semana) | Pre-computado en ETL |
 | `llamadas_fines_semana` | SUM(llamadas_fines_semana) | Pre-computado en ETL |
-| `pct_dias_habiles` | Calculado | % de llamadas en días hábiles |
+| `pct_entre_semana` | Calculado | % de llamadas en dias de semana |
 | `primera_actividad` | MIN(fecha) → DATE | Primer mes con datos |
 | `ultima_actividad` | MAX(fecha) → LAST_DAY | Último día del mes más reciente |
-| `dias_habiles_sin_actividad` | `ivr_contar_dias_habiles()` | Días hábiles desde última actividad |
-| `fecha_seguimiento_1_dia` | `ivr_agregar_dias_habiles(max, 1)` | Fecha de primer seguimiento |
-| `fecha_seguimiento_3_dias` | `ivr_agregar_dias_habiles(max, 3)` | Fecha de seguimiento crítico |
-| `fecha_escalamiento` | `ivr_agregar_dias_habiles(max, 5)` | Fecha de escalamiento |
+| `dias_semana_sin_actividad` | `ivr_contar_dias_semana()` | Dias de semana desde última actividad |
+| `fecha_seguimiento_1_dia` | `ivr_agregar_dias_semana(max, 1)` | Fecha de primer seguimiento |
+| `fecha_seguimiento_3_dias` | `ivr_agregar_dias_semana(max, 3)` | Fecha de seguimiento crítico |
+| `fecha_escalamiento` | `ivr_agregar_dias_semana(max, 5)` | Fecha de escalamiento |
 | `clasificacion_sla` | Calculado | ACTIVO_HOY / DENTRO_SLA / RIESGO_SLA / FUERA_SLA / VOLUMEN_MEDIO / BAJO_VOLUMEN |
 | `pct_del_segmento` | Subconsulta | % que este centro representa en su segmento |
 

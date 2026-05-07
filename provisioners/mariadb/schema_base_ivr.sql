@@ -51,9 +51,9 @@ CREATE TABLE IF NOT EXISTS base_ivr_detalle (
     no_digito_telefono   INT           NOT NULL DEFAULT 0
         COMMENT 'COUNT donde cTelefono_Digitado IS NULL (BR-CLIENT-001)',
 
-    -- Métricas de día hábil (pre-computadas en el ETL usando ivr_es_dia_habil)
+    -- Metricas lunes-viernes vs fin de semana (pre-computadas en ETL con ivr_es_dia_semana)
     -- Necesarias para sp_rpt_centros_xsegmento sin regresar a la tabla fuente.
-    llamadas_dias_habiles INT          NOT NULL DEFAULT 0
+    llamadas_entre_semana INT          NOT NULL DEFAULT 0
         COMMENT 'COUNT de llamadas en días hábiles MX (lunes-viernes, no festivos)',
     llamadas_fines_semana INT          NOT NULL DEFAULT 0
         COMMENT 'COUNT de llamadas en sábado o domingo',

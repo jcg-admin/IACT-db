@@ -294,16 +294,16 @@ SELECT
 
 ---
 
-### T-015 — Verificar ivr_es_dia_habil
+### T-015 — Verificar ivr_es_dia_semana
 
 ```sql
 SELECT
-    ivr_es_dia_habil('2025-01-06') AS lunes_normal,  -- TRUE
-    ivr_es_dia_habil('2025-01-04') AS sabado,         -- FALSE
-    ivr_es_dia_habil('2025-01-05') AS domingo,        -- FALSE
-    ivr_es_dia_habil('2025-01-01') AS anio_nuevo,    -- FALSE
-    ivr_es_dia_habil('2025-05-01') AS dia_trabajo,   -- FALSE
-    ivr_es_dia_habil('2025-09-16') AS independencia; -- FALSE
+    ivr_es_dia_semana('2025-01-06') AS lunes_normal,  -- TRUE
+    ivr_es_dia_semana('2025-01-04') AS sabado,         -- FALSE
+    ivr_es_dia_semana('2025-01-05') AS domingo,        -- FALSE
+    ivr_es_dia_semana('2025-01-01') AS anio_nuevo,    -- FALSE
+    ivr_es_dia_semana('2025-05-01') AS dia_trabajo,   -- FALSE
+    ivr_es_dia_semana('2025-09-16') AS independencia; -- FALSE
 ```
 
 **Criterio de aceptación:** Todos los valores coinciden exactamente.
@@ -311,16 +311,16 @@ SELECT
 
 ---
 
-### T-016 — Verificar ivr_contar_dias_habiles
+### T-016 — Verificar ivr_contar_dias_semana
 
 ```sql
 SELECT
-    ivr_contar_dias_habiles('2025-01-01', '2025-01-31') AS enero_2025,   -- 22
-    ivr_contar_dias_habiles('2025-04-01', '2025-06-30') AS q2_2025,      -- 65
-    ivr_contar_dias_habiles('2025-07-01', '2025-09-30') AS q3_2025,      -- 66
-    ivr_contar_dias_habiles('2025-01-15', '2025-01-15') AS mismo_dia_h,  -- 1 (si es lunes)
-    ivr_contar_dias_habiles('2025-01-11', '2025-01-11') AS mismo_dia_f,  -- 0 (sábado)
-    ivr_contar_dias_habiles('2025-03-31', '2025-01-01') AS rango_inv;    -- 0 (rango invertido)
+    ivr_contar_dias_semana('2025-01-01', '2025-01-31') AS enero_2025,   -- 22
+    ivr_contar_dias_semana('2025-04-01', '2025-06-30') AS q2_2025,      -- 65
+    ivr_contar_dias_semana('2025-07-01', '2025-09-30') AS q3_2025,      -- 66
+    ivr_contar_dias_semana('2025-01-15', '2025-01-15') AS mismo_dia_h,  -- 1 (si es lunes)
+    ivr_contar_dias_semana('2025-01-11', '2025-01-11') AS mismo_dia_f,  -- 0 (sábado)
+    ivr_contar_dias_semana('2025-03-31', '2025-01-01') AS rango_inv;    -- 0 (rango invertido)
 ```
 
 **Criterio de aceptación:** enero=22, rango invertido=0.
@@ -328,14 +328,14 @@ SELECT
 
 ---
 
-### T-017 — Verificar ivr_agregar_dias_habiles
+### T-017 — Verificar ivr_agregar_dias_semana
 
 ```sql
 SELECT
-    ivr_agregar_dias_habiles('2025-01-31', 1) AS sig_dia_h,  -- 2025-02-03 (lunes)
-    ivr_agregar_dias_habiles('2025-01-31', 3) AS tres_dias_h, -- 2025-02-05
-    ivr_agregar_dias_habiles('2025-01-31', 5) AS cinco_dias_h, -- 2025-02-07
-    ivr_agregar_dias_habiles('2025-01-15', 0) AS cero_dias;   -- 2025-01-15 (sin cambio)
+    ivr_agregar_dias_semana('2025-01-31', 1) AS sig_dia_h,  -- 2025-02-03 (lunes)
+    ivr_agregar_dias_semana('2025-01-31', 3) AS tres_dias_h, -- 2025-02-05
+    ivr_agregar_dias_semana('2025-01-31', 5) AS cinco_dias_h, -- 2025-02-07
+    ivr_agregar_dias_semana('2025-01-15', 0) AS cero_dias;   -- 2025-01-15 (sin cambio)
 ```
 
 **Criterio de aceptación:** Los 4 valores son fechas laborables válidas.
@@ -370,7 +370,7 @@ SHOW INDEX FROM base_ivr_detalle;
 -- Verificar columnas:
 -- trimestre, fecha, segmento, centro_transferencia, menu, opcion,
 -- total_llamadas, misma_linea, linea_diferente, no_digito_telefono,
--- llamadas_dias_habiles, llamadas_fines_semana, cargado_en
+-- llamadas_entre_semana, llamadas_fines_semana, cargado_en
 -- Verificar índices:
 -- PRIMARY, idx_trim_seg_fecha, idx_trim_menu, idx_trim_centro,
 -- idx_fecha_seg, uk_grain
@@ -508,13 +508,13 @@ WHERE trimestre = 'Q01_25'
       'CASO_ERROR_CEROS','ERROR_CARACTER_INICIAL');
 -- Esperado: 0 (todos los NK90 fueron normalizados)
 
--- Verificar llamadas_dias_habiles > 0
-SELECT SUM(llamadas_dias_habiles), SUM(llamadas_fines_semana)
+-- Verificar llamadas_entre_semana > 0
+SELECT SUM(llamadas_entre_semana), SUM(llamadas_fines_semana)
 FROM base_ivr_detalle WHERE trimestre = 'Q01_25';
 -- Esperado: ambas > 0, dias_habiles >> fines_semana (~80/20)
 ```
 
-**Criterio de aceptación:** NK90 crudos = 0. Segmentos suman al total. `llamadas_dias_habiles` > 0.
+**Criterio de aceptación:** NK90 crudos = 0. Segmentos suman al total. `llamadas_entre_semana` > 0.
 **Riesgo:** MEDIO
 **Tiempo estimado:** 20 min | **Depende de:** T-031
 
@@ -1031,10 +1031,10 @@ CALL sp_rpt_cMENU_ERROR('Q03_25', 'todas');
 CALL sp_rpt_centros_xsegmento('Q01_25');
 -- Verificar columnas:
 -- clasificacion_sla no es NULL
--- dias_habiles_sin_actividad >= 0
+-- dias_semana_sin_actividad >= 0
 -- fecha_seguimiento_1_dia > ultima_actividad
 -- pct_del_segmento suma ≈ 100% por segmento
--- llamadas_dias_habiles > 0 para los centros activos
+-- llamadas_entre_semana > 0 para los centros activos
 ```
 
 **Criterio de aceptación:** Sin errores. `fecha_seguimiento_*` son fechas válidas. `clasificacion_sla` es uno de los 6 valores válidos.
@@ -1262,7 +1262,7 @@ done
 | `sp_rpt_centros_xsegmento` | < 3s (usa funciones ivr_*) |
 
 **Criterio de aceptación:** Ningún endpoint supera 5 segundos con datos de un quarter.
-**Riesgo:** MEDIO — `sp_rpt_centros_xsegmento` llama a `ivr_contar_dias_habiles` por cada fila del result set.
+**Riesgo:** MEDIO — `sp_rpt_centros_xsegmento` llama a `ivr_contar_dias_semana` por cada fila del result set.
 **Tiempo estimado:** 30 min | **Depende de:** T-082
 
 ---

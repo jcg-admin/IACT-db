@@ -12,9 +12,9 @@
 --   2. fn_normalizar_menu        — sin dependencias
 --   3. fn_normalizar_centro      — sin dependencias
 --   4. fn_duracion_seg           — sin dependencias (maneja G-29)
---   5. ivr_es_dia_habil          — sin dependencias (festivos MX)
---   6. ivr_contar_dias_habiles   — depende de ivr_es_dia_habil
---   7. ivr_agregar_dias_habiles  — depende de ivr_es_dia_habil
+--   5. ivr_es_dia_semana          — sin dependencias
+--   6. ivr_contar_dias_semana   — depende de ivr_es_dia_semana
+--   7. ivr_agregar_dias_semana  — depende de ivr_es_dia_semana
 -- =============================================================================
 
 DELIMITER $$
@@ -148,20 +148,20 @@ END$$
 
 
 -- -----------------------------------------------------------------------------
--- ivr_es_dia_habil
+-- ivr_es_dia_semana
 -- Determina si una fecha es dia de semana (lunes a viernes).
 -- Prefijo ivr_ para evitar colision con posibles funciones del cliente (P-14).
 --
 -- CRITERIO: El IVR opera los 7 dias de la semana sin excepcion, incluyendo
 -- festivos nacionales (los datos confirman volumen normal en todos los festivos).
--- Por lo tanto "dia habil" = lunes a viernes, "fin de semana" = sabado/domingo.
+-- Por lo tanto "dia de semana" = lunes a viernes, "fin de semana" = sabado/domingo.
 -- La logica de festivos Art.74 LFT fue eliminada porque no aplica a este contexto.
 --
--- USO: ivr_es_dia_habil('2025-03-21')  -- TRUE (viernes, dia de semana)
---      ivr_es_dia_habil('2025-01-04')  -- FALSE (sabado)
+-- USO: ivr_es_dia_semana('2025-03-21')  -- TRUE (viernes, dia de semana)
+--      ivr_es_dia_semana('2025-01-04')  -- FALSE (sabado)
 -- -----------------------------------------------------------------------------
-DROP FUNCTION IF EXISTS ivr_es_dia_habil$$
-CREATE FUNCTION ivr_es_dia_habil(p_fecha DATE)
+DROP FUNCTION IF EXISTS ivr_es_dia_semana$$
+CREATE FUNCTION ivr_es_dia_semana(p_fecha DATE)
 RETURNS BOOLEAN
 DETERMINISTIC
 COMMENT 'TRUE si p_fecha es lunes a viernes. El IVR opera 7 dias — festivos no aplican.'
@@ -172,21 +172,21 @@ END$$
 
 
 -- -----------------------------------------------------------------------------
--- ivr_contar_dias_habiles
--- Cuenta los días hábiles entre dos fechas (ambas inclusive).
--- Depende de ivr_es_dia_habil.
+-- ivr_contar_dias_semana
+-- Cuenta los dias de semana entre dos fechas (ambas inclusive).
+-- Depende de ivr_es_dia_semana.
 --
 -- COMPLEJIDAD: O(n) donde n = días en el rango.
 -- Para un quarter (90 días) el bucle es de ≤90 iteraciones — aceptable.
 -- Para rangos multi-año considera optimización con fórmula matemática.
 --
--- USO: ivr_contar_dias_habiles('2025-01-01', '2025-03-31')
+-- USO: ivr_contar_dias_semana('2025-01-01', '2025-03-31')
 -- -----------------------------------------------------------------------------
-DROP FUNCTION IF EXISTS ivr_contar_dias_habiles$$
-CREATE FUNCTION ivr_contar_dias_habiles(p_ini DATE, p_fin DATE)
+DROP FUNCTION IF EXISTS ivr_contar_dias_semana$$
+CREATE FUNCTION ivr_contar_dias_semana(p_ini DATE, p_fin DATE)
 RETURNS INT
 DETERMINISTIC
-COMMENT 'Cuenta días hábiles en rango [p_ini, p_fin] inclusive. O(n días).'
+COMMENT 'Cuenta dias de semana en rango [p_ini, p_fin] inclusive. O(n días).'
 BEGIN
     DECLARE v_dias  INT     DEFAULT 0;
     DECLARE v_fecha DATE;
@@ -197,7 +197,7 @@ BEGIN
 
     SET v_fecha = p_ini;
     WHILE v_fecha <= p_fin DO
-        IF ivr_es_dia_habil(v_fecha) THEN
+        IF ivr_es_dia_semana(v_fecha) THEN
             SET v_dias = v_dias + 1;
         END IF;
         SET v_fecha = DATE_ADD(v_fecha, INTERVAL 1 DAY);
@@ -208,17 +208,17 @@ END$$
 
 
 -- -----------------------------------------------------------------------------
--- ivr_agregar_dias_habiles
--- Retorna la fecha resultante de agregar N días hábiles a p_fecha.
--- Depende de ivr_es_dia_habil.
+-- ivr_agregar_dias_semana
+-- Retorna la fecha resultante de agregar N dias de semana a p_fecha.
+-- Depende de ivr_es_dia_semana.
 --
--- USO: ivr_agregar_dias_habiles('2025-01-31', 3) → primer día hábil 3 días después
+-- USO: ivr_agregar_dias_semana('2025-01-31', 3) → primer dia de semana 3 días después
 -- -----------------------------------------------------------------------------
-DROP FUNCTION IF EXISTS ivr_agregar_dias_habiles$$
-CREATE FUNCTION ivr_agregar_dias_habiles(p_fecha DATE, p_n INT)
+DROP FUNCTION IF EXISTS ivr_agregar_dias_semana$$
+CREATE FUNCTION ivr_agregar_dias_semana(p_fecha DATE, p_n INT)
 RETURNS DATE
 DETERMINISTIC
-COMMENT 'Fecha + N días hábiles. Depende de ivr_es_dia_habil.'
+COMMENT 'Fecha + N dias de semana. Depende de ivr_es_dia_semana.'
 BEGIN
     DECLARE v_resultado DATE;
     DECLARE v_contador  INT DEFAULT 0;
@@ -230,7 +230,7 @@ BEGIN
     SET v_resultado = p_fecha;
     WHILE v_contador < p_n DO
         SET v_resultado = DATE_ADD(v_resultado, INTERVAL 1 DAY);
-        IF ivr_es_dia_habil(v_resultado) THEN
+        IF ivr_es_dia_semana(v_resultado) THEN
             SET v_contador = v_contador + 1;
         END IF;
     END WHILE;
@@ -254,11 +254,11 @@ SELECT 'fn_normalizar_centro_nk90',          fn_normalizar_centro('1901000081909
 SELECT 'fn_normalizar_centro_vdn',           fn_normalizar_centro('10828091')                       UNION ALL
 SELECT 'fn_duracion_seg_normal',             fn_duracion_seg('2025-01-15 14:00:00','2025-01-15 14:05:30') UNION ALL
 SELECT 'fn_duracion_seg_g29',               fn_duracion_seg('2025-01-15 14:35:00','2025-01-15 13:58:00') UNION ALL
-SELECT 'ivr_es_dia_habil_lunes',            ivr_es_dia_habil('2025-01-06')                         UNION ALL
-SELECT 'ivr_es_dia_habil_sabado',           ivr_es_dia_habil('2025-01-04')                         UNION ALL
-SELECT 'ivr_es_dia_habil_1enero',           ivr_es_dia_habil('2025-01-01')                         UNION ALL
-SELECT 'ivr_es_dia_habil_mayo1',            ivr_es_dia_habil('2025-05-01')                         UNION ALL
-SELECT 'ivr_contar_dias_habiles_enero',     ivr_contar_dias_habiles('2025-01-01','2025-01-31')      UNION ALL
-SELECT 'ivr_contar_dias_habiles_q2',        ivr_contar_dias_habiles('2025-04-01','2025-06-30')      UNION ALL
-SELECT 'ivr_contar_dias_habiles_q3',        ivr_contar_dias_habiles('2025-07-01','2025-09-30')      UNION ALL
-SELECT 'ivr_agregar_dias_habiles',          ivr_agregar_dias_habiles('2025-01-31', 3);
+SELECT 'ivr_es_dia_semana_lunes',            ivr_es_dia_semana('2025-01-06')                         UNION ALL
+SELECT 'ivr_es_dia_semana_sabado',           ivr_es_dia_semana('2025-01-04')                         UNION ALL
+SELECT 'ivr_es_dia_semana_1enero',           ivr_es_dia_semana('2025-01-01')                         UNION ALL
+SELECT 'ivr_es_dia_semana_mayo1',            ivr_es_dia_semana('2025-05-01')                         UNION ALL
+SELECT 'ivr_contar_dias_semana_enero',     ivr_contar_dias_semana('2025-01-01','2025-01-31')      UNION ALL
+SELECT 'ivr_contar_dias_semana_q2',        ivr_contar_dias_semana('2025-04-01','2025-06-30')      UNION ALL
+SELECT 'ivr_contar_dias_semana_q3',        ivr_contar_dias_semana('2025-07-01','2025-09-30')      UNION ALL
+SELECT 'ivr_agregar_dias_semana',          ivr_agregar_dias_semana('2025-01-31', 3);

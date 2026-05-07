@@ -15,13 +15,13 @@ El análisis de grafo de dependencias (`GRAFO-DEPENDENCIAS.md`) identificó
 
 | Gap identificado | Impacto | Tareas nuevas |
 |---|---|---|
-| `ivr_es_dia_habil` falla silenciosamente — 18 nodos afectados sin excepción | ALTO | T-018, T-019 |
-| Columnas `llamadas_dias_habiles/fines_semana` nunca verificadas | MEDIO | (cubierto en T-018) |
+| `ivr_es_dia_semana` falla silenciosamente — 18 nodos afectados sin excepción | ALTO | T-018, T-019 |
+| Columnas `llamadas_entre_semana/fines_semana` nunca verificadas | MEDIO | (cubierto en T-018) |
 | `etl_runs` recibe escrituras de 4 fuentes — secuencia no testeada | MEDIO | T-057 |
 | `_call_sp()` con 0 filas — `cursor.description` puede ser None en Django+MySQL | ALTO | T-053b |
 | Cadena más larga del sistema (11 nodos) sin test end-to-end explícito | ALTO | T-074 |
 | `sp_etl_historico` debe deshabilitarse en `job_config` post-backfill | BAJO | T-044b |
-| Sin monitoreo post-deployment del ratio días hábiles | MEDIO | T-085 |
+| Sin monitoreo post-deployment del ratio dias de semana | MEDIO | T-085 |
 
 ### Tasks modificadas — criterios de aceptación más precisos
 
@@ -29,7 +29,7 @@ El análisis de grafo de dependencias (`GRAFO-DEPENDENCIAS.md`) identificó
 |---|---|
 | T-013 | Agrega verificación explícita del ORDEN de ramas en `fn_normalizar_centro` |
 | T-015 | Agrega fechas específicas de 2025 con festivos reales del año a procesar |
-| T-032 | Agrega verificación de `llamadas_dias_habiles + llamadas_fines_semana = total` |
+| T-032 | Agrega verificación de `llamadas_entre_semana + llamadas_fines_semana = total` |
 | T-051 | Agrega verificación de que IVRRouter bloquea migraciones en BD `ivr` |
 | T-083 | Agrega umbral específico para `sp_rpt_centros_xsegmento` (cadena más larga) |
 
@@ -249,26 +249,26 @@ SELECT
 
 ---
 
-### T-015 — Verificar ivr_es_dia_habil *(MODIFICADA)*
+### T-015 — Verificar ivr_es_dia_semana *(MODIFICADA)*
 
 ```sql
 -- Casos básicos
 SELECT
-    ivr_es_dia_habil('2025-01-06') AS lunes,        -- TRUE
-    ivr_es_dia_habil('2025-01-04') AS sabado,        -- FALSE
-    ivr_es_dia_habil('2025-01-05') AS domingo,       -- FALSE
-    ivr_es_dia_habil('2025-01-01') AS anio_nuevo,   -- FALSE
-    ivr_es_dia_habil('2025-05-01') AS dia_trabajo,  -- FALSE
-    ivr_es_dia_habil('2025-09-16') AS independencia; -- FALSE
+    ivr_es_dia_semana('2025-01-06') AS lunes,        -- TRUE
+    ivr_es_dia_semana('2025-01-04') AS sabado,        -- FALSE
+    ivr_es_dia_semana('2025-01-05') AS domingo,       -- FALSE
+    ivr_es_dia_semana('2025-01-01') AS anio_nuevo,   -- FALSE
+    ivr_es_dia_semana('2025-05-01') AS dia_trabajo,  -- FALSE
+    ivr_es_dia_semana('2025-09-16') AS independencia; -- FALSE
 
 -- Fechas específicas del periodo Q1-Q3 2025 (datos reales que se procesarán)
--- Verificar festivos del año real — estos afectan las columnas llamadas_dias_habiles
+-- Verificar festivos del año real — estos afectan las columnas llamadas_entre_semana
 SELECT
-    ivr_es_dia_habil('2025-02-05') AS constitucion,  -- FALSE (festivo fijo)
-    ivr_es_dia_habil('2025-03-21') AS juarez,        -- FALSE (festivo fijo)
-    ivr_es_dia_habil('2025-03-24') AS lun_normal,    -- TRUE  (lunes, no es festivo)
-    ivr_es_dia_habil('2025-11-20') AS revolucion,    -- FALSE (festivo fijo)
-    ivr_es_dia_habil('2025-11-17') AS lun_pre_rev;   -- TRUE  (lunes previo, NO es festivo en esta implementación)
+    ivr_es_dia_semana('2025-02-05') AS constitucion,  -- FALSE (festivo fijo)
+    ivr_es_dia_semana('2025-03-21') AS juarez,        -- FALSE (festivo fijo)
+    ivr_es_dia_semana('2025-03-24') AS lun_normal,    -- TRUE  (lunes, no es festivo)
+    ivr_es_dia_semana('2025-11-20') AS revolucion,    -- FALSE (festivo fijo)
+    ivr_es_dia_semana('2025-11-17') AS lun_pre_rev;   -- TRUE  (lunes previo, NO es festivo en esta implementación)
 ```
 
 **NOTA sobre Semana Santa:** Las fechas de Jueves y Viernes Santo son variables.
@@ -278,8 +278,8 @@ Esto es una limitación documentada — verificar que el equipo la acepta.
 
 ```sql
 SELECT
-    ivr_es_dia_habil('2025-04-17') AS jueves_santo_2025,  -- TRUE (no está en catálogo)
-    ivr_es_dia_habil('2025-04-18') AS viernes_santo_2025;  -- TRUE (no está en catálogo)
+    ivr_es_dia_semana('2025-04-17') AS jueves_santo_2025,  -- TRUE (no está en catálogo)
+    ivr_es_dia_semana('2025-04-18') AS viernes_santo_2025;  -- TRUE (no está en catálogo)
 -- Si el equipo requiere Semana Santa, agregar a funciones_utilidad.sql antes de continuar
 ```
 
@@ -289,31 +289,31 @@ Equipo confirma comportamiento de Semana Santa.
 
 ---
 
-### T-016 — Verificar ivr_contar_dias_habiles
+### T-016 — Verificar ivr_contar_dias_semana
 
 ```sql
 SELECT
-    ivr_contar_dias_habiles('2025-01-01', '2025-01-31') AS enero_2025, -- 22
-    ivr_contar_dias_habiles('2025-04-01', '2025-06-30') AS q2_2025,    -- 65
-    ivr_contar_dias_habiles('2025-07-01', '2025-09-30') AS q3_2025,    -- 66
-    ivr_contar_dias_habiles('2025-01-15', '2025-01-15') AS mismo_dia_h, -- 1
-    ivr_contar_dias_habiles('2025-01-11', '2025-01-11') AS mismo_dia_f, -- 0 (sábado)
-    ivr_contar_dias_habiles('2025-03-31', '2025-01-01') AS rango_inv;   -- 0
+    ivr_contar_dias_semana('2025-01-01', '2025-01-31') AS enero_2025, -- 22
+    ivr_contar_dias_semana('2025-04-01', '2025-06-30') AS q2_2025,    -- 65
+    ivr_contar_dias_semana('2025-07-01', '2025-09-30') AS q3_2025,    -- 66
+    ivr_contar_dias_semana('2025-01-15', '2025-01-15') AS mismo_dia_h, -- 1
+    ivr_contar_dias_semana('2025-01-11', '2025-01-11') AS mismo_dia_f, -- 0 (sábado)
+    ivr_contar_dias_semana('2025-03-31', '2025-01-01') AS rango_inv;   -- 0
 ```
 
-**Criterio:** enero=22, rango invertido=0.
+**Criterio:** enero=23, rango invertido=0.
 **Tiempo:** 10 min | **Depende de:** T-010
 
 ---
 
-### T-017 — Verificar ivr_agregar_dias_habiles
+### T-017 — Verificar ivr_agregar_dias_semana
 
 ```sql
 SELECT
-    ivr_agregar_dias_habiles('2025-01-31', 1) AS sig_dia,    -- 2025-02-03 (lunes)
-    ivr_agregar_dias_habiles('2025-01-31', 3) AS tres_dias,  -- 2025-02-05
-    ivr_agregar_dias_habiles('2025-01-31', 5) AS cinco_dias, -- 2025-02-07
-    ivr_agregar_dias_habiles('2025-01-15', 0) AS cero_dias;  -- 2025-01-15
+    ivr_agregar_dias_semana('2025-01-31', 1) AS sig_dia,    -- 2025-02-03 (lunes)
+    ivr_agregar_dias_semana('2025-01-31', 3) AS tres_dias,  -- 2025-02-05
+    ivr_agregar_dias_semana('2025-01-31', 5) AS cinco_dias, -- 2025-02-07
+    ivr_agregar_dias_semana('2025-01-15', 0) AS cero_dias;  -- 2025-01-15
 ```
 
 **Criterio:** Los 4 valores son fechas laborables válidas.
@@ -321,10 +321,10 @@ SELECT
 
 ---
 
-### T-018 — Verificar integridad de llamadas_dias_habiles + llamadas_fines_semana *(NUEVA)*
+### T-018 — Verificar integridad de llamadas_entre_semana + llamadas_fines_semana *(NUEVA)*
 
 **Origen:** Análisis de grafo — columnas nuevas en schema v2 nunca verificadas en plan v1.
-`ivr_es_dia_habil` afecta 18 nodos silenciosamente si retorna valores incorrectos.
+`ivr_es_dia_semana` afecta 18 nodos silenciosamente si retorna valores incorrectos.
 
 ```sql
 -- Ejecutar DESPUÉS de T-032 (cuando base_ivr_detalle tenga datos de Q01_25)
@@ -332,23 +332,23 @@ SELECT
 SELECT COUNT(*) AS filas_con_error
 FROM base_ivr_detalle
 WHERE trimestre = 'Q01_25'
-  AND (llamadas_dias_habiles + llamadas_fines_semana) != total_llamadas;
+  AND (llamadas_entre_semana + llamadas_fines_semana) != total_llamadas;
 -- Esperado: 0
 
--- 2. Ratio razonable: días hábiles = 5/7 del tiempo ≈ 71.4%, ajustado por festivos ~69-72%
+-- 2. Ratio razonable: dias de semana = 5/7 del tiempo ≈ 71.4%, ajustado por festivos ~69-72%
 SELECT
-    SUM(llamadas_dias_habiles) AS total_h,
+    SUM(llamadas_entre_semana) AS total_entre_semana,
     SUM(llamadas_fines_semana) AS total_fin,
     SUM(total_llamadas)        AS total,
-    ROUND(SUM(llamadas_dias_habiles) / SUM(total_llamadas) * 100, 1) AS pct_habiles
+    ROUND(SUM(llamadas_entre_semana) / SUM(total_llamadas) * 100, 1) AS pct_entre_semana
 FROM base_ivr_detalle
 WHERE trimestre = 'Q01_25';
--- Esperado: pct_habiles entre 65% y 80%
--- Si pct_habiles < 50% o > 90%: error en ivr_es_dia_habil
+-- Esperado: pct_entre_semana entre 65% y 80%
+-- Si pct_entre_semana < 50% o > 90%: error en ivr_es_dia_semana
 
 -- 3. Verificar que los 3 meses del quarter tienen distribución similar
 SELECT fecha,
-    ROUND(SUM(llamadas_dias_habiles) / SUM(total_llamadas) * 100, 1) AS pct_h
+    ROUND(SUM(llamadas_entre_semana) / SUM(total_llamadas) * 100, 1) AS pct_h
 FROM base_ivr_detalle
 WHERE trimestre = 'Q01_25'
 GROUP BY fecha
@@ -357,26 +357,26 @@ ORDER BY fecha;
 -- Tolerancia: ±5pp respecto al teórico
 ```
 
-**Criterio:** `filas_con_error = 0`. `pct_habiles` entre 65% y 80%. Sin meses outliers.
-**Riesgo:** ALTO — detecta fallo silencioso de `ivr_es_dia_habil`
+**Criterio:** `filas_con_error = 0`. `pct_entre_semana` entre 65% y 80%. Sin meses outliers.
+**Riesgo:** ALTO — detecta fallo silencioso de `ivr_es_dia_semana`
 **Tiempo:** 15 min | **Depende de:** T-032
 
 ---
 
-### T-019 — Test de propagación del fallo silencioso de ivr_es_dia_habil *(NUEVA)*
+### T-019 — Test de propagación del fallo silencioso de ivr_es_dia_semana *(NUEVA)*
 
-**Origen:** Análisis de grafo — `ivr_es_dia_habil` afecta 18 nodos sin lanzar excepción.
+**Origen:** Análisis de grafo — `ivr_es_dia_semana` afecta 18 nodos sin lanzar excepción.
 Es el fallo más peligroso del sistema porque no hay señal de error visible.
 
 ```sql
 -- Simular función incorrecta: modificar temporalmente para siempre retornar TRUE
 -- (como si todos los días fueran hábiles)
-DROP FUNCTION IF EXISTS ivr_es_dia_habil_backup;
-CREATE FUNCTION ivr_es_dia_habil_backup(p_fecha DATE) RETURNS BOOLEAN DETERMINISTIC
-BEGIN RETURN ivr_es_dia_habil(p_fecha); END;
+DROP FUNCTION IF EXISTS ivr_es_dia_semana_backup;
+CREATE FUNCTION ivr_es_dia_semana_backup(p_fecha DATE) RETURNS BOOLEAN DETERMINISTIC
+BEGIN RETURN ivr_es_dia_semana(p_fecha); END;
 
 -- Versión "rota" que siempre retorna TRUE
-CREATE OR REPLACE FUNCTION ivr_es_dia_habil(p_fecha DATE) RETURNS BOOLEAN DETERMINISTIC
+CREATE OR REPLACE FUNCTION ivr_es_dia_semana(p_fecha DATE) RETURNS BOOLEAN DETERMINISTIC
 BEGIN RETURN TRUE; END;
 
 -- Reprocesar enero Q01_25 con la función rota
@@ -384,22 +384,22 @@ DELETE FROM base_ivr_detalle WHERE trimestre = 'Q01_25' AND fecha = '202501';
 CALL sp_etl_base_detalle('Q01_25', '2025-01-01', '2025-01-31',
      'tbl_historico_t1_2025', NULL);
 
--- Verificar que pct_habiles ahora es 100% (detecta la corrupción silenciosa)
-SELECT ROUND(SUM(llamadas_dias_habiles)/SUM(total_llamadas)*100,1) AS pct_h
+-- Verificar que pct_entre_semana ahora es 100% (detecta la corrupción silenciosa)
+SELECT ROUND(SUM(llamadas_entre_semana)/SUM(total_llamadas)*100,1) AS pct_h
 FROM base_ivr_detalle WHERE trimestre='Q01_25' AND fecha='202501';
 -- Esperado: 100% (confirma que el test detecta el problema)
 
 -- Restaurar función correcta
-DROP FUNCTION ivr_es_dia_habil;
-CREATE FUNCTION ivr_es_dia_habil(p_fecha DATE) RETURNS BOOLEAN DETERMINISTIC
-BEGIN RETURN ivr_es_dia_habil_backup(p_fecha); END;
-DROP FUNCTION ivr_es_dia_habil_backup;
+DROP FUNCTION ivr_es_dia_semana;
+CREATE FUNCTION ivr_es_dia_semana(p_fecha DATE) RETURNS BOOLEAN DETERMINISTIC
+BEGIN RETURN ivr_es_dia_semana_backup(p_fecha); END;
+DROP FUNCTION ivr_es_dia_semana_backup;
 
 -- Reprocesar con función correcta y verificar recuperación
 DELETE FROM base_ivr_detalle WHERE trimestre = 'Q01_25' AND fecha = '202501';
 CALL sp_etl_base_detalle('Q01_25', '2025-01-01', '2025-01-31',
      'tbl_historico_t1_2025', NULL);
-SELECT ROUND(SUM(llamadas_dias_habiles)/SUM(total_llamadas)*100,1) AS pct_h
+SELECT ROUND(SUM(llamadas_entre_semana)/SUM(total_llamadas)*100,1) AS pct_h
 FROM base_ivr_detalle WHERE trimestre='Q01_25' AND fecha='202501';
 -- Esperado: ~70% (correcto)
 ```
@@ -430,13 +430,13 @@ DESCRIBE base_ivr_detalle;
 SHOW INDEX FROM base_ivr_detalle;
 ```
 
-**Criterio:** 13 columnas presentes incluyendo `llamadas_dias_habiles` y
+**Criterio:** 13 columnas presentes incluyendo `llamadas_entre_semana` y
 `llamadas_fines_semana` (columnas nuevas de v2). 6 índices incluyendo `uk_grain`.
 
 **Lista de columnas esperadas:**
 `id, trimestre, fecha, segmento, centro_transferencia, menu, opcion,
 total_llamadas, misma_linea, linea_diferente, no_digito_telefono,
-llamadas_dias_habiles, llamadas_fines_semana, cargado_en`
+llamadas_entre_semana, llamadas_fines_semana, cargado_en`
 
 **Riesgo:** MEDIO | **Tiempo:** 10 min | **Depende de:** T-020
 
@@ -527,14 +527,14 @@ WHERE trimestre='Q01_25' AND LENGTH(centro_transferencia)>10
       ('CASO_NULL','CLIENTE_COLGO','CASO_ERROR_CEROS','ERROR_CARACTER_INICIAL');
 -- Esperado: 0
 
--- 3. NUEVO v2: Integridad de llamadas_dias_habiles + llamadas_fines_semana
+-- 3. NUEVO v2: Integridad de llamadas_entre_semana + llamadas_fines_semana
 SELECT COUNT(*) AS filas_error FROM base_ivr_detalle
 WHERE trimestre='Q01_25'
-  AND (llamadas_dias_habiles + llamadas_fines_semana) != total_llamadas;
+  AND (llamadas_entre_semana + llamadas_fines_semana) != total_llamadas;
 -- Esperado: 0
 
--- 4. NUEVO v2: Ratio días hábiles razonable
-SELECT ROUND(SUM(llamadas_dias_habiles)/SUM(total_llamadas)*100,1) AS pct_h
+-- 4. NUEVO v2: Ratio dias de semana razonable
+SELECT ROUND(SUM(llamadas_entre_semana)/SUM(total_llamadas)*100,1) AS pct_h
 FROM base_ivr_detalle WHERE trimestre='Q01_25';
 -- Esperado: entre 65% y 80%
 ```
@@ -1025,7 +1025,7 @@ CALL sp_rpt_centros_xsegmento('Q01_25');
 -- clasificacion_sla no NULL
 -- fecha_seguimiento_1_dia > ultima_actividad
 -- pct_del_segmento suma ≈ 100% por segmento
--- llamadas_dias_habiles > 0 para centros activos
+-- llamadas_entre_semana > 0 para centros activos
 ```
 
 **Criterio:** Sin errores. `clasificacion_sla` es uno de los 6 valores válidos.
@@ -1126,7 +1126,7 @@ curl "http://localhost:8000/api/ivr/reportes/clientes/?quarter=INVALIDO"
 ### T-074 — Test end-to-end cadena más larga (CentrosXSegmentoView → 11 nodos) *(NUEVA)*
 
 **Origen:** Análisis de grafo — cadena de 11 nodos, la más larga del sistema.
-Toca `ivr_es_dia_habil`, `ivr_contar_dias_habiles`, `ivr_agregar_dias_habiles`
+Toca `ivr_es_dia_semana`, `ivr_contar_dias_semana`, `ivr_agregar_dias_semana`
 y `fn_duracion_seg`. Ningún otro endpoint usa tantas funciones de utilidad.
 
 ```bash
@@ -1145,11 +1145,11 @@ assert resp.status_code == 200
 data = resp.json()['datos']
 assert len(data) > 0, "Debe retornar datos"
 
-# Verificar que los campos de días hábiles están presentes
+# Verificar que los campos de dias de semana están presentes
 primer = data[0]
-required = ['clasificacion_sla','dias_habiles_sin_actividad',
+required = ['clasificacion_sla','dias_semana_sin_actividad',
             'fecha_seguimiento_1_dia','fecha_seguimiento_3_dias',
-            'fecha_escalamiento','llamadas_dias_habiles','pct_dias_habiles']
+            'fecha_escalamiento','llamadas_entre_semana','pct_entre_semana']
 for campo in required:
     assert campo in primer, f"Campo faltante: {campo}"
     assert primer[campo] is not None, f"Campo None: {campo}"
@@ -1160,14 +1160,14 @@ for row in data:
         'ACTIVO_HOY','DENTRO_SLA','RIESGO_SLA','FUERA_SLA',
         'VOLUMEN_MEDIO','BAJO_VOLUMEN'
     ], f"SLA inválido: {row['clasificacion_sla']}"
-    assert 0 <= row.get('pct_dias_habiles',0) <= 100
+    assert 0 <= row.get('pct_entre_semana',0) <= 100
 
 print(f"OK: {len(data)} centros retornados con todos los campos correctos")
 ```
 
-**Criterio:** HTTP 200. Todos los campos de días hábiles presentes y no-nulos.
-`clasificacion_sla` es uno de los 6 valores válidos. `pct_dias_habiles` en [0,100].
-**Riesgo:** ALTO — valida la cadena más larga incluyendo `ivr_es_dia_habil`
+**Criterio:** HTTP 200. Todos los campos de dias de semana presentes y no-nulos.
+`clasificacion_sla` es uno de los 6 valores válidos. `pct_entre_semana` en [0,100].
+**Riesgo:** ALTO — valida la cadena más larga incluyendo `ivr_es_dia_semana`
 **Tiempo:** 30 min | **Depende de:** T-073, T-018
 
 ---
@@ -1242,8 +1242,8 @@ time curl -s "http://localhost:8000/api/ivr/reportes/centros-segmento/?quarter=Q
 | centros | sp_rpt_centros_transferencia | < 1s | < 3s |
 | **centros-segmento** | **sp_rpt_centros_xsegmento** | **< 3s** | **< 8s** |
 
-**Si `centros-segmento` supera 8s:** `ivr_contar_dias_habiles` usa un WHILE
-O(n días) por cada fila del result set. Pre-computar `dias_habiles_sin_actividad`
+**Si `centros-segmento` supera 8s:** `ivr_contar_dias_semana` usa un WHILE
+O(n días) por cada fila del result set. Pre-computar `dias_semana_sin_actividad`
 en el ETL como columna de `base_ivr_detalle` o en una tabla auxiliar.
 
 **Criterio:** Ningún endpoint supera su umbral máximo.
@@ -1270,34 +1270,34 @@ ETL_SCHEDULE_MINUTE=0
 
 ---
 
-### T-085 — Crear query de monitoreo del ratio días hábiles *(NUEVA)*
+### T-085 — Crear query de monitoreo del ratio dias de semana *(NUEVA)*
 
-**Origen:** Análisis de grafo — `ivr_es_dia_habil` genera fallos silenciosos
+**Origen:** Análisis de grafo — `ivr_es_dia_semana` genera fallos silenciosos
 que afectan 18 nodos. Se necesita una query de monitoreo continuo para detectar
 si el ratio empieza a desviarse sin que ningún componente lance excepciones.
 
 ```sql
 -- Query de monitoreo — ejecutar semanalmente o después de cada ETL
--- Alertar si pct_habiles < 60% o > 85% en cualquier quarter
+-- Alertar si pct_entre_semana < 60% o > 85% en cualquier quarter
 
-CREATE OR REPLACE VIEW vw_monitor_dias_habiles AS
+CREATE OR REPLACE VIEW vw_monitor_dias_semana AS
 SELECT
     trimestre,
     fecha,
     SUM(total_llamadas)        AS total,
-    SUM(llamadas_dias_habiles) AS habiles,
+    SUM(llamadas_entre_semana) AS habiles,
     SUM(llamadas_fines_semana) AS fin_semana,
     -- Integridad: debe ser 0 siempre
-    SUM(total_llamadas) - SUM(llamadas_dias_habiles)
+    SUM(total_llamadas) - SUM(llamadas_entre_semana)
         - SUM(llamadas_fines_semana)    AS error_suma,
-    -- Ratio: fuera de [60%, 85%] indica problema en ivr_es_dia_habil
-    ROUND(SUM(llamadas_dias_habiles)
-          / NULLIF(SUM(total_llamadas),0) * 100, 1) AS pct_habiles,
+    -- Ratio: fuera de [60%, 85%] indica problema en ivr_es_dia_semana
+    ROUND(SUM(llamadas_entre_semana)
+          / NULLIF(SUM(total_llamadas),0) * 100, 1) AS pct_entre_semana,
     CASE
         WHEN SUM(total_llamadas)=0 THEN 'SIN_DATOS'
-        WHEN SUM(total_llamadas) != SUM(llamadas_dias_habiles)
+        WHEN SUM(total_llamadas) != SUM(llamadas_entre_semana)
              + SUM(llamadas_fines_semana) THEN 'ERROR_INTEGRIDAD'
-        WHEN SUM(llamadas_dias_habiles)/SUM(total_llamadas)*100 NOT BETWEEN 60 AND 85
+        WHEN SUM(llamadas_entre_semana)/SUM(total_llamadas)*100 NOT BETWEEN 60 AND 85
             THEN 'ALERTA_RATIO'
         ELSE 'OK'
     END AS estado_monitor
@@ -1305,12 +1305,12 @@ FROM base_ivr_detalle
 GROUP BY trimestre, fecha;
 
 -- Verificar que no hay alertas activas post-backfill
-SELECT * FROM vw_monitor_dias_habiles WHERE estado_monitor != 'OK';
+SELECT * FROM vw_monitor_dias_semana WHERE estado_monitor != 'OK';
 -- Esperado: 0 filas
 ```
 
 **Criterio:** Vista creada. `SELECT ... WHERE estado_monitor != 'OK'` retorna 0 filas.
-**Riesgo:** MEDIO — detecta fallos futuros silenciosos de `ivr_es_dia_habil`
+**Riesgo:** MEDIO — detecta fallos futuros silenciosos de `ivr_es_dia_semana`
 **Tiempo:** 20 min | **Depende de:** T-082
 
 ---
@@ -1341,7 +1341,7 @@ T-010 → T-013 → T-015 → T-019  (funciones — ALTA prioridad por fallo sil
          ↓
 T-020 → T-021 → T-030 → T-031 → T-032 → T-033 → T-034 → T-035
                                     ↓
-                                   T-018  (verificación días hábiles — NUEVA)
+                                   T-018  (verificación dias de semana — NUEVA)
                                     ↓
 T-040 → T-041 → T-042 → T-043 → T-044 → T-044b (backfill + disable historico)
                                               ↓
@@ -1361,7 +1361,7 @@ T-080 → T-081 → T-082 → T-083 → T-085  (producción + monitoreo — NUEV
 | ID | Pregunta | Bloquea |
 |---|---|---|
 | P-NEW-04 | ¿`sp_etl_base_clientes` usa `cTelefono_Origen` o `cTelefono_Digitado`? | T-034 |
-| P-Semana-Santa | ¿La función `ivr_es_dia_habil` debe incluir Jueves/Viernes Santo? | T-015 |
+| P-Semana-Santa | CERRADO — IVR opera 7 dias, festivos no aplican. `ivr_es_dia_semana` = lun-vie. | T-015 |
 
 ---
 
