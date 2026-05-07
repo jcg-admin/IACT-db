@@ -149,55 +149,25 @@ END$$
 
 -- -----------------------------------------------------------------------------
 -- ivr_es_dia_habil
--- Determina si una fecha es día hábil en México.
--- Prefijo ivr_ para evitar colisión con posibles funciones del cliente (P-14).
+-- Determina si una fecha es dia de semana (lunes a viernes).
+-- Prefijo ivr_ para evitar colision con posibles funciones del cliente (P-14).
 --
--- Festivos fijos (Ley Federal del Trabajo Art. 74):
---   1 Enero   — Año nuevo
---   5 Febrero — Día de la Constitución (oficialmente primer lunes de Feb desde 2006)
---   21 Marzo  — Natalicio Juárez (tercer lunes de Marzo desde 2006)
---   1 Mayo    — Día del Trabajo
---   16 Sep    — Independencia
---   20 Nov    — Revolución (tercer lunes de Nov desde 2006)
---   25 Dic    — Navidad
+-- CRITERIO: El IVR opera los 7 dias de la semana sin excepcion, incluyendo
+-- festivos nacionales (los datos confirman volumen normal en todos los festivos).
+-- Por lo tanto "dia habil" = lunes a viernes, "fin de semana" = sabado/domingo.
+-- La logica de festivos Art.74 LFT fue eliminada porque no aplica a este contexto.
 --
--- NOTA: Los días de puente (lunes) requieren una tabla de festivos para
--- precisión total. Esta implementación usa las fechas fijas como aproximación.
--- Para el cálculo de SLA del IVR la diferencia es aceptable.
---
--- USO: ivr_es_dia_habil('2025-03-21')
+-- USO: ivr_es_dia_habil('2025-03-21')  -- TRUE (viernes, dia de semana)
+--      ivr_es_dia_habil('2025-01-04')  -- FALSE (sabado)
 -- -----------------------------------------------------------------------------
 DROP FUNCTION IF EXISTS ivr_es_dia_habil$$
 CREATE FUNCTION ivr_es_dia_habil(p_fecha DATE)
 RETURNS BOOLEAN
 DETERMINISTIC
-COMMENT 'TRUE si p_fecha es día hábil en México (fines de semana + festivos fijos).'
+COMMENT 'TRUE si p_fecha es lunes a viernes. El IVR opera 7 dias — festivos no aplican.'
 BEGIN
-    DECLARE v_anio CHAR(4);
-    DECLARE v_mmdd CHAR(5);
-
-    -- Fin de semana
-    IF DAYOFWEEK(p_fecha) IN (1, 7) THEN  -- 1=Domingo, 7=Sábado
-        RETURN FALSE;
-    END IF;
-
-    SET v_anio = YEAR(p_fecha);
-    SET v_mmdd = DATE_FORMAT(p_fecha, '%m-%d');
-
-    -- Festivos fijos (Art. 74 LFT)
-    IF v_mmdd IN (
-        '01-01',   -- Año nuevo
-        '02-05',   -- Constitución (fecha base — puede ser puente)
-        '03-21',   -- Natalicio Juárez (fecha base — puede ser puente)
-        '05-01',   -- Día del Trabajo
-        '09-16',   -- Independencia
-        '11-20',   -- Revolución (fecha base — puede ser puente)
-        '12-25'    -- Navidad
-    ) THEN
-        RETURN FALSE;
-    END IF;
-
-    RETURN TRUE;
+    -- 1=Domingo, 7=Sabado en MySQL DAYOFWEEK()
+    RETURN DAYOFWEEK(p_fecha) NOT IN (1, 7);
 END$$
 
 
@@ -287,5 +257,8 @@ SELECT 'fn_duracion_seg_g29',               fn_duracion_seg('2025-01-15 14:35:00
 SELECT 'ivr_es_dia_habil_lunes',            ivr_es_dia_habil('2025-01-06')                         UNION ALL
 SELECT 'ivr_es_dia_habil_sabado',           ivr_es_dia_habil('2025-01-04')                         UNION ALL
 SELECT 'ivr_es_dia_habil_1enero',           ivr_es_dia_habil('2025-01-01')                         UNION ALL
+SELECT 'ivr_es_dia_habil_mayo1',            ivr_es_dia_habil('2025-05-01')                         UNION ALL
 SELECT 'ivr_contar_dias_habiles_enero',     ivr_contar_dias_habiles('2025-01-01','2025-01-31')      UNION ALL
+SELECT 'ivr_contar_dias_habiles_q2',        ivr_contar_dias_habiles('2025-04-01','2025-06-30')      UNION ALL
+SELECT 'ivr_contar_dias_habiles_q3',        ivr_contar_dias_habiles('2025-07-01','2025-09-30')      UNION ALL
 SELECT 'ivr_agregar_dias_habiles',          ivr_agregar_dias_habiles('2025-01-31', 3);
