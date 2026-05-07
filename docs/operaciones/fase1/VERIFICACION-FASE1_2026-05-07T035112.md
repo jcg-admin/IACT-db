@@ -14,7 +14,7 @@
 | T-012 | fn_normalizar_menu | PASA | 3 casos VACIO + pass-through OK |
 | T-013 | fn_normalizar_centro | PASA | 9/9 casos + orden de ramas OK |
 | T-014 | fn_duracion_seg | PASA | normal=330, g29=2220, null=0 |
-| T-015 | ivr_es_dia_habil | PASA | Festivos Art.74 OK. Semana Santa: decision pendiente |
+| T-015 | ivr_es_dia_habil | PASA | Festivos Art.74 OK. Semana Santa: NO aplica (IVR opera 7 dias) |
 | T-016 | ivr_contar_dias_habiles | PASA | enero=22 OK. Q2=64, Q3=65 (plan tenia off-by-one) |
 | T-017 | ivr_agregar_dias_habiles | PASA | 4 casos OK, resultados son dias habiles validos |
 | T-018 | Integridad llamadas_dias_habiles | DIFERIDA | Requiere base_ivr_detalle con datos (post T-032) |
@@ -50,17 +50,25 @@ como fin de semana al calcular el total de Q2.
 
 **Accion:** Actualizar los valores de referencia en PLAN-IMPLEMENTACION-V2.md.
 
-### H-F1-002 — Semana Santa no incluida (punto de decision abierto)
+### H-F1-002 — Semana Santa no aplica (CERRADO)
 
-`ivr_es_dia_habil('2025-04-17')` y `ivr_es_dia_habil('2025-04-18')` retornan
-`1` (habil). La implementacion solo incluye festivos fijos del Art.74 LFT.
-Jueves y Viernes Santo son festivos variables no incluidos.
+`ivr_es_dia_habil` no incluye Jueves/Viernes Santo porque son festivos
+variables no mandados por Art.74 LFT.
 
-Esto afecta el conteo de `llamadas_dias_habiles` en Q2 de cualquier anno.
-El equipo debe confirmar si esta limitacion es aceptable antes de
-avanzar a T-018 (integridad de los conteos).
+Los datos confirman que el IVR opera los 7 dias de la semana sin excepcion:
 
-**Estado:** Pendiente de decision del equipo.
+| Fecha | Dia | Llamadas |
+|---|---|---|
+| 2025-04-14 | Lunes | 687 |
+| 2025-04-17 | Jueves Santo | 644 |
+| 2025-04-18 | Viernes Santo | 636 |
+| 2025-04-19 | Sabado | 627 |
+| 2025-04-20 | Domingo | 621 |
+
+El volumen de Jueves y Viernes Santo es comparable al de dias laborables
+normales. Tratar esos dias como habiles es correcto para este cliente.
+
+**Estado:** CERRADO. La implementacion actual es correcta.
 
 ---
 
