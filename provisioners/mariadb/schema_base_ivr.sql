@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS base_ivr_detalle (
     -- Metricas lunes-viernes vs fin de semana (pre-computadas en ETL con ivr_es_dia_semana)
     -- Necesarias para sp_rpt_centros_xsegmento sin regresar a la tabla fuente.
     llamadas_entre_semana INT          NOT NULL DEFAULT 0
-        COMMENT 'COUNT de llamadas en días hábiles MX (lunes-viernes, no festivos)',
+        COMMENT 'COUNT de llamadas en dias lunes-viernes. El IVR opera 7 dias — festivos incluidos.',
     llamadas_fines_semana INT          NOT NULL DEFAULT 0
         COMMENT 'COUNT de llamadas en sábado o domingo',
 
@@ -75,6 +75,13 @@ CREATE TABLE IF NOT EXISTS base_ivr_detalle (
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Base analítica IVR — grain por quarter×mes×segmento×centro×menu×opcion. Fuente de 6/7 SPs de reporte.';
+
+
+-- Garantizar que el COMMENT de llamadas_entre_semana este actualizado
+-- aunque la tabla ya exista (CREATE TABLE IF NOT EXISTS no modifica columnas existentes)
+ALTER TABLE base_ivr_detalle
+    MODIFY COLUMN llamadas_entre_semana INT NOT NULL DEFAULT 0
+    COMMENT 'COUNT de llamadas en dias lunes-viernes. El IVR opera 7 dias — festivos incluidos.';
 
 
 -- -----------------------------------------------------------------------------

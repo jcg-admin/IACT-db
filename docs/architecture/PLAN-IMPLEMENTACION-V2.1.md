@@ -615,7 +615,8 @@ CALL sp_etl_maestro();
 SELECT status FROM job_execution_log WHERE status='SKIP' ORDER BY id DESC LIMIT 1;
 -- Esperado: 'SKIP'
 
-UPDATE job_execution_log SET status='SUCCESS' WHERE id = @fake_id;
+DELETE FROM job_execution_log WHERE id = @fake_id;
+-- DELETE en lugar de UPDATE: el registro es de test, no debe quedar en el log
 ```
 
 **Criterio:** Aparece un registro `status='SKIP'`.

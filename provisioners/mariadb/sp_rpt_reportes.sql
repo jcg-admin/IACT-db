@@ -15,7 +15,7 @@
 --   sp_rpt_menu_redirigidos        — UC_RPT_16 — menú → centro
 --   sp_rpt_menu_centro             — UC_RPT_16 — centro → menú+opción
 --   sp_rpt_cMENU_ERROR             — UC_RPT_16 — anomalías cMenu=teléfono
---   sp_rpt_centros_xsegmento       — UC_RPT_01 — KPIs con SLA y días hábiles
+--   sp_rpt_centros_xsegmento       — UC_RPT_01 — KPIs con SLA y dias de semana (lunes-viernes)
 --
 -- CONVENCIÓN DE PARÁMETROS (todos los SPs):
 --   p_quarter  VARCHAR(10)  — 'Q01_25' | 'Q02_25' | ... | 'Q02_26'
@@ -296,7 +296,7 @@ END$$
 
 -- =============================================================================
 -- sp_rpt_centros_xsegmento
--- KPIs por centro de transferencia con clasificación SLA y días hábiles.
+-- KPIs por centro de transferencia con clasificacion SLA y dias de semana.
 -- El SP más complejo — usa todas las funciones de utilidad.
 -- Requiere llamadas_entre_semana y llamadas_fines_semana en base_ivr_detalle
 -- (pre-computados en el ETL con ivr_es_dia_semana).
@@ -332,13 +332,13 @@ BEGIN
         LAST_DAY(STR_TO_DATE(CONCAT(MAX(b.fecha), '01'), '%Y%m%d'))
                                                      AS ultima_actividad,
 
-        -- Días hábiles del periodo de actividad
+        -- Dias lunes-viernes del periodo de actividad
         ivr_contar_dias_semana(
             STR_TO_DATE(CONCAT(MIN(b.fecha), '01'), '%Y%m%d'),
             LAST_DAY(STR_TO_DATE(CONCAT(MAX(b.fecha), '01'), '%Y%m%d'))
         )                                            AS dias_semana_periodo,
 
-        -- Días hábiles transcurridos desde la última actividad hasta hoy
+        -- Dias lunes-viernes transcurridos desde la ultima actividad hasta hoy
         ivr_contar_dias_semana(
             LAST_DAY(STR_TO_DATE(CONCAT(MAX(b.fecha), '01'), '%Y%m%d')),
             CURDATE()
@@ -356,7 +356,7 @@ BEGIN
         )                                            AS fecha_escalamiento,
 
         -- Clasificación SLA
-        -- Basada en volumen total y días hábiles sin actividad reciente
+        -- Basada en volumen total y dias de semana sin actividad reciente
         -- Ref: ANALISIS-ARQUITECTURA-ETL.md, BR-016 recalibrado (D-ETL-007)
         CASE
             WHEN SUM(b.total_llamadas) >= 1000
