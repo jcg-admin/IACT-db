@@ -1,8 +1,8 @@
 #!/bin/bash
 # backup_ivr_legacy.sh
 # Backup completo de la base de datos ivr_legacy (MariaDB 10.1.48)
-# Genera: dump SQL + checksums MD5
-# Uso: bash /tmp/bk/backup_ivr_legacy.sh
+# Genera: dump SQL comprimido + checksum MD5, con timestamp ISO 8601
+# Uso: bash provisioners/mariadb/backup_ivr_legacy.sh
 
 set -euo pipefail
 
@@ -11,9 +11,11 @@ SOCKET="/run/mysqld/mysqld.sock"
 DB="ivr_legacy"
 USER="django_user"
 PASS="django_pass"
-DEST="/tmp/bk"
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-BACKUP_NAME="ivr_legacy_BACKUP_${TIMESTAMP}"
+DEST="/tmp/references/IACT-db/backups"
+
+# Timestamp ISO 8601: 2026-05-07T025321
+TIMESTAMP=$(date +"%Y-%m-%dT%H%M%S")
+BACKUP_NAME="ivr_legacy_${TIMESTAMP}"
 DUMP_FILE="${DEST}/${BACKUP_NAME}.sql.gz"
 MD5_FILE="${DEST}/${BACKUP_NAME}.md5"
 LOG_FILE="${DEST}/${BACKUP_NAME}.log"
@@ -26,9 +28,12 @@ mysql_cmd() {
     mysql --socket="$SOCKET" -u"$USER" -p"$PASS" "$DB" "$@"
 }
 
-# ── 1. Verificar que MariaDB responde ─────────────────────────────────────────
-log "=== Backup ivr_legacy — inicio ==="
-log "Destino: $DEST"
+# ── 1. Crear directorio de destino si no existe ───────────────────────────────
+mkdir -p "$DEST"
+
+# ── 2. Verificar que MariaDB responde ─────────────────────────────────────────
+log "=== Backup ${DB} — ${TIMESTAMP} ==="
+log "Destino: ${DEST}"
 
 if ! mysql_cmd -N -e "SELECT 1;" > /dev/null 2>&1; then
     log "MariaDB no responde. Intentando arrancar..."
@@ -44,14 +49,14 @@ if ! mysql_cmd -N -e "SELECT 1;" > /dev/null 2>&1; then
         || die "MariaDB no disponible tras el arranque."
     log "MariaDB arrancada correctamente."
 fi
-log "MariaDB OK — socket: $SOCKET"
+log "MariaDB OK — socket: ${SOCKET}"
 
-# ── 2. Inventario previo al dump ──────────────────────────────────────────────
+# ── 3. Inventario previo al dump ──────────────────────────────────────────────
 log "--- Inventario de tablas ---"
 mysql_cmd -e "
 SELECT table_name,
-       table_rows          AS filas_aprox,
-       ROUND(data_length/1024/1024, 2) AS mb
+       table_rows                       AS filas_aprox,
+       ROUND(data_length/1024/1024, 2)  AS mb
 FROM information_schema.tables
 WHERE table_schema = '${DB}'
 ORDER BY table_name;
@@ -60,9 +65,9 @@ ORDER BY table_name;
 SP_COUNT=$(mysql_cmd -N -e "
 SELECT COUNT(*) FROM information_schema.routines
 WHERE routine_schema='${DB}';" 2>/dev/null)
-log "Stored Procedures en la BD: $SP_COUNT"
+log "Stored Procedures: ${SP_COUNT}"
 
-# ── 3. Conteos exactos (COUNT(*)) ─────────────────────────────────────────────
+# ── 4. Conteos exactos COUNT(*) ───────────────────────────────────────────────
 log "--- Conteos exactos ---"
 TABLES=$(mysql_cmd -N -e "
 SELECT table_name FROM information_schema.tables
@@ -75,9 +80,9 @@ while IFS= read -r tbl; do
     TOTAL_ROWS=$((TOTAL_ROWS + rows))
     log "  ${tbl}: ${rows} filas"
 done <<< "$TABLES"
-log "  TOTAL: $TOTAL_ROWS filas en toda la BD"
+log "  TOTAL: ${TOTAL_ROWS} filas"
 
-# ── 4. Dump con mysqldump ──────────────────────────────────────────────────────
+# ── 5. Dump con mysqldump ──────────────────────────────────────────────────────
 log "--- Generando dump ---"
 mysqldump \
     --socket="$SOCKET" \
@@ -93,31 +98,33 @@ mysqldump \
     "$DB" 2>>"$LOG_FILE" \
     | gzip -9 > "$DUMP_FILE"
 
-log "Dump generado: $(basename "$DUMP_FILE")"
-log "Tamaño: $(du -h "$DUMP_FILE" | cut -f1)"
+DUMP_SIZE=$(du -h "$DUMP_FILE" | cut -f1)
+log "Dump generado: $(basename "$DUMP_FILE") (${DUMP_SIZE})"
 
-# ── 5. Verificar que el dump no está vacío ────────────────────────────────────
-DUMP_SIZE=$(stat -c%s "$DUMP_FILE")
-[ "$DUMP_SIZE" -lt 1024 ] && die "El dump parece vacío ($DUMP_SIZE bytes)."
+# ── 6. Verificar integridad del archivo ───────────────────────────────────────
+DUMP_BYTES=$(stat -c%s "$DUMP_FILE")
+[ "$DUMP_BYTES" -lt 1024 ] && die "El dump parece vacio (${DUMP_BYTES} bytes)."
 
-# Verificar que se puede descomprimir (primeros 512 bytes)
-gzip -t "$DUMP_FILE" 2>>"$LOG_FILE" || die "El dump comprimido está corrupto."
+gzip -t "$DUMP_FILE" 2>>"$LOG_FILE" || die "El dump comprimido esta corrupto."
 log "Integridad gzip: OK"
 
-# ── 6. Generar checksums MD5 ──────────────────────────────────────────────────
-log "--- Generando checksums ---"
+# ── 7. Generar y verificar checksum MD5 ──────────────────────────────────────
+log "--- Checksum MD5 ---"
 (cd "$DEST" && md5sum "$(basename "$DUMP_FILE")") > "$MD5_FILE"
 log "MD5: $(cat "$MD5_FILE")"
 
-# ── 7. Verificar checksums ────────────────────────────────────────────────────
 (cd "$DEST" && md5sum -c "$(basename "$MD5_FILE")" 2>&1) | tee -a "$LOG_FILE" \
     || die "Verificacion MD5 fallida."
 
-# ── 8. Resumen final ──────────────────────────────────────────────────────────
-log "=== Backup completado exitosamente ==="
-log "Archivos generados:"
-log "  Dump:      $DUMP_FILE"
-log "  Checksum:  $MD5_FILE"
-log "  Log:       $LOG_FILE"
-log "Filas respaldadas: $TOTAL_ROWS"
-log "Tamaño final: $(du -h "$DUMP_FILE" | cut -f1)"
+# ── 8. Listar backups existentes ──────────────────────────────────────────────
+log "--- Backups en ${DEST} ---"
+ls -lh "${DEST}"/*.sql.gz 2>/dev/null | awk '{print "  "$9, $5}' \
+    | tee -a "$LOG_FILE" || true
+
+# ── 9. Resumen ────────────────────────────────────────────────────────────────
+log "=== Backup completado ==="
+log "  Dump:     ${DUMP_FILE}"
+log "  Checksum: ${MD5_FILE}"
+log "  Log:      ${LOG_FILE}"
+log "  Filas:    ${TOTAL_ROWS}"
+log "  Tamanio:  ${DUMP_SIZE}"

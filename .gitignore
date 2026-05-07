@@ -291,3 +291,8 @@ Thumbs.db
 .env
 logs/
 *.log
+
+# Backups de base de datos (archivos binarios pesados)
+backups/*.sql.gz
+backups/*.md5
+backups/*.log
