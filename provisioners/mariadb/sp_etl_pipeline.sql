@@ -267,7 +267,10 @@ END$$
 -- =============================================================================
 DROP PROCEDURE IF EXISTS sp_etl_maestro$$
 CREATE PROCEDURE sp_etl_maestro()
-maestro: BEGIN
+BEGIN
+    -- FIX: eliminados labels de bloque y LEAVE en handlers anidados.
+    -- MariaDB 10.11 no permite LEAVE de bloque externo desde EXIT HANDLER.
+    -- Patron reemplazado: variable v_abort como flag de salida temprana.
     DECLARE v_year       INT;
     DECLARE v_qnum       INT;
     DECLARE v_quarter    VARCHAR(10);
@@ -281,6 +284,7 @@ maestro: BEGIN
     DECLARE v_ok         BOOLEAN;
     DECLARE v_msg        TEXT;
     DECLARE v_err_msg    TEXT;
+    DECLARE v_abort      BOOLEAN DEFAULT FALSE;
 
     -- -----------------------------------------------------------------------
     -- PASO 0: Verificar que el job está habilitado
@@ -294,13 +298,13 @@ maestro: BEGIN
         INSERT INTO job_execution_log
             (job_name, step_name, status, start_time, end_time, ejecutado_por)
         VALUES ('etl_diario', 'maestro', 'SKIP', NOW(), NOW(), 'evt_etl_diario');
-        LEAVE maestro;
+        SET v_abort = TRUE;
     END IF;
 
     -- -----------------------------------------------------------------------
     -- PASO 1: Verificar concurrencia (ventana mínima de 6 horas)
     -- -----------------------------------------------------------------------
-    IF EXISTS (
+    IF NOT v_abort AND EXISTS (
         SELECT 1 FROM job_execution_log
         WHERE job_name = 'etl_diario'
           AND step_name = 'maestro'
@@ -312,8 +316,10 @@ maestro: BEGIN
              error_message)
         VALUES ('etl_diario', 'maestro', 'SKIP', NOW(), NOW(), 'evt_etl_diario',
                 'Otro job etl_diario está RUNNING en las últimas 6 horas.');
-        LEAVE maestro;
+        SET v_abort = TRUE;
     END IF;
+
+    IF NOT v_abort THEN
 
     -- -----------------------------------------------------------------------
     -- PASO 2: Calcular quarter y tabla fuente (dinámico — cualquier año)
@@ -323,7 +329,6 @@ maestro: BEGIN
     SET v_quarter = CONCAT('Q0', v_qnum, '_', RIGHT(v_year, 2));
     SET v_table   = CONCAT('tbl_historico_t', v_qnum, '_', v_year);
 
-    -- Fechas de inicio/fin del quarter actual
     SET v_inicio = MAKEDATE(v_year, 1)
                    + INTERVAL (v_qnum - 1) * 3 MONTH;
     SET v_fin    = LAST_DAY(v_inicio + INTERVAL 2 MONTH);
@@ -340,7 +345,7 @@ maestro: BEGIN
     SET v_maestro_id = LAST_INSERT_ID();
 
     -- -----------------------------------------------------------------------
-    -- PASO 4: ETL base_ivr_detalle (con su propio checkpoint)
+    -- PASO 4: ETL base_ivr_detalle
     -- -----------------------------------------------------------------------
     INSERT INTO job_execution_log
         (job_name, quarter_name, step_name, tabla_origen,
@@ -358,16 +363,17 @@ maestro: BEGIN
             SET status='FAILED', end_time=NOW(), error_message=v_err_msg
             WHERE id = v_step_id;
             UPDATE job_execution_log
-            SET status='FAILED', end_time=NOW(), error_message=CONCAT('Falló etl_base_detalle: ', v_err_msg)
+            SET status='FAILED', end_time=NOW(),
+                error_message=CONCAT('Falló etl_base_detalle: ', v_err_msg)
             WHERE id = v_maestro_id;
-            LEAVE maestro;
+            -- No LEAVE: el handler termina y el bloque externo continua
+            -- v_ok quedara NULL, el UPDATE final marcara PARTIAL
         END;
-
         CALL sp_etl_base_detalle(v_quarter, v_inicio, v_fin, v_table, v_step_id);
     END;
 
     -- -----------------------------------------------------------------------
-    -- PASO 5: ETL base_ivr_clientes (independiente — corre aunque detalle tardó)
+    -- PASO 5: ETL base_ivr_clientes
     -- -----------------------------------------------------------------------
     INSERT INTO job_execution_log
         (job_name, quarter_name, step_name, tabla_origen,
@@ -384,9 +390,7 @@ maestro: BEGIN
             UPDATE job_execution_log
             SET status='FAILED', end_time=NOW(), error_message=v_err_msg
             WHERE id = v_step_id;
-            -- El maestro continúa — un fallo en clientes es PARTIAL, no FAILED
         END;
-
         CALL sp_etl_base_clientes(v_quarter, v_inicio, v_fin, v_table, v_step_id);
     END;
 
@@ -396,15 +400,17 @@ maestro: BEGIN
     CALL sp_etl_validar(v_quarter, v_ok, v_msg);
 
     -- -----------------------------------------------------------------------
-    -- PASO 7: Actualizar estado final del maestro
+    -- PASO 7: Estado final del maestro
     -- -----------------------------------------------------------------------
     UPDATE job_execution_log
-    SET status     = IF(v_ok, 'SUCCESS', 'PARTIAL'),
+    SET status     = IF(COALESCE(v_ok, FALSE), 'SUCCESS', 'PARTIAL'),
         end_time   = NOW(),
-        error_message = IF(v_ok, NULL, v_msg)
+        error_message = IF(COALESCE(v_ok, FALSE), NULL, v_msg)
     WHERE id = v_maestro_id;
 
-END maestro$$
+    END IF; -- END IF NOT v_abort
+
+END$$
 
 
 -- =============================================================================
