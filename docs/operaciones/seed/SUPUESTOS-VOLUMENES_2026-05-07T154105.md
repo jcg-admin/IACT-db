@@ -123,3 +123,35 @@ y no necesitan ajuste — solo los tres de supuesto.
 4. La proporcion de menus dentro de cada quarter es fija segun el perfil.
    En produccion esa distribucion puede variar estacionalmente dentro
    del mismo quarter.
+
+---
+
+## Actualizacion — numeros no redondos en Q01_25 y Q04_25
+
+**Fecha:** 2026-05-07
+
+Los valores de 1,000,000 y 1,069,000 son artificialmente redondos.
+En produccion los volumenes nunca son multiplos exactos de 1,000.
+
+Se repoblaron Q01_25 y Q04_25 con valores irregulares:
+
+| Quarter | Antes | Despues | --rows usado |
+|---|---|---|---|
+| Q01_25 | 1,000,000 | 1,031,847 | 1,031,847 |
+| Q04_25 | 1,069,000 | 1,074,193 | 1,004,858 |
+
+### Estado final del sandbox
+
+| Quarter | Filas sandbox | Equiv. produccion |
+|---|---|---|
+| Q01_25 | 1,031,847 | ~12.0M |
+| Q02_25 | 1,169,000 | ~13.6M (pico) |
+| Q03_25 | 986,000 | ~11.5M |
+| Q04_25 | 1,074,193 | ~12.5M |
+| Q01_26 | 1,039,000 | ~12.1M |
+| Q02_26 | 486,000 | ~5.7M (parcial) |
+| **TOTAL** | **5,786,040** | |
+
+Ningun quarter es identico a otro. Q02_25 sigue siendo el pico.
+Q04_25 > Q01_25 por la logica de fin de anio.
+Q01_26 > Q01_25 por crecimiento YoY.
