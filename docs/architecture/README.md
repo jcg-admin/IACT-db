@@ -15,3 +15,10 @@ Esta sección es para:
 - Desarrolladores modificando el sistema
 - Mantenedores del proyecto
 - Personas implementando cambios en la arquitectura
+
+## Documentos de Fase O (2026-05-08)
+
+| Documento | Descripción |
+|---|---|
+| `HALLAZGOS-FASE-O-2026-05-08.md` | 3 bugs de producción y 4 hallazgos de infraestructura encontrados durante los tests de integración IVR |
+| `TESTS-INTEGRACION-IVR.md` | Guía de referencia: arquitectura de `test_ivr_legacy`, fixtures, collation, checklist |

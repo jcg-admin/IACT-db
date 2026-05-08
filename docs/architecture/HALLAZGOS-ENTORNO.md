@@ -68,6 +68,31 @@ al inicio de cada task que requiera la BD.
 **En producción:** MariaDB corre como servicio systemd — este problema
 no existe. El workaround es exclusivo del entorno de desarrollo del sandbox.
 
+### Arranque de MariaDB en pytest — `preexec_fn` vs `runuser`
+
+**Detectado en:** Fase O — Tests de integración IVR (2026-05-08)
+
+El script `/tmp/mariadb_ensure.sh` es adecuado para uso interactivo.
+Para tests de integración con pytest, el patrón correcto es diferente.
+
+`runuser ... &` crea un proceso huérfano: `Popen` tiene referencia
+a `runuser`, que termina después del fork. El hijo `mariadbd` queda
+sin padre y el sandbox lo mata.
+
+La solución es usar `preexec_fn` para bajar privilegios directamente:
+
+```python
+proc = subprocess.Popen(
+    ['/usr/sbin/mariadbd', '--user=mysql', '--skip-grant-tables', ...],
+    preexec_fn=drop_privs,  # setgid + setuid a mysql
+)
+```
+
+`Popen` tiene referencia directa a `mariadbd`. El proceso vive mientras
+el fixture `ensure_mariadb` (scope='session') está activo.
+
+Ver: `TESTS-INTEGRACION-IVR.md` para el contexto completo.
+
 ---
 
 ## 2. Datos: seed vs producción
