@@ -436,3 +436,43 @@ cd D:\Estadia_IACT\proyecto\IACT\db
 ---
 
 **Última actualización**: 2026-01-10
+
+---
+
+## Compatibilidad PostgreSQL / SQLite — reglas para IACT-api
+
+### Regla: CharField unique + blank siempre requiere null
+
+Un `CharField` con `unique=True` y `blank=True` **debe** incluir
+`null=True` para ser compatible con PostgreSQL.
+
+```python
+# Correcto — compatible con PostgreSQL
+permission_django = models.CharField(
+    max_length=100,
+    unique=True,
+    blank=True,
+    null=True,
+)
+
+# Incorrecto — falla en PostgreSQL cuando hay más de una fila existente
+permission_django = models.CharField(
+    max_length=100,
+    unique=True,
+    blank=True,
+    # null=True  ← falta
+)
+```
+
+**Por qué:** SQLite permite múltiples filas con `''` en un campo `UNIQUE`.
+PostgreSQL no. Sin `null=True`, la migración que agrega el campo establece
+`default=''` para filas existentes, generando duplicados que PostgreSQL
+rechaza con `UniqueViolation`.
+
+### Regla: No usar SQLite en desarrollo de IACT-api
+
+IACT-db provee PostgreSQL y MariaDB. IACT-api debe usar ambas desde el
+primer commit de desarrollo. El archivo `config/settings_local.py` en
+IACT-api debe importar desde `settings.development`, no definir SQLite.
+
+Ver: `HALLAZGOS-IACT-API-2026-05-07.md` — H-A-001 y H-A-003.
