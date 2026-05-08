@@ -137,3 +137,46 @@ python manage.py showmigrations --database default | grep '\[ \]'
 ```
 
 Ver `VERIFICACION-LOCAL-SIN-VAGRANT.md` para el checklist completo.
+
+---
+
+## Configurar IACT-api para usar las bases de datos de IACT-db
+
+Una vez que los servicios están corriendo, IACT-api debe apuntar a ellos.
+
+**Verificar que los servicios responden:**
+
+```bash
+pg_isready -h 127.0.0.1 -p 5432
+mysqladmin -h 127.0.0.1 -u django_user -pdjango_pass ping
+# o via socket:
+mysqladmin --socket=/run/mysqld/mysqld.sock status
+```
+
+**Configurar IACT-api:**
+
+El archivo `callcentersite/config/settings_local.py` en IACT-api
+hereda de `settings.development` que lee las credenciales del `.env`:
+
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=iact_analytics
+DB_USER=django_user
+DB_PASSWORD=django_pass
+
+IVR_DB_HOST=localhost
+IVR_DB_PORT=3306
+IVR_DB_NAME=ivr_legacy
+IVR_DB_USER=django_user
+IVR_DB_PASSWORD=django_pass
+```
+
+**Aplicar migraciones Django:**
+
+```bash
+cd IACT-api/callcentersite
+python manage.py migrate
+```
+
+Ver: `IACT-db/docs/architecture/SEPARACION-IACT-API.md`
