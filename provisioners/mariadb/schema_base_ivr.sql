@@ -154,31 +154,31 @@ CREATE TABLE IF NOT EXISTS job_execution_log (
 -- Fuente de verdad para la UI Django (UC_PIP_01/02/03/04).
 -- A diferencia de job_execution_log, esta tabla es consultada por Django.
 -- -----------------------------------------------------------------------------
+-- etl_runs — D-NOM-001 (2026-05-09): columnas en inglés
+-- Tablas de infraestructura del pipeline usan inglés (coherente con job_execution_log).
 CREATE TABLE IF NOT EXISTS etl_runs (
-    id              INT           NOT NULL AUTO_INCREMENT,
-    trimestre       VARCHAR(20)   NOT NULL,
-    iniciado_en     DATETIME      NOT NULL,
-    finalizado_en   DATETIME,
-    timeout_at      DATETIME      NOT NULL
-        COMMENT 'Fecha/hora límite. Si es RUNNING después de este timestamp → Django lo marca TIMEOUT.',
-    estado          ENUM('en_ejecucion','exitoso','fallido','timeout','skip')
-                    NOT NULL DEFAULT 'en_ejecucion',
-    registros_detalle INT         DEFAULT 0
-        COMMENT 'Filas en base_ivr_detalle para este quarter después del ETL',
-    registros_clientes INT        DEFAULT 0
-        COMMENT 'Filas en base_ivr_clientes (esperado: 3)',
-    mensaje_error   TEXT,
-    ejecutado_por   VARCHAR(100)  DEFAULT 'scheduler'
-        COMMENT 'scheduler | admin:{username} | system',
+    id                INT           NOT NULL AUTO_INCREMENT,
+    trimestre         VARCHAR(20)   NOT NULL,
+    inicio_at         DATETIME      NOT NULL,
+    fin_at            DATETIME,
+    timeout_at        DATETIME      NOT NULL
+        COMMENT 'Fecha/hora límite. Si sigue en en_ejecucion después → timeout.',
+    heartbeat_at      DATETIME      NULL
+        COMMENT 'Actualizado cada 60s por el thread de heartbeat de run_etl.py',
+    status            ENUM('en_ejecucion','success','failed','timeout','skip')
+                      NOT NULL DEFAULT 'en_ejecucion',
+    registros_detalle INT           DEFAULT 0,
+    registros_clientes INT          DEFAULT 0,
+    error_message     TEXT,
+    trigger_source    VARCHAR(100)  DEFAULT 'django_command'
+        COMMENT 'django_command | evt_etl_diario | manual',
 
     PRIMARY KEY (id),
-    INDEX idx_estado_inicio  (estado, iniciado_en DESC),
+    INDEX idx_status_inicio  (status, inicio_at DESC),
     INDEX idx_trimestre      (trimestre),
-    INDEX idx_timeout        (estado, timeout_at)
-        COMMENT 'Usado por el heartbeat de Django para detectar timeouts'
-
+    INDEX idx_timeout        (status, timeout_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='Tracking del management command Django. Fuente de verdad para la UI de administración.';
+  COMMENT='Tracking del management command run_etl — heartbeat y estado de cada ejecución ETL.';
 
 
 -- -----------------------------------------------------------------------------
@@ -230,3 +230,64 @@ WHERE TABLE_SCHEMA = DATABASE()
       'job_execution_log','etl_runs','job_config'
   )
 ORDER BY TABLE_NAME;
+
+-- vw_monitor_dias_semana — monitoreo ratio días hábiles
+CREATE OR REPLACE VIEW vw_monitor_dias_semana AS
+SELECT
+    trimestre, fecha,
+    SUM(total_llamadas)        AS total,
+    SUM(llamadas_entre_semana) AS habiles,
+    SUM(llamadas_fines_semana) AS fin_semana,
+    SUM(total_llamadas) - SUM(llamadas_entre_semana)
+        - SUM(llamadas_fines_semana) AS error_suma,
+    ROUND(SUM(llamadas_entre_semana)
+          / NULLIF(SUM(total_llamadas),0) * 100, 1) AS pct_entre_semana,
+    CASE
+        WHEN SUM(total_llamadas) = 0 THEN 'SIN_DATOS'
+        WHEN SUM(total_llamadas) != SUM(llamadas_entre_semana)
+             + SUM(llamadas_fines_semana) THEN 'ERROR_INTEGRIDAD'
+        WHEN SUM(llamadas_entre_semana)/SUM(total_llamadas)*100
+             NOT BETWEEN 60 AND 85 THEN 'ALERTA_RATIO'
+        ELSE 'OK'
+    END AS estado_monitor
+FROM base_ivr_detalle
+GROUP BY trimestre, fecha;
+
+-- =============================================================================
+-- vw_monitor_dias_semana — T-085 (2026-05-09)
+-- Vista de monitoreo del ratio días hábiles en base_ivr_detalle.
+-- Detecta fallos silenciosos de ivr_es_dia_semana (afecta 18 nodos).
+--
+-- Uso: SELECT * FROM vw_monitor_dias_semana WHERE estado_monitor != 'OK';
+-- Esperado post-ETL: 0 filas.
+--
+-- estado_monitor:
+--   OK               pct_entre_semana en [60%,85%], suma íntegra
+--   ALERTA_RATIO     ratio fuera de rango → posible bug en ivr_es_dia_semana
+--   ERROR_INTEGRIDAD llamadas_entre_semana + llamadas_fines_semana != total
+--   SIN_DATOS        0 llamadas en el período
+-- =============================================================================
+CREATE OR REPLACE VIEW vw_monitor_dias_semana AS
+SELECT
+    trimestre,
+    fecha,
+    SUM(total_llamadas)        AS total,
+    SUM(llamadas_entre_semana) AS habiles,
+    SUM(llamadas_fines_semana) AS fin_semana,
+    SUM(total_llamadas) - SUM(llamadas_entre_semana)
+        - SUM(llamadas_fines_semana)               AS error_suma,
+    ROUND(SUM(llamadas_entre_semana)
+          / NULLIF(SUM(total_llamadas), 0) * 100, 1) AS pct_entre_semana,
+    CASE
+        WHEN SUM(total_llamadas) = 0
+            THEN 'SIN_DATOS'
+        WHEN SUM(total_llamadas) != SUM(llamadas_entre_semana)
+             + SUM(llamadas_fines_semana)
+            THEN 'ERROR_INTEGRIDAD'
+        WHEN SUM(llamadas_entre_semana) / SUM(total_llamadas) * 100
+             NOT BETWEEN 60 AND 85
+            THEN 'ALERTA_RATIO'
+        ELSE 'OK'
+    END AS estado_monitor
+FROM base_ivr_detalle
+GROUP BY trimestre, fecha;
