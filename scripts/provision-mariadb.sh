@@ -23,6 +23,11 @@
 #   · T-1.5: PASO 5 verifica objetos por nombre en lugar de solo contar:
 #     tablas analíticas, tabla de prueba, funciones de utilidad, SPs ETL y reporte
 #
+# v1.2.1 (2026-05-10):
+#   · H-EXEC-003: corregido local grant= → GRANT_STMT= en bloque de grants DML.
+#     local solo es válido dentro de funciones — con set -euo pipefail, el script
+#     abortaba en línea 194 antes de otorgar los grants analíticos a django_user.
+#
 # EJECUTA todos los pasos de provisionamiento de MariaDB en orden:
 #
 #   1. Arranca MariaDB si no esta corriendo  (via start.sh mariadb)
