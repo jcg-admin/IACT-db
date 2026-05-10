@@ -16,12 +16,6 @@ init_env() {
         return 0
     fi
 
-    # Try to detect from Vagrant
-    if [[ -d "/vagrant" ]]; then
-        export PROJECT_ROOT="/vagrant"
-        return 0
-    fi
-
     # Fallback: find git root
     local git_root
     git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")

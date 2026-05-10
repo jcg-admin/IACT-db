@@ -1,183 +1,157 @@
 #!/bin/bash
-# setup.sh
-# MariaDB database setup script
-# Version: 1.0.0
+# =============================================================================
+# provisioners/mariadb/setup.sh — Crea BD y usuario para Django
+# =============================================================================
+# IDEMPOTENTE: se puede ejecutar N veces sin efectos adversos.
+#   · Si la BD ya existe      → sin cambios
+#   · Si el usuario ya existe → actualiza contraseña
+#   · GRANT es idempotente en MariaDB — se re-aplica siempre
+#
+# ivr_legacy es READ-ONLY para Django (solo SELECT — CNST-003).
+# El usuario también recibe CREATE/DROP sobre test_ivr_legacy (para pytest).
+#
+# NO instala MariaDB. Requiere que MariaDB esté corriendo.
+# Portado de IACT-api provisioners/mariadb/db_setup.sh (v1.0.0)
+# =============================================================================
 
 set -euo pipefail
 
-# Load utilities
-source /vagrant/utils/core.sh
-source /vagrant/utils/database.sh
-source /vagrant/utils/logging.sh
-source /vagrant/utils/validation.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-# Main function
+source "${PROJECT_ROOT}/utils/logging.sh"
+source "${PROJECT_ROOT}/utils/core.sh"
+source "${PROJECT_ROOT}/utils/network.sh"
+source "${PROJECT_ROOT}/utils/database.sh"
+source "${PROJECT_ROOT}/utils/validation.sh"
+
+# Cargar .env si las variables no vienen del entorno (ejecución directa)
+ENV_FILE="${PROJECT_ROOT}/.env"
+if [[ -f "$ENV_FILE" ]]; then set -a; source "$ENV_FILE"; set +a; fi
+
 main() {
     log_header "MariaDB Database Setup"
 
-    # Validate running as root
     if ! validate_root; then
-        log_fatal "This script must be run as root"
+        log_fatal "Este script debe ejecutarse como root (sudo)"
     fi
 
-    # Validate required variables
-    require_vars DB_NAME DB_CHARSET DB_COLLATION DB_USER DB_PASSWORD DB_ROOT_PASSWORD
+    require_vars DB_MARIADB_NAME DB_MARIADB_USER DB_MARIADB_PASSWORD \
+                 DB_CHARSET DB_COLLATION
 
-    # Ensure log directory
-    if ! ensure_dir /vagrant/logs; then
-        log_error "Failed to create log directory"
+    ensure_dir "${PROJECT_ROOT}/logs"
+
+    local db_name="${DB_MARIADB_NAME}"
+    local db_user="${DB_MARIADB_USER}"
+    local db_pass="${DB_MARIADB_PASSWORD}"
+    local charset="${DB_CHARSET:-utf8mb4}"
+    local collation="${DB_COLLATION:-utf8mb4_unicode_ci}"
+    local test_db_name="test_${db_name}"
+
+    # --- Helper: ejecutar SQL como root via socket (sin contraseña) ---
+    my_root()        { mysql --batch "$@" 2>&1; }
+    my_root_silent() { mysql --batch --silent --skip-column-names "$@" 2>/dev/null; }
+
+    # PASO 1 — Verificar acceso root
+    log_step 1 5 "Verificando acceso root a MariaDB"
+
+    if ! my_root_silent -e "SELECT 1;" >/dev/null; then
+        log_fatal "No hay acceso root a MariaDB via socket unix"
+    fi
+    log_success "MariaDB accesible"
+
+    # PASO 2 — Crear base de datos
+    log_step 2 5 "Base de datos: ${db_name}"
+
+    local exists
+    exists=$(my_root_silent -e \
+        "SELECT COUNT(*) FROM information_schema.SCHEMATA
+         WHERE SCHEMA_NAME = '${db_name}';" || echo "0")
+
+    if [[ "$exists" -gt 0 ]]; then
+        log_info "Base de datos ya existe — sin cambios"
+    else
+        my_root -e \
+            "CREATE DATABASE \`${db_name}\`
+             CHARACTER SET ${charset}
+             COLLATE ${collation};" >/dev/null
+        log_success "Base de datos ${db_name} creada (${charset}/${collation})"
+    fi
+
+    # PASO 3 — Crear / actualizar usuario
+    log_step 3 5 "Usuario: ${db_user}"
+
+    for host in "%" "localhost"; do
+        local user_exists
+        user_exists=$(my_root_silent -e \
+            "SELECT COUNT(*) FROM mysql.user
+             WHERE User = '${db_user}' AND Host = '${host}';" || echo "0")
+
+        if [[ "$user_exists" -gt 0 ]]; then
+            my_root -e \
+                "ALTER USER '${db_user}'@'${host}'
+                 IDENTIFIED BY '${db_pass}';" >/dev/null
+            log_info "Usuario ${db_user}@${host} ya existe — contraseña sincronizada"
+        else
+            my_root -e \
+                "CREATE USER '${db_user}'@'${host}'
+                 IDENTIFIED BY '${db_pass}';" >/dev/null
+            log_success "Usuario ${db_user}@${host} creado"
+        fi
+    done
+
+    # PASO 4 — Otorgar privilegios
+    log_step 4 5 "Privilegios: ${db_user} en ${db_name} y ${test_db_name}"
+
+    for host in "%" "localhost"; do
+        # Producción: solo lectura (CNST-003)
+        my_root -e \
+            "GRANT SELECT ON \`${db_name}\`.* TO '${db_user}'@'${host}';" >/dev/null
+        # Tests: pytest necesita crear y destruir test_ivr_legacy
+        my_root -e \
+            "GRANT CREATE, DROP, INDEX, ALTER ON \`${test_db_name}\`.* \
+             TO '${db_user}'@'${host}';" >/dev/null
+    done
+
+    my_root -e "FLUSH PRIVILEGES;" >/dev/null
+    log_success "Privilegios aplicados: SELECT en ${db_name} + CREATE/DROP en ${test_db_name}"
+
+    # PASO 5 — Verificar conexión con credenciales Django
+    log_step 5 5 "Verificando conexión Django"
+
+    local host="${MARIADB_HOST:-127.0.0.1}"
+    local port="${MARIADB_PORT:-3306}"
+
+    local result
+    result=$(mysql -h "$host" -P "$port" \
+        -u "$db_user" -p"${db_pass}" \
+        --batch --silent --skip-column-names \
+        -e "SELECT CONCAT(DATABASE(), '@', USER());" \
+        "$db_name" 2>&1) || {
+        log_error "No se pudo conectar como ${db_user}: ${result}"
         return 1
+    }
+
+    log_success "Conexión OK: ${result}"
+
+    # Verificar que el usuario NO tiene privilegios de escritura (CNST-003)
+    local write_privs
+    write_privs=$(mysql -h "$host" -P "$port"         -u "$db_user" -p"${db_pass}"         --batch --silent --skip-column-names         -e "SELECT COUNT(*) FROM information_schema.USER_PRIVILEGES
+            WHERE GRANTEE LIKE \\"'${db_user}'%\\"
+            AND PRIVILEGE_TYPE IN ('INSERT','UPDATE','DELETE','DROP','CREATE','ALTER');"         2>/dev/null || echo "0")
+
+    if [[ "$write_privs" -eq 0 ]]; then
+        log_success "CNST-003 verificado: ${db_user} es READ-ONLY en ${db_name}"
+    else
+        log_warn "CNST-003: ${db_user} tiene ${write_privs} privilegio(s) de escritura"
+        log_warn "  Revisa los GRANT aplicados sobre ${db_name}"
     fi
 
-    # Verify MariaDB is running
-    if ! verify_mariadb_running; then
-        log_error "MariaDB is not running"
-        return 1
-    fi
-
-    # Create database
-    if ! create_database; then
-        log_error "Failed to create database"
-        return 1
-    fi
-
-    # Create user
-    if ! create_database_user; then
-        log_error "Failed to create database user"
-        return 1
-    fi
-
-    # Grant privileges
-    if ! grant_user_privileges; then
-        log_error "Failed to grant privileges"
-        return 1
-    fi
-
-    # Create schema version table
-    if ! create_schema_version_table; then
-        log_error "Failed to create schema version table"
-        return 1
-    fi
-
-    log_success "MariaDB database setup completed"
-    return 0
+    echo ""
+    log_success "Setup MariaDB completado. Base ${db_name} lista (READ-ONLY para Django)."
+    echo ""
+    echo "  Django settings:"
+    echo "    DATABASE ivr: HOST=${host} PORT=${port} NAME=${db_name} USER=${db_user}"
 }
 
-# Verify MariaDB is running
-verify_mariadb_running() {
-    log_info "Verifying MariaDB is running"
-
-    if ! systemctl is-active --quiet mariadb; then
-        log_error "MariaDB service is not active"
-        return 1
-    fi
-
-    # Wait for MariaDB to be ready
-    if ! mysql_wait_ready 30; then
-        log_error "MariaDB is not ready to accept connections"
-        return 1
-    fi
-
-    log_success "MariaDB is running and ready"
-    return 0
-}
-
-# Create database
-create_database() {
-    log_info "Creating database: ${DB_NAME}"
-
-    # Check if database already exists
-    if mysql_database_exists "${DB_NAME}" "root" "${DB_ROOT_PASSWORD}"; then
-        log_warn "Database ${DB_NAME} already exists, skipping creation"
-        return 0
-    fi
-
-    # Create database with specified charset and collation
-    if ! mysql_create_database "${DB_NAME}" "${DB_CHARSET}" "${DB_COLLATION}" "root" "${DB_ROOT_PASSWORD}"; then
-        log_error "Failed to create database"
-        return 1
-    fi
-
-    log_success "Database ${DB_NAME} created successfully"
-    return 0
-}
-
-# Create database user
-create_database_user() {
-    log_info "Creating database user: ${DB_USER}"
-
-    # Check if user already exists
-    local user_exists=$(mysql -u root -p"${DB_ROOT_PASSWORD}" -sse "SELECT COUNT(*) FROM mysql.user WHERE User='${DB_USER}' AND Host='%';" 2>/dev/null || echo "0")
-
-    if [[ "$user_exists" -gt 0 ]]; then
-        log_warn "User ${DB_USER} already exists, skipping creation"
-        return 0
-    fi
-
-    # Create user with remote access (%)
-    if ! mysql_create_user "${DB_USER}" "${DB_PASSWORD}" "%" "root" "${DB_ROOT_PASSWORD}"; then
-        log_error "Failed to create user"
-        return 1
-    fi
-
-    log_success "User ${DB_USER} created successfully"
-    return 0
-}
-
-# Grant privileges to user
-grant_user_privileges() {
-    log_info "Granting privileges to user: ${DB_USER}"
-
-    # Grant all privileges on the database
-    if ! mysql_grant_privileges "${DB_NAME}" "${DB_USER}" "%" "root" "${DB_ROOT_PASSWORD}"; then
-        log_error "Failed to grant privileges"
-        return 1
-    fi
-
-    # Flush privileges
-    log_info "Flushing privileges"
-    if ! mysql -u root -p"${DB_ROOT_PASSWORD}" -e "FLUSH PRIVILEGES;" 2>/dev/null; then
-        log_error "Failed to flush privileges"
-        return 1
-    fi
-
-    log_success "Privileges granted to ${DB_USER} on ${DB_NAME}"
-    return 0
-}
-
-# Create schema version table
-create_schema_version_table() {
-    log_info "Creating schema version table"
-
-    # Create a table to track schema version
-    local sql="
-    CREATE TABLE IF NOT EXISTS schema_version (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        version VARCHAR(50) NOT NULL,
-        description VARCHAR(255),
-        applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_version (version)
-    ) ENGINE=InnoDB DEFAULT CHARSET=${DB_CHARSET} COLLATE=${DB_COLLATION};
-    "
-
-    if ! mysql -u root -p"${DB_ROOT_PASSWORD}" "${DB_NAME}" -e "${sql}" 2>/dev/null; then
-        log_error "Failed to create schema_version table"
-        return 1
-    fi
-
-    # Insert initial version
-    local insert_sql="
-    INSERT INTO schema_version (version, description)
-    VALUES ('1.0.0', 'Initial database schema')
-    ON DUPLICATE KEY UPDATE version=version;
-    "
-
-    if ! mysql -u root -p"${DB_ROOT_PASSWORD}" "${DB_NAME}" -e "${insert_sql}" 2>/dev/null; then
-        log_warn "Failed to insert initial schema version (may already exist)"
-    fi
-
-    log_success "Schema version table created"
-    return 0
-}
-
-# Note: main() is called by bootstrap.sh, not auto-executed
+main

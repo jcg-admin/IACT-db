@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Check Database Connections - Verificación de conexiones externas Host -> VM
-============================================================================
-Descripción: Verifica conectividad a MariaDB y PostgreSQL desde el host
+Check Database Connections - Verificación de conectividad MariaDB + PostgreSQL
+================================================================================
+Descripción: Verifica conectividad a MariaDB y PostgreSQL.
+             Lee configuración desde .env en la raíz del proyecto.
 Patrón: Funcional, Sin efectos secundarios, Logging estructurado
 Requisitos: mysql-connector-python, psycopg2-binary, colorama
 ============================================================================
@@ -135,22 +136,49 @@ class IACTLogger:
 # CONFIGURACIONES DE CONEXIÓN (Host -> VM via port forwarding)
 # =============================================================================
 
-# Configuración MariaDB (localhost:13306 -> VM 192.168.56.10:3306)
+# =============================================================================
+# CONFIGURACIÓN — leída desde .env en el directorio raíz del proyecto
+# =============================================================================
+
+def load_env(env_path: str = None) -> dict:
+    """Carga variables desde el archivo .env del proyecto."""
+    import os
+
+    if env_path is None:
+        # Buscar .env en el directorio padre del script (raíz del proyecto)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        env_path = os.path.join(script_dir, '..', '.env')
+
+    env_vars = {}
+    env_path = os.path.normpath(env_path)
+
+    if os.path.exists(env_path):
+        with open(env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, _, value = line.partition('=')
+                    env_vars[key.strip()] = value.strip().strip('"').strip("'")
+
+    return env_vars
+
+
+_env = load_env()
+
 MARIADB_CONFIG = {
-    "host": "192.168.56.10",  # IP Host-Only de la VM MariaDB
-    "port": 3306,              # Puerto estándar (acceso directo por red)
-    "user": "django_user",
-    "password": "django_pass",
-    "database": "ivr_legacy"
+    "host":     _env.get("MARIADB_HOST",         "127.0.0.1"),
+    "port":     int(_env.get("MARIADB_PORT",      "3306")),
+    "user":     _env.get("DB_MARIADB_USER",       "django_user"),
+    "password": _env.get("DB_MARIADB_PASSWORD",   "django_pass"),
+    "database": _env.get("DB_MARIADB_NAME",       "ivr_legacy"),
 }
 
-# Configuración PostgreSQL (localhost:15432 -> VM 192.168.56.11:5432)
 POSTGRES_CONFIG = {
-    "host": "192.168.56.11",  # IP Host-Only de la VM PostgreSQL
-    "port": 5432,              # Puerto estándar (acceso directo por red)
-    "user": "django_user",
-    "password": "django_pass",
-    "dbname": "iact_analytics"
+    "host":     _env.get("POSTGRES_HOST",         "127.0.0.1"),
+    "port":     int(_env.get("POSTGRES_PORT",     "5432")),
+    "user":     _env.get("DB_POSTGRES_USER",      "django_user"),
+    "password": _env.get("DB_POSTGRES_PASSWORD",  "django_pass"),
+    "dbname":   _env.get("DB_POSTGRES_NAME",      "iact_analytics"),
 }
 
 
@@ -195,7 +223,7 @@ def test_mariadb_connection(config: Dict[str, Any], logger: IACTLogger) -> Tuple
     except mysql.connector.Error as err:
         error_msg = f"Error de conexión MariaDB: {err}"
         logger.log_error(error_msg)
-        logger.log_warning(f"Verifique que la VM MariaDB esté corriendo: vagrant status")
+        logger.log_warning(f"Verifique que MariaDB esté corriendo: sudo systemctl status mariadb")
         return False, error_msg
 
 
@@ -233,7 +261,7 @@ def test_postgres_connection(config: Dict[str, Any], logger: IACTLogger) -> Tupl
     except PgOperationalError as err:
         error_msg = f"Error de conexión PostgreSQL: {err}"
         logger.log_error(error_msg)
-        logger.log_warning(f"Verifique que la VM PostgreSQL esté corriendo: vagrant status")
+        logger.log_warning(f"Verifique que PostgreSQL esté corriendo: sudo systemctl status postgresql")
         return False, error_msg
         
     finally:
@@ -257,13 +285,13 @@ def run_tests(logger: IACTLogger) -> bool:
     """
     
     tests = [
-        ("MariaDB (Host -> VM 192.168.56.10)", test_mariadb_connection, MARIADB_CONFIG),
-        ("PostgreSQL (Host -> VM 192.168.56.11)", test_postgres_connection, POSTGRES_CONFIG),
+        (f"MariaDB ({MARIADB_CONFIG['host']}:{MARIADB_CONFIG['port']})", test_mariadb_connection, MARIADB_CONFIG),
+        (f"PostgreSQL ({POSTGRES_CONFIG['host']}:{POSTGRES_CONFIG['port']})", test_postgres_connection, POSTGRES_CONFIG),
     ]
 
     logger.log_header("VERIFICACIÓN DE CONEXIONES EXTERNAS (HOST -> VM)")
-    logger.log_info("Método de conexión: Red Host-Only (192.168.56.0/24)")
-    logger.log_info("Asegúrese de que ambas VMs estén corriendo: vagrant status")
+    logger.log_info(f"MariaDB: {MARIADB_CONFIG['host']}:{MARIADB_CONFIG['port']} / PostgreSQL: {POSTGRES_CONFIG['host']}:{POSTGRES_CONFIG['port']}")
+    logger.log_info("Asegúrese de que MariaDB y PostgreSQL estén corriendo")
     
     total_steps = len(tests)
     step = 0
@@ -283,7 +311,7 @@ def run_tests(logger: IACTLogger) -> bool:
             logger.log_error(f"FALLO: La conexión {name} no fue establecida")
             logger.log_warning(f"  Host: {config.get('host', config.get('host'))}:{config.get('port')}")
             logger.log_warning(f"  Posibles causas:")
-            logger.log_warning(f"    1. VM no está corriendo (ejecute: vagrant up)")
+            logger.log_warning(f"    1. El servicio no está corriendo (ejecute: sudo bash bootstrap.sh)")
             logger.log_warning(f"    2. Red Host-Only no configurada correctamente")
             logger.log_warning(f"    3. Firewall bloqueando conexión")
         
@@ -303,8 +331,8 @@ def run_tests(logger: IACTLogger) -> bool:
         logger.log_info("Las VMs están listas para usar desde aplicaciones Django")
     else:
         logger.log_error("✗ Una o más conexiones fallaron")
-        logger.log_info("Ejecute 'vagrant status' para verificar el estado de las VMs")
-        logger.log_info("Ejecute 'vagrant up' para iniciar las VMs si están detenidas")
+        logger.log_info("Ejecute: sudo systemctl status mariadb postgresql")
+        logger.log_info("Para reinstalar: sudo bash bootstrap.sh")
     
     return all_ok
 

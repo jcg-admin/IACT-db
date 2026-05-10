@@ -32,9 +32,11 @@ La documentación está organizada en categorías para facilitar la navegación:
 
 Documentación esencial para comenzar a usar IACT DevBox.
 
-- **[QUICKSTART.md](getting-started/QUICKSTART.md)** - Guía de instalación rápida
+- **[QUICKSTART.md](getting-started/QUICKSTART.md)** - Guía de instalación rápida (sin Vagrant)
 - **[COMMANDS.md](getting-started/COMMANDS.md)** - Referencia de comandos Vagrant
-- **[VERIFICACION_COMPLETA.md](getting-started/VERIFICACION_COMPLETA.md)** - Checklist de verificación post-instalación
+- **[VERIFICACION-LOCAL-SIN-VAGRANT.md](getting-started/VERIFICACION-LOCAL-SIN-VAGRANT.md)** - Checklist para entorno local directo (sin VMs)
+- **[VERIFICACION_COMPLETA.md](getting-started/VERIFICACION_COMPLETA.md)** - Checklist de verificación con Vagrant
+- **[HISTORICO-IVR.md](getting-started/HISTORICO-IVR.md)** - Schema y seed de las tablas históricas IVR (`tbl_historico_tN_YYYY`)
 
 ### Setup (Configuración Avanzada)
 

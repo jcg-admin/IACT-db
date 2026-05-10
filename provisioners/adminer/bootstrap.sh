@@ -6,7 +6,12 @@
 set -euo pipefail
 
 # Load utilities
-source /vagrant/utils/provisioning.sh
+
+# Detectar PROJECT_ROOT (sin dependencia de /vagrant)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+source "${PROJECT_ROOT}/utils/provisioning.sh"
 
 # Initialize
 init_all
@@ -17,25 +22,25 @@ init_log "adminer_bootstrap"
 # Define steps with unique names (avoid collision with provisioning.sh functions)
 adminer_system() {
     init_log "system_prepare"
-    source /vagrant/utils/system.sh
+    source "${PROJECT_ROOT}/utils/system.sh"
     main
 }
 
 adminer_swap() {
     init_log "adminer_swap"
-    source /vagrant/provisioners/adminer/swap.sh
+    source "${PROJECT_ROOT}/provisioners/adminer/swap.sh"
     main
 }
 
 adminer_install() {
     init_log "adminer_install"
-    source /vagrant/provisioners/adminer/install.sh
+    source "${PROJECT_ROOT}/provisioners/adminer/install.sh"
     main
 }
 
 adminer_ssl() {
     init_log "adminer_ssl"
-    source /vagrant/provisioners/adminer/ssl.sh
+    source "${PROJECT_ROOT}/provisioners/adminer/ssl.sh"
     main
 }
 
