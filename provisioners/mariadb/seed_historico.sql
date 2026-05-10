@@ -1,67 +1,112 @@
 -- =============================================================================
 -- seed_historico.sql — Poblar tbl_historico_tN_YYYY con datos representativos
 -- =============================================================================
--- Genera datos que replican los patrones reales del IVR.
---
--- IDEMPOTENCIA:
---   Por defecto: SKIP si la tabla ya tiene datos (no duplica).
---   Con forzado:  SET @FORCE_RESEED = 1 antes de ejecutar → TRUNCATE + re-seed.
+-- Genera datos que replican los patrones reales del IVR del cliente.
+-- Fuentes de calibración: TBL-HISTORICO-ANOMALIAS.md, perfiles/q01_2025.py,
+-- SUPUESTOS-VOLUMENES_2026-05-07T154105.md, datos reales Q1-Q3 2025 (34.1M filas)
 --
 -- COMPORTAMIENTO POR EJECUCION:
---   1ra ejecucion  → inserta SEED_ROWS en cada tabla vacía.
---   2da ejecucion  → skip de tablas ya sembradas, mensaje informativo.
---   Con --force    → trunca y re-siembra todas las tablas.
+--   1ra ejecucion  → SEED: inserta @SEED_Qnn registros en tabla vacía.
+--   2da ejecucion  → APPEND: inserta @SEED_Qnn registros adicionales.
+--   Sin SKIP, sin TRUNCATE — cada ejecucion agrega datos.
+--   Los datos históricos tienen valor aunque contengan errores documentados.
 --
 -- TRACKING:
---   Registra cada ejecucion en seed_executions con:
---   timestamp, tabla, filas_antes, filas_despues, accion, seed_rows, script_version.
+--   Registra en seed_executions: timestamp, tabla, filas_antes, filas_despues,
+--   accion (SEED|APPEND), seed_rows_cfg, script_version, commit_hash.
 --
--- DIDs de entrada (cDID_800Transfer) — confirmados por segmento:
---   NacionalA  19028031  45%
---   NacionalB  19020001  30%
---   Puebla     19020084  25%
+-- ESCALAS POR QUARTER (proporcionales a datos reales Q1-Q3 2025):
+--   Q01_25: base  1.000  (11,643,679 reales)
+--   Q02_25: pico  1.136  (13,612,375 reales — mayor del año)
+--   Q03_25: valle 0.954  (11,482,117 reales)
+--   Q04_25:       1.041  (supuesto — fin de año +8% sobre Q03)
+--   Q01_26:       1.010  (supuesto — crecimiento YoY ~4%)
+--   Q02_26: parcial 36/91 días del Q02_26 proyectado
+--   Offset aleatorio [3..17] garantiza que ningún quarter termina en cero.
 --
--- Distribucion de cMenu (basada en analisis real Q3 2025):
---   cliente_colgo       52%   abandono principal
---   NULL/vacio/sin cMenu 9%   abandono (cMenu vacio en fuente)
---   SinOpcion_Cabecera   4%   abandono
---   Desborde_Cabecera    5%   enrutamiento por etiqueta (no es abandono)
---   Desborde_Promocional 2%   enrutamiento promocional
---   menus reales        28%   Saldo / Pagos / Atencion / Transferencia / etc.
+-- DISTRIBUCIONES CALIBRADAS (perfiles/q01_2025.py, TBL-HISTORICO-ANOMALIAS.md):
+--   G-29 (dHoraInicio > dHoraFin): 38.8% — bug real del sistema IVR
+--   cMenu: distribución Q01_2025 real — cliente_colgo 22.6%, RES-FallaInternet
+--          14.3%, NOTMX-SeguimientoInstalacion 11.6%, etc.
+--   cTelefono_Digitado NULL:        21.2%  (P_NULL en poblar_historico.py)
+--   cTelefono_Digitado = Origen:    28.2%  (P_MISMA en poblar_historico.py)
+--   cDID_Centro_Transferencia NK90: ~9.9% de registros enrutados
 --
--- Bugs reales replicados:
---   ~0.3% registros con dHoraInicio > dHoraFin (campos swapped — bug IVR real)
+-- BUGS REALES REPLICADOS (TBL-HISTORICO-ANOMALIAS.md):
+--   G-29:            38.8% dHoraInicio > dHoraFin (campos swapped — bug IVR)
+--   CLIENTE_COLGO:   cDID_Centro_Transferencia='cliente_colgo' cuando el
+--                    cliente colgó antes de completar la transferencia
+--   NK90:            VDN+cTelefono_Digitado concatenados (migración a IPVR)
+--   __CMENU_ERROR__: ~1.2% teléfono en cMenu (bug IVR Puebla Q02+)
 --
--- USO normal:
---   mysql -u django_user -pdjango_pass ivr_legacy < seed_historico.sql
+-- LIMITACIONES — cubiertas por NIVEL 2 (poblar_historico.py):
+--   · Solo top 22 menús de Q01_2025 (el catálogo real tiene 39+)
+--   · Sin evolución de menús por quarter (Q02 agrega 8, Q03 agrega 5)
+--   · VDNs por menú simplificados (no cubre los 28+ VDNs por menú)
 --
--- USO con forzado de re-seed:
---   mysql -u django_user -pdjango_pass ivr_legacy \
---         -e "SET @FORCE_RESEED=1;" seed_historico.sql
---   # o desde el bash wrapper:
---   FORCE_RESEED=1 sudo bash provisioners/mariadb/schema_historico.sh
+-- USO:
+--   Nivel 1 (automático via schema_historico.sh):
+--     SKIP_SEED=0 sudo bash provisioners/mariadb/schema_historico.sh
 --
--- SEED_ROWS por quarter (default 5000):
---   Desarrollo:   5000   (~5  seg)
---   Integracion: 50000   (~1  min)
---   Staging:    500000   (~10 min)
+--   Nivel 2 (alta fidelidad, requiere Python 3):
+--     FULL_SEED=1 sudo bash provisioners/mariadb/schema_historico.sh
+--
+-- SEED_ROWS base Q01_25 (default 3000):
+--   Desarrollo:   3000    (~15 seg)
+--   Integración: 30000    (~2  min)
+--   Staging:    300000    (~20 min)
+-- =============================================================================
+--
+-- CHANGELOG:
+--   v3.0.0 (2026-05-10):
+--     H-SEED-001: SKIP → APPEND incremental (sin LEAVE, sin corte)
+--     H-SEED-002: FORCE_RESEED/TRUNCATE eliminados (datos siempre tienen valor)
+--     H-SEED-003: G-29 calibrado 0.003 → 0.388
+--     H-SEED-004: cMenu con 22 menús reales Q01_2025 y proporciones correctas
+--     H-SEED-005/006: cTelefono calibrado P_NULL=0.212, P_MISMA=0.282
+--     H-SEED-007: LPAD → rango fijo FLOOR(1000000+RAND()*9000000)
+--     H-SEED-008: @SCRIPT_VER como fallback condicional (no sobreescribe)
+--     H-SEED-010/011: escalas por quarter y offset aleatorio (no-cero)
+--     T-1.1 (FASE 0 plan anterior): label sp_seed_historico: en BEGIN
+--     Ref: HALLAZGOS-SEED-SQL-202605102030.md,
+--          HALLAZGOS-SEED-VOLUMEN-MENUS-202605102045.md
+--
+--   v2.0.0 (2026-05-06): versión original — ver git log
 -- =============================================================================
 
 USE ivr_legacy;
 
--- Variables de control (pueden sobreescribirse antes de ejecutar este script)
-SET @SEED_ROWS     = IF(@SEED_ROWS IS NULL OR @SEED_ROWS = 0, 5000, @SEED_ROWS);
-SET @FORCE_RESEED  = IF(@FORCE_RESEED IS NULL, 0, @FORCE_RESEED);
-SET @SCRIPT_VER    = '2.0.0';
+-- =============================================================================
+-- Variables de control
+-- =============================================================================
+SET @SEED_ROWS  = IF(@SEED_ROWS IS NULL OR @SEED_ROWS = 0, 3000, @SEED_ROWS);
+-- @SCRIPT_VER: usar la versión inyectada por schema_historico.sh si existe.
+-- Fallback a '3.0.0' solo si no viene ninguna (H-SEED-008).
+SET @SCRIPT_VER = IF(@SCRIPT_VER IS NULL OR @SCRIPT_VER = '', '3.0.0', @SCRIPT_VER);
 
 -- =============================================================================
--- Tabla de tracking de ejecuciones (idempotente)
+-- Escalas de volumen por quarter (H-SEED-010, H-SEED-011)
+-- Ref: SUPUESTOS-VOLUMENES_2026-05-07T154105.md
+-- Offset [3..17]: ningún quarter termina en 0, ningún par es idéntico.
+-- =============================================================================
+SET @_OFF = FLOOR(RAND() * 15) + 3;
+
+SET @SEED_Q01_25 = @SEED_ROWS + @_OFF;
+SET @SEED_Q02_25 = FLOOR(@SEED_ROWS * 1.136) + @_OFF + FLOOR(RAND() * 5) + 1;
+SET @SEED_Q03_25 = FLOOR(@SEED_ROWS * 0.954) + @_OFF + FLOOR(RAND() * 5) + 2;
+SET @SEED_Q04_25 = FLOOR(@SEED_ROWS * 1.041) + @_OFF + FLOOR(RAND() * 5) + 3;
+SET @SEED_Q01_26 = FLOOR(@SEED_ROWS * 1.010) + @_OFF + FLOOR(RAND() * 5) + 4;
+SET @SEED_Q02_26 = GREATEST(500,
+    FLOOR(@SEED_ROWS * 1.136 * 36 / 91) + FLOOR(RAND() * 7) + 3);
+
+-- =============================================================================
+-- Tabla de tracking (H-SEED-001: VARCHAR en lugar de ENUM para soportar APPEND)
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS seed_executions (
     id             INT AUTO_INCREMENT PRIMARY KEY,
     ejecutado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tabla          VARCHAR(60)  NOT NULL,
-    accion         ENUM('SEED','SKIP','TRUNCATE+SEED') NOT NULL,
+    accion         VARCHAR(20)  NOT NULL,
     filas_antes    INT          NOT NULL DEFAULT 0,
     filas_despues  INT          NOT NULL DEFAULT 0,
     seed_rows_cfg  INT          NOT NULL,
@@ -71,8 +116,11 @@ CREATE TABLE IF NOT EXISTS seed_executions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   COMMENT='Registro de ejecuciones de seed_historico.sql';
 
+-- Migrar instalaciones previas con ENUM (no-op en instalaciones nuevas con VARCHAR)
+ALTER TABLE seed_executions MODIFY COLUMN accion VARCHAR(20) NOT NULL;
+
 -- =============================================================================
--- SP principal: sp_seed_historico
+-- SP principal
 -- =============================================================================
 DROP PROCEDURE IF EXISTS sp_seed_historico;
 
@@ -83,16 +131,14 @@ CREATE PROCEDURE sp_seed_historico(
     IN  p_fecha_ini    DATE,
     IN  p_fecha_fin    DATE,
     IN  p_rows         INT,
-    IN  p_force        TINYINT,   -- 1 = TRUNCATE + re-seed, 0 = skip si ya hay datos
     IN  p_script_ver   VARCHAR(20),
     IN  p_commit_hash  VARCHAR(40)
 )
-BEGIN
+sp_seed_historico: BEGIN
     DECLARE v_i            INT DEFAULT 0;
     DECLARE v_count_antes  INT DEFAULT 0;
     DECLARE v_count_des    INT DEFAULT 0;
     DECLARE v_accion       VARCHAR(20);
-
     DECLARE v_rand         FLOAT;
     DECLARE v_rand2        FLOAT;
     DECLARE v_fecha        DATE;
@@ -102,7 +148,6 @@ BEGIN
     DECLARE v_inicio_hora  INT;
     DECLARE v_did          VARCHAR(20);
     DECLARE v_centro       VARCHAR(50);
-    DECLARE v_vdn          VARCHAR(10);
     DECLARE v_menu         VARCHAR(100);
     DECLARE v_opcion       VARCHAR(100);
     DECLARE v_tel_origen   VARCHAR(20);
@@ -117,37 +162,19 @@ BEGIN
     PREPARE s FROM v_sql; EXECUTE s; DEALLOCATE PREPARE s;
     SET v_count_antes = @_cnt;
 
-    -- Decidir accion
-    IF v_count_antes > 0 AND p_force = 0 THEN
-        -- Ya tiene datos y no se forzó re-seed: SKIP
-        SET v_accion = 'SKIP';
-        SELECT CONCAT('SKIP: ', p_tabla, ' ya tiene ', v_count_antes,
-                      ' registros. Usar FORCE_RESEED=1 para re-sembrar.') AS info;
-
-        INSERT INTO seed_executions
-            (tabla, accion, filas_antes, filas_despues,
-             seed_rows_cfg, script_version, commit_hash)
-        VALUES (p_tabla, 'SKIP', v_count_antes, v_count_antes,
-                p_rows, p_script_ver, p_commit_hash);
-        LEAVE sp_seed_historico;
-    END IF;
-
-    -- Forzado: truncar antes de insertar
-    IF p_force = 1 AND v_count_antes > 0 THEN
-        SET v_accion = 'TRUNCATE+SEED';
-        SET v_sql = CONCAT('TRUNCATE TABLE ', p_tabla);
-        PREPARE s FROM v_sql; EXECUTE s; DEALLOCATE PREPARE s;
-        SELECT CONCAT('TRUNCATE: ', p_tabla, ' vaciada (',
-                      v_count_antes, ' registros eliminados).') AS info;
-        SET v_count_antes = 0;
-    ELSE
+    -- H-SEED-001: SEED en primera insercion, APPEND en siguientes.
+    -- H-SEED-002: sin SKIP ni TRUNCATE — cada ejecucion agrega datos.
+    IF v_count_antes = 0 THEN
         SET v_accion = 'SEED';
+        SELECT CONCAT('SEED: ', p_tabla, ' — primera siembra de ', p_rows,
+                      ' registros') AS info;
+    ELSE
+        SET v_accion = 'APPEND';
+        SELECT CONCAT('APPEND: ', p_tabla, ' ya tiene ', v_count_antes,
+                      ' registros — agregando ', p_rows, ' mas') AS info;
     END IF;
 
     SET v_dias_rango = DATEDIFF(p_fecha_fin, p_fecha_ini) + 1;
-
-    SELECT CONCAT('Sembrando ', p_tabla, ' (', p_rows, ' registros, ',
-                  p_fecha_ini, ' a ', p_fecha_fin, ')...') AS info;
 
     SET v_i = 0;
     WHILE v_i < p_rows DO
@@ -155,134 +182,248 @@ BEGIN
         SET v_rand  = RAND();
         SET v_rand2 = RAND();
 
-        -- dFecha distribuida uniformemente en el rango
         SET v_fecha = DATE_ADD(p_fecha_ini,
                           INTERVAL FLOOR(v_rand * v_dias_rango) DAY);
 
-        -- Horario 07:00-21:00
-        SET v_inicio_hora = (7 * 3600) + FLOOR(RAND() * (14 * 3600));
+        SET v_inicio_hora  = (7 * 3600) + FLOOR(RAND() * 50400);
         SET v_duracion_seg = FLOOR(5 + RAND() * 895);
+        SET v_hora_ini     = TIMESTAMP(v_fecha, SEC_TO_TIME(v_inicio_hora));
+        SET v_hora_fin     = TIMESTAMP(v_fecha, SEC_TO_TIME(v_inicio_hora + v_duracion_seg));
 
-        SET v_hora_ini = TIMESTAMP(v_fecha, SEC_TO_TIME(v_inicio_hora));
-        SET v_hora_fin = TIMESTAMP(v_fecha, SEC_TO_TIME(v_inicio_hora + v_duracion_seg));
-
-        -- Bug real: ~0.3% registros con dHoraInicio > dHoraFin
-        IF RAND() < 0.003 THEN
+        -- G-29: 38.8% (H-SEED-003)
+        IF RAND() < 0.388 THEN
             SET v_hora_fin = TIMESTAMP(v_fecha, SEC_TO_TIME(v_inicio_hora));
             SET v_hora_ini = TIMESTAMP(v_fecha, SEC_TO_TIME(v_inicio_hora + v_duracion_seg));
         END IF;
 
-        -- cDID_800Transfer: NacionalA 45% / NacionalB 30% / Puebla 25%
+        -- cDID_800Transfer
         SET v_rand = RAND();
         IF    v_rand < 0.45 THEN SET v_did = '19028031';
         ELSEIF v_rand < 0.75 THEN SET v_did = '19020001';
         ELSE                      SET v_did = '19020084';
         END IF;
 
-        -- cTelefono_Origen: prefijos reales MX
+        -- cTelefono_Origen (H-SEED-007: rango fijo, sin ceros internos)
         SET v_rand = RAND();
         IF    v_rand < 0.30 THEN
-            SET v_tel_origen = CONCAT('443', LPAD(FLOOR(RAND()*9999999),7,'0'));
+            SET v_tel_origen = CONCAT('443', FLOOR(1000000 + RAND() * 9000000));
         ELSEIF v_rand < 0.55 THEN
-            SET v_tel_origen = CONCAT('722', LPAD(FLOOR(RAND()*9999999),7,'0'));
+            SET v_tel_origen = CONCAT('722', FLOOR(1000000 + RAND() * 9000000));
         ELSEIF v_rand < 0.75 THEN
-            SET v_tel_origen = CONCAT('222', LPAD(FLOOR(RAND()*9999999),7,'0'));
+            SET v_tel_origen = CONCAT('222', FLOOR(1000000 + RAND() * 9000000));
         ELSE
-            SET v_tel_origen = CONCAT('55',  LPAD(FLOOR(RAND()*99999999),8,'0'));
+            SET v_tel_origen = CONCAT('55', FLOOR(10000000 + RAND() * 90000000));
         END IF;
 
-        -- cTelefono_Digitado: 30% NULL / 45% igual / 25% diferente
+        -- cTelefono_Digitado (H-SEED-005/006: P_NULL=0.212, P_MISMA=0.282)
         SET v_rand = RAND();
-        IF    v_rand < 0.30 THEN SET v_tel_digitado = NULL;
-        ELSEIF v_rand < 0.75 THEN SET v_tel_digitado = v_tel_origen;
-        ELSE  SET v_tel_digitado = CONCAT('443',LPAD(FLOOR(RAND()*9999999),7,'0'));
-        END IF;
-
-        -- cMenu y cOpcion
-        SET v_rand = RAND();
-        IF    v_rand < 0.52 THEN SET v_menu='cliente_colgo';  SET v_opcion=NULL;
-        ELSEIF v_rand < 0.61 THEN
-            SET v_rand2 = RAND();
-            IF    v_rand2 < 0.50 THEN SET v_menu=NULL;
-            ELSEIF v_rand2 < 0.80 THEN SET v_menu='';
-            ELSE                        SET v_menu='sin cMenu';
-            END IF;
-            SET v_opcion=NULL;
-        ELSEIF v_rand < 0.65 THEN SET v_menu='SinOpcion_Cabecera';  SET v_opcion=NULL;
-        ELSEIF v_rand < 0.70 THEN SET v_menu='Desborde_Cabecera';   SET v_opcion=NULL;
-        ELSEIF v_rand < 0.72 THEN SET v_menu='Desborde_Promocional';SET v_opcion=NULL;
+        IF    v_rand < 0.212 THEN
+            SET v_tel_digitado = NULL;
+        ELSEIF v_rand < 0.494 THEN
+            SET v_tel_digitado = v_tel_origen;
         ELSE
             SET v_rand2 = RAND();
-            IF    v_rand2 < 0.18 THEN SET v_menu='Saldo';
-                SET v_opcion=IF(RAND()<0.5,'ConsultaTelefonica','ConsultaMovil');
-            ELSEIF v_rand2 < 0.34 THEN SET v_menu='Pagos';
-                SET v_opcion=IF(RAND()<0.6,'PagoLineaTelefonica','PagoMovil');
-            ELSEIF v_rand2 < 0.48 THEN SET v_menu='Atencion';
-                SET v_opcion=IF(RAND()<0.5,'AtencionEspecializada','AtencionGeneral');
-            ELSEIF v_rand2 < 0.58 THEN SET v_menu='Transferencia';
-                SET v_opcion=IF(RAND()<0.7,'TransferenciaDirecta','TransferenciaIVR');
-            ELSEIF v_rand2 < 0.68 THEN SET v_menu='Informacion';
-                SET v_opcion=IF(RAND()<0.5,'InfoProductos','InfoServicios');
-            ELSEIF v_rand2 < 0.76 THEN SET v_menu='ReclamacionesTecnicas';
-                SET v_opcion=IF(RAND()<0.6,'FallaServicio','EquipoDefectuoso');
-            ELSEIF v_rand2 < 0.84 THEN SET v_menu='BajasModificaciones';
-                SET v_opcion=IF(RAND()<0.5,'BajaServicio','ModificacionPlan');
-            ELSEIF v_rand2 < 0.90 THEN SET v_menu='ConsultaFactura';
-                SET v_opcion=IF(RAND()<0.5,'FacturaDetallada','ResumenFactura');
-            ELSE SET v_menu='SolicitudProducto';
-                SET v_opcion=IF(RAND()<0.5,'NuevoProducto','ActivacionProducto');
-            END IF;
-        END IF;
-
-        -- cDID_Centro_Transferencia
-        IF v_menu IN ('cliente_colgo','SinOpcion_Cabecera')
-           OR v_menu IS NULL OR v_menu='' OR v_menu='sin cMenu' THEN
-            SET v_rand = RAND();
-            IF    v_rand < 0.80 THEN SET v_centro=NULL;
-            ELSEIF v_rand < 0.95 THEN SET v_centro='cliente_colgo';
-            ELSE                      SET v_centro='0000000';
-            END IF;
-        ELSE
-            SET v_rand = RAND();
-            IF    v_rand < 0.25 THEN SET v_vdn='1309004';
-            ELSEIF v_rand < 0.45 THEN SET v_vdn='15070013';
-            ELSEIF v_rand < 0.60 THEN SET v_vdn='2309004';
-            ELSEIF v_rand < 0.72 THEN SET v_vdn='1205003';
-            ELSEIF v_rand < 0.82 THEN SET v_vdn='1408002';
-            ELSE                      SET v_vdn='1705001';
-            END IF;
-            IF v_tel_digitado IS NOT NULL AND RAND() < 0.70 THEN
-                SET v_centro = CONCAT(v_vdn, v_tel_digitado);
+            IF    v_rand2 < 0.30 THEN
+                SET v_tel_digitado = CONCAT('443', FLOOR(1000000 + RAND() * 9000000));
+            ELSEIF v_rand2 < 0.55 THEN
+                SET v_tel_digitado = CONCAT('722', FLOOR(1000000 + RAND() * 9000000));
+            ELSEIF v_rand2 < 0.75 THEN
+                SET v_tel_digitado = CONCAT('222', FLOOR(1000000 + RAND() * 9000000));
             ELSE
-                SET v_centro = v_vdn;
+                SET v_tel_digitado = CONCAT('55', FLOOR(10000000 + RAND() * 90000000));
             END IF;
+        END IF;
+
+        -- cMenu y cOpcion (H-SEED-004: distribucion q01_2025.py real)
+        SET v_rand = RAND();
+        IF    v_rand < 0.226 THEN
+            SET v_menu = 'cliente_colgo'; SET v_opcion = NULL;
+        ELSEIF v_rand < 0.306 THEN
+            SET v_rand2 = RAND();
+            IF    v_rand2 < 0.60 THEN SET v_menu = NULL;
+            ELSEIF v_rand2 < 0.85 THEN SET v_menu = '';
+            ELSE                        SET v_menu = 'sin cMenu';
+            END IF;
+            SET v_opcion = NULL;
+        ELSEIF v_rand < 0.339 THEN
+            SET v_menu = 'SinOpcion_Cabecera'; SET v_opcion = NULL;
+        ELSEIF v_rand < 0.360 THEN
+            SET v_menu = 'Marque3'; SET v_opcion = NULL;
+        ELSEIF v_rand < 0.493 THEN
+            SET v_menu = 'Desborde_Cabecera';
+            SET v_rand2 = RAND();
+            IF    v_rand2 < 0.15 THEN SET v_opcion = 'QJA_AB_DAT_1';
+            ELSEIF v_rand2 < 0.30 THEN SET v_opcion = 'TELECOBRA';
+            ELSEIF v_rand2 < 0.43 THEN SET v_opcion = 'TELVICOBRA';
+            ELSEIF v_rand2 < 0.51 THEN SET v_opcion = 'ECATEPEC';
+            ELSEIF v_rand2 < 0.62 THEN SET v_opcion = 'QJA_AB_2';
+            ELSE                        SET v_opcion = NULL;
+            END IF;
+        ELSEIF v_rand < 0.522 THEN
+            SET v_menu = 'Desborde_Promocional'; SET v_opcion = NULL;
+        ELSEIF v_rand < 0.665 THEN
+            SET v_menu = 'RES-FallaInternet';
+            SET v_rand2 = RAND();
+            IF    v_rand2 < 0.80 THEN SET v_opcion = 'DEFAULT';
+            ELSEIF v_rand2 < 0.87 THEN SET v_opcion = 'NOBOT';
+            ELSE                        SET v_opcion = 'POSIBLE_FALLA_DSLAM_P';
+            END IF;
+        ELSEIF v_rand < 0.694 THEN
+            SET v_menu = 'RES-FallasLinea';
+            SET v_opcion = IF(RAND() < 0.92, 'DEFAULT', 'ML');
+        ELSEIF v_rand < 0.704 THEN
+            SET v_rand2 = RAND();
+            IF    v_rand2 < 0.60 THEN SET v_menu = 'RES-Fallas_2024';
+            ELSEIF v_rand2 < 0.80 THEN SET v_menu = 'RES-FallaEntretiene';
+            ELSE                        SET v_menu = 'RES-FallaSegQja';
+            END IF;
+            SET v_opcion = 'DEFAULT';
+        ELSEIF v_rand < 0.820 THEN
+            SET v_menu = 'NOTMX-SeguimientoInstalacion'; SET v_opcion = 'DEFAULT';
+        ELSEIF v_rand < 0.847 THEN
+            SET v_menu = 'NOTMX-CONT-Contratacion'; SET v_opcion = 'DEFAULT';
+        ELSEIF v_rand < 0.861 THEN
+            SET v_menu = 'NOTMX-CONT-Portabilidad'; SET v_opcion = 'DEFAULT';
+        ELSEIF v_rand < 0.915 THEN
+            SET v_rand2 = RAND();
+            IF    v_rand2 < 0.76 THEN SET v_menu = 'RES-SaldooPagos';
+            ELSEIF v_rand2 < 0.83 THEN SET v_menu = 'RES-SaldosPagos_2024';
+            ELSE                        SET v_menu = 'RES-Saldos-WT';
+            END IF;
+            SET v_opcion = 'DEFAULT';
+        ELSEIF v_rand < 0.962 THEN
+            SET v_menu = 'RES-MADT-Detalle';
+            SET v_opcion = IF(RAND() < 0.92, 'DEFAULT', '2L');
+        ELSEIF v_rand < 0.979 THEN
+            SET v_menu = 'RES-Entr';
+            SET v_opcion = IF(RAND() < 0.92, 'DEFAULT', '2L');
+        ELSEIF v_rand < 0.988 THEN
+            SET v_rand2 = RAND();
+            IF    v_rand2 < 0.55 THEN SET v_menu = 'RES-ContratacionInfinitum';
+            ELSEIF v_rand2 < 0.75 THEN SET v_menu = 'RES-ContratacionInfinitum_2024';
+            ELSEIF v_rand2 < 0.85 THEN SET v_menu = 'RES_CambioDom';
+            ELSE                        SET v_menu = 'RES_CambioTit';
+            END IF;
+            SET v_opcion = 'DEFAULT';
+        ELSEIF v_rand < 0.990 THEN
+            -- __CMENU_ERROR__: telefono en cMenu (bug real IVR ~1.2%)
+            SET v_menu = CONCAT('443', FLOOR(1000000 + RAND() * 9000000));
+            SET v_opcion = NULL;
+        ELSE
+            SET v_rand2 = RAND();
+            IF    v_rand2 < 0.30 THEN SET v_menu = 'RES_Otros';
+            ELSEIF v_rand2 < 0.55 THEN SET v_menu = 'RES-DISH';
+            ELSEIF v_rand2 < 0.75 THEN SET v_menu = 'RES-TAE';
+            ELSEIF v_rand2 < 0.90 THEN SET v_menu = 'RES-SegurosInbursa';
+            ELSE                        SET v_menu = 'default';
+            END IF;
+            SET v_opcion = 'DEFAULT';
+        END IF;
+
+        -- cDID_Centro_Transferencia (VDNs reales q01_2025.py VDN_POR_MENU)
+        -- Cada menu tiene su propio VDN — no agrupar categorias distintas.
+        IF v_menu = 'cliente_colgo' THEN
+            -- cMenu='cliente_colgo' → cDID es SIEMPRE 'cliente_colgo' (100%)
+            -- Ref: q01_2025.py 'cliente_colgo': ('cliente_colgo',)
+            SET v_centro = 'cliente_colgo';
+        ELSEIF v_menu IS NULL OR v_menu = '' OR v_menu = 'sin cMenu' THEN
+            -- VACIO (NULL/vacio/sin cMenu) → 80% cliente_colgo, 17% 19020086, 3% NULL
+            -- Ref: q01_2025.py None: [('cliente_colgo',0.80),('19020086',0.97),(None,1.0)]
+            SET v_rand = RAND();
+            IF    v_rand < 0.80 THEN SET v_centro = 'cliente_colgo';
+            ELSEIF v_rand < 0.97 THEN SET v_centro = '19020086';
+            ELSE                       SET v_centro = NULL;
+            END IF;
+        ELSEIF v_menu IN ('SinOpcion_Cabecera','Marque3') THEN
+            -- SinOpcion_Cabecera y Marque3 → SIEMPRE '19020086' (nunca 'cliente_colgo')
+            -- Ref: q01_2025.py 'SinOpcion_Cabecera':[('19020086',1.0)]
+            --                  'Marque3':            [('19020086',1.0)]
+            SET v_centro = '19020086';
+        ELSEIF v_menu = 'Desborde_Cabecera' THEN
+            SET v_centro = IF(RAND() < 0.75, 'cliente_colgo', '10928253');
+        ELSEIF v_menu = 'Desborde_Promocional' THEN
+            SET v_centro = '19020086';
+        ELSEIF v_menu = 'RES-FallaInternet' THEN
+            SET v_rand = RAND();
+            IF    v_rand < 0.49 THEN SET v_centro = '10828091';
+            ELSEIF v_rand < 0.66 THEN SET v_centro = '19010000';
+            ELSEIF v_rand < 0.80 THEN SET v_centro = '15070019';
+            ELSE                       SET v_centro = '10728000';
+            END IF;
+        ELSEIF v_menu = 'RES-FallasLinea' THEN
+            SET v_rand = RAND();
+            IF    v_rand < 0.70 THEN SET v_centro = '15070019';
+            ELSEIF v_rand < 0.90 THEN SET v_centro = '10828091';
+            ELSE                       SET v_centro = '10228051';
+            END IF;
+        ELSEIF v_menu IN ('RES-Fallas_2024','RES-FallaEntretiene') THEN
+            SET v_centro = '10828091';
+        ELSEIF v_menu = 'RES-FallaSegQja' THEN
+            SET v_centro = '10928253';
+        ELSEIF v_menu = 'NOTMX-SeguimientoInstalacion' THEN
+            SET v_centro = '10728487';
+        ELSEIF v_menu = 'NOTMX-CONT-Contratacion' THEN
+            SET v_centro = '15070059';
+        ELSEIF v_menu = 'NOTMX-CONT-Portabilidad' THEN
+            SET v_centro = '10728485';
+        ELSEIF v_menu IN ('RES-SaldooPagos','RES-Saldos-WT') THEN
+            SET v_centro = IF(RAND() < 0.60, '14929014', '1309004');
+        ELSEIF v_menu = 'RES-SaldosPagos_2024' THEN
+            SET v_centro = IF(RAND() < 0.70, '309004', '14929014');
+        ELSEIF v_menu = 'RES-MADT-Detalle' THEN
+            SET v_centro = IF(RAND() < 0.80, '15070013', '10928253');
+        ELSEIF v_menu = 'RES-Entr' THEN
+            SET v_centro = '10728382';
+        ELSEIF v_menu IN ('RES-ContratacionInfinitum','RES-ContratacionInfinitum_2024') THEN
+            SET v_rand = RAND();
+            IF    v_rand < 0.70 THEN SET v_centro = '15070013';
+            ELSEIF v_rand < 0.88 THEN SET v_centro = '15070006';
+            ELSE                       SET v_centro = '15070059';
+            END IF;
+        ELSEIF v_menu IN ('RES_CambioDom','RES_CambioTit') THEN
+            SET v_centro = IF(RAND() < 0.60, '15070004', '15070071');
+        ELSEIF v_menu REGEXP '^[0-9]+' THEN
+            -- __CMENU_ERROR__: sp_rpt_cMENU_ERROR enruta estos a 19020086
+            SET v_centro = '19020086';
+        ELSE
+            SET v_centro = IF(RAND() < 0.65, '15070013', '19020086');
+        END IF;
+
+        -- NK90: VDN+cTelefono_Digitado concatenados (~9.9% de enrutados)
+        -- Normalización en sp_etl_base_detalle: LEFT(campo, LENGTH-10)
+        IF v_centro IS NOT NULL
+           AND v_centro NOT IN ('cliente_colgo','19020086')
+           AND v_tel_digitado IS NOT NULL
+           AND RAND() < 0.099 THEN
+            SET v_centro = CONCAT(v_centro, v_tel_digitado);
         END IF;
 
         -- cEtiquetacliente
         SET v_rand = RAND();
-        IF    v_rand < 0.05 THEN SET v_etiqueta=NULL;
-        ELSEIF v_rand < 0.35 THEN SET v_etiqueta='VIP';
-        ELSEIF v_rand < 0.55 THEN SET v_etiqueta='REGULAR';
-        ELSEIF v_rand < 0.70 THEN SET v_etiqueta='MOROSO';
-        ELSEIF v_rand < 0.82 THEN SET v_etiqueta='NUEVO';
-        ELSEIF v_rand < 0.90 THEN SET v_etiqueta='BAJA_RIESGO';
-        ELSE                       SET v_etiqueta='RETENCION';
+        IF    v_rand < 0.05 THEN SET v_etiqueta = NULL;
+        ELSEIF v_rand < 0.15 THEN SET v_etiqueta = 'VIP';
+        ELSEIF v_rand < 0.45 THEN SET v_etiqueta = 'REGULAR';
+        ELSEIF v_rand < 0.60 THEN SET v_etiqueta = 'MOROSO';
+        ELSEIF v_rand < 0.75 THEN SET v_etiqueta = 'NUEVO';
+        ELSEIF v_rand < 0.87 THEN SET v_etiqueta = 'BAJA_RIESGO';
+        ELSE                       SET v_etiqueta = 'RETENCION';
         END IF;
 
-        -- INSERT dinamico
         SET v_sql = CONCAT(
             'INSERT INTO ', p_tabla,
             ' (dFecha,dHoraInicio,dHoraFin,cDID_800Transfer,',
             '  cDID_Centro_Transferencia,cMenu,cOpcion,',
             '  cTelefono_Origen,cTelefono_Digitado,cEtiquetacliente) VALUES (',
-            QUOTE(v_fecha),',',QUOTE(v_hora_ini),',',QUOTE(v_hora_fin),',',
-            QUOTE(v_did),',',
-            IF(v_centro IS NULL,'NULL',QUOTE(v_centro)),',',
-            IF(v_menu IS NULL,'NULL',IF(v_menu='','""',QUOTE(v_menu))),',',
-            IF(v_opcion IS NULL,'NULL',QUOTE(v_opcion)),',',
-            IF(v_tel_origen IS NULL,'NULL',QUOTE(v_tel_origen)),',',
-            IF(v_tel_digitado IS NULL,'NULL',QUOTE(v_tel_digitado)),',',
-            IF(v_etiqueta IS NULL,'NULL',QUOTE(v_etiqueta)),')'
+            QUOTE(v_fecha),        ',',
+            QUOTE(v_hora_ini),     ',',
+            QUOTE(v_hora_fin),     ',',
+            QUOTE(v_did),          ',',
+            IF(v_centro IS NULL,       'NULL', QUOTE(v_centro)),       ',',
+            IF(v_menu IS NULL,         'NULL', QUOTE(v_menu)),         ',',
+            IF(v_opcion IS NULL,       'NULL', QUOTE(v_opcion)),       ',',
+            IF(v_tel_origen IS NULL,   'NULL', QUOTE(v_tel_origen)),   ',',
+            IF(v_tel_digitado IS NULL, 'NULL', QUOTE(v_tel_digitado)), ',',
+            IF(v_etiqueta IS NULL,     'NULL', QUOTE(v_etiqueta)),     ')'
         );
         SET @dyn_sql = v_sql;
         PREPARE stmt FROM @dyn_sql;
@@ -295,7 +436,6 @@ BEGIN
     END WHILE;
     COMMIT;
 
-    -- Contar resultado y registrar en tracking
     SET v_sql = CONCAT('SELECT COUNT(*) INTO @_cnt FROM ', p_tabla);
     SET @_cnt = 0;
     PREPARE s FROM v_sql; EXECUTE s; DEALLOCATE PREPARE s;
@@ -307,8 +447,9 @@ BEGIN
     VALUES (p_tabla, v_accion, v_count_antes, v_count_des,
             p_rows, p_script_ver, p_commit_hash);
 
-    SELECT CONCAT('OK: ', p_tabla, ' — ',
-                  v_count_des, ' registros (accion: ', v_accion, ')') AS resultado;
+    SELECT CONCAT('OK: ', p_tabla, ' — ', v_count_des,
+                  ' registros totales (accion: ', v_accion,
+                  ', aniadidos: ', v_count_des - v_count_antes, ')') AS resultado;
 
 END sp_seed_historico$$
 
@@ -317,51 +458,37 @@ DELIMITER ;
 -- =============================================================================
 -- Ejecutar seed para los 6 quarters
 -- =============================================================================
-
--- Capturar usuario actual para el tracking
 SELECT USER() INTO @_current_user;
 
--- Q1 2025
 CALL sp_seed_historico('tbl_historico_t1_2025','2025-01-01','2025-03-31',
-    @SEED_ROWS, @FORCE_RESEED, @SCRIPT_VER, @COMMIT_HASH);
-
--- Q2 2025
+    @SEED_Q01_25, @SCRIPT_VER, @COMMIT_HASH);
 CALL sp_seed_historico('tbl_historico_t2_2025','2025-04-01','2025-06-30',
-    @SEED_ROWS, @FORCE_RESEED, @SCRIPT_VER, @COMMIT_HASH);
-
--- Q3 2025
+    @SEED_Q02_25, @SCRIPT_VER, @COMMIT_HASH);
 CALL sp_seed_historico('tbl_historico_t3_2025','2025-07-01','2025-09-30',
-    @SEED_ROWS, @FORCE_RESEED, @SCRIPT_VER, @COMMIT_HASH);
-
--- Q4 2025
+    @SEED_Q03_25, @SCRIPT_VER, @COMMIT_HASH);
 CALL sp_seed_historico('tbl_historico_t4_2025','2025-10-01','2025-12-31',
-    @SEED_ROWS, @FORCE_RESEED, @SCRIPT_VER, @COMMIT_HASH);
-
--- Q1 2026
+    @SEED_Q04_25, @SCRIPT_VER, @COMMIT_HASH);
 CALL sp_seed_historico('tbl_historico_t1_2026','2026-01-01','2026-03-31',
-    @SEED_ROWS, @FORCE_RESEED, @SCRIPT_VER, @COMMIT_HASH);
-
--- Q2 2026 (parcial — 36 dias de 91 = ~40%)
-SET @SEED_ROWS_PARCIAL = GREATEST(500, FLOOR(@SEED_ROWS * 36 / 91));
+    @SEED_Q01_26, @SCRIPT_VER, @COMMIT_HASH);
 CALL sp_seed_historico('tbl_historico_t2_2026','2026-04-01','2026-05-06',
-    @SEED_ROWS_PARCIAL, @FORCE_RESEED, @SCRIPT_VER, @COMMIT_HASH);
+    @SEED_Q02_26, @SCRIPT_VER, @COMMIT_HASH);
 
 DROP PROCEDURE IF EXISTS sp_seed_historico;
 
 -- =============================================================================
--- Historial de todas las ejecuciones
+-- Historial de ejecuciones
 -- =============================================================================
 SELECT
     id,
-    ejecutado_en,
+    DATE_FORMAT(ejecutado_en,'%Y-%m-%d %H:%i:%s') AS cuando,
     tabla,
     accion,
     filas_antes,
     filas_despues,
-    filas_despues - filas_antes AS filas_nuevas,
+    filas_despues - filas_antes                    AS filas_nuevas,
     seed_rows_cfg,
     script_version,
-    COALESCE(commit_hash, 'N/A') AS commit_hash
+    COALESCE(LEFT(commit_hash,8),'N/A')            AS commit
 FROM seed_executions
 ORDER BY id DESC
 LIMIT 20;
