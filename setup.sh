@@ -31,6 +31,13 @@
 #   sudo bash setup.sh mariadb --full                     # schema completo + SPs + seed
 #   sudo env SKIP_SEED=1 bash setup.sh mariadb --full     # schema + SPs, sin seed
 #   sudo bash setup.sh postgres                           # solo PostgreSQL
+#
+# CHANGELOG:
+#   2026-05-10:
+#     · H-EXEC-009: corregido SKIP_SEED — ${SKIP_SEED:+--skip-seed} con SKIP_SEED=0
+#       activaba --skip-seed porque "0" es no vacío para ${var:+word}. Reemplazado
+#       por comparación explícita [[ "${SKIP_SEED}" == "1" ]] y default vacío.
+#       El seed se omitía siempre en setup.sh mariadb --full. Ref: FASE 3.
 # =============================================================================
 
 set -euo pipefail
