@@ -2,13 +2,35 @@
 # =============================================================================
 # setup.sh — IACT-db: configura BDs sin instalar (BDs ya instaladas)
 # =============================================================================
-# Uso cuando MariaDB y PostgreSQL ya están instalados y corriendo:
+# Prerequisito: MariaDB y/o PostgreSQL deben estar instalados.
+# Prerequisito: archivo .env configurado (cp .env.example .env).
 #
-#   cp .env.example .env
-#   sudo bash setup.sh
+# USO:
+#   sudo bash setup.sh [TARGET] [OPCIONES]
 #
-# Ejecuta solo los setup.sh de cada BD (crea BD, usuario, privilegios).
-# No instala paquetes del sistema.
+# TARGET (default: all):
+#   all       — configura MariaDB + PostgreSQL
+#   mariadb   — solo MariaDB
+#   postgres  — solo PostgreSQL
+#
+# OPCIONES:
+#   --full        Para MariaDB: ejecuta provision-mariadb.sh en lugar de
+#                 setup.sh basico. Incluye schema historico, schema analitico,
+#                 funciones de utilidad, SPs ETL y de reporte, y seed de datos.
+#                 Sin --full: solo crea BD, usuario y grants.
+#
+# VARIABLES DE ENTORNO:
+#   SKIP_SEED=1   Con --full: omite el seed de datos historicos (solo schema + SPs).
+#                 Util para entornos donde el seed tarda mucho o ya existe.
+#                 Pasar via: sudo env SKIP_SEED=1 bash setup.sh mariadb --full
+#                 O agregar SKIP_SEED=1 al .env antes de ejecutar.
+#
+# EJEMPLOS:
+#   sudo bash setup.sh                                    # BD + usuario en ambas BDs
+#   sudo bash setup.sh mariadb                            # BD + usuario en MariaDB
+#   sudo bash setup.sh mariadb --full                     # schema completo + SPs + seed
+#   sudo env SKIP_SEED=1 bash setup.sh mariadb --full     # schema + SPs, sin seed
+#   sudo bash setup.sh postgres                           # solo PostgreSQL
 # =============================================================================
 
 set -euo pipefail
@@ -37,26 +59,111 @@ export MARIADB_PORT="${MARIADB_PORT:-3306}"
 export POSTGRES_HOST="${POSTGRES_HOST:-127.0.0.1}"
 export POSTGRES_PORT="${POSTGRES_PORT:-5432}"
 
+# SKIP_SEED: vacío (default) = ejecutar seed; "1" = omitir seed.
+# Default vacío — la comparación es [[ "${SKIP_SEED}" == "1" ]] (explícita).
+# ${var:+word} fue eliminado: "0" es no vacío y activaba el flag incorrectamente.
+export SKIP_SEED="${SKIP_SEED:-}"
+
 if ! validate_root; then
-    log_fatal "Ejecuta con: sudo bash setup.sh"
+    log_fatal "Ejecuta con: sudo bash setup.sh [all|mariadb|postgres] [--full]"
 fi
 
-# Arrancar BDs si no están corriendo
-bash "${PROJECT_ROOT}/start.sh" || {
-    log_error "No se pudieron arrancar las bases de datos"
-    log_error "  Verifica la instalación: bash verify.sh"
-    exit 1
-}
+TARGET="${1:-all}"
+# H-MDB-011: flag --full ejecuta provision-mariadb.sh (schema + SPs + seed)
+# Sin --full: solo BD + usuario + grants (setup rapido)
+FULL_PROVISION=0
+for arg in "$@"; do
+    [[ "$arg" == "--full" ]] && FULL_PROVISION=1
+done
+
+case "$TARGET" in
+    all|mariadb|postgres) ;;
+    --full) TARGET="all" ;;
+    *)
+        log_error "Target no reconocido: '${TARGET}'"
+        log_error "Uso: sudo bash setup.sh [all|mariadb|postgres] [--full]"
+        exit 1
+        ;;
+esac
 
 ensure_dir "${PROJECT_ROOT}/logs"
 
-log_header "IACT-db Setup (sin instalación de paquetes)"
+log_header "IACT-db Setup — target: ${TARGET}"
 
-log_info "Configurando MariaDB..."
-bash "${PROJECT_ROOT}/provisioners/mariadb/setup.sh"
+# =============================================================================
+# Arrancar solo las BDs necesarias segun el target
+# =============================================================================
+log_info "Arrancando base(s) de datos: ${TARGET}"
 
-log_info "Configurando PostgreSQL..."
-bash "${PROJECT_ROOT}/provisioners/postgres/setup.sh"
+bash "${PROJECT_ROOT}/start.sh" "$TARGET" || {
+    log_error "No se pudo arrancar: ${TARGET}"
+    log_error "  Verifica la instalacion: bash verify.sh"
+    exit 1
+}
 
-log_success "Setup completado"
+# =============================================================================
+# Configurar segun target
+# =============================================================================
+ERRORS=0
+
+run_setup() {
+    local name=$1
+    local script=$2
+
+    log_info "Configurando ${name}..."
+    if bash "$script"; then
+        log_success "${name} configurado correctamente"
+    else
+        log_error "${name} fallo durante el setup"
+        ERRORS=$(( ERRORS + 1 ))
+    fi
+}
+
+# H-MDB-011: para MariaDB, distinguir setup rapido vs provisionamiento completo.
+# --full ejecuta provision-mariadb.sh: BD + usuario + schema + SPs + seed.
+# Sin --full: solo provisioners/mariadb/setup.sh (BD + usuario + grants).
+run_mariadb_setup() {
+    if [[ "$FULL_PROVISION" -eq 1 ]]; then
+        log_info "MariaDB: provisionamiento completo (--full)"
+        log_info "  Incluye: schema historico, schema analitico, SPs, seed"
+        local seed_flag=""
+        [[ "${SKIP_SEED}" == "1" ]] && seed_flag="--skip-seed"
+        if bash "${PROJECT_ROOT}/scripts/provision-mariadb.sh" ${seed_flag}; then
+            log_success "MariaDB provisionada completamente"
+        else
+            log_error "provision-mariadb.sh fallo"
+            ERRORS=$(( ERRORS + 1 ))
+        fi
+    else
+        log_info "MariaDB: setup basico (BD + usuario + grants)"
+        log_info "  Para schema completo: sudo bash setup.sh mariadb --full"
+        run_setup "MariaDB" "${PROJECT_ROOT}/provisioners/mariadb/setup.sh"
+    fi
+}
+
+case "$TARGET" in
+    all)
+        run_mariadb_setup
+        echo ""
+        run_setup "PostgreSQL" "${PROJECT_ROOT}/provisioners/postgres/setup.sh"
+        ;;
+    mariadb)
+        run_mariadb_setup
+        ;;
+    postgres)
+        run_setup "PostgreSQL" "${PROJECT_ROOT}/provisioners/postgres/setup.sh"
+        ;;
+esac
+
+# =============================================================================
+# Resultado
+# =============================================================================
+echo ""
+if [[ $ERRORS -eq 0 ]]; then
+    log_success "Setup completado sin errores"
+else
+    log_error "Setup completado con ${ERRORS} error(es) — revisar salida anterior"
+    exit 1
+fi
+
 bash "${PROJECT_ROOT}/verify.sh"

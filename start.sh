@@ -52,15 +52,27 @@ start_mariadb() {
     log_info "MariaDB inactivo — iniciando..."
     mariadb_cleanup_stale
 
-    # Intentar via service/systemctl
+    # Cadena de arranque: service → systemctl → mariadbd directo
     local started=false
+
     if command -v service &>/dev/null; then
-        service mariadb start 2>/dev/null && started=true && \
-            log_info "Iniciado via service" || true
+        log_debug "start_mariadb: intentando via service"
+        if service mariadb start 2>/dev/null; then
+            log_info "start_mariadb: iniciado via service"
+            started=true
+        else
+            log_debug "start_mariadb: service fallo — continuando cadena"
+        fi
     fi
+
     if ! $started && command -v systemctl &>/dev/null; then
-        systemctl start mariadb 2>/dev/null && started=true && \
-            log_info "Iniciado via systemctl" || true
+        log_debug "start_mariadb: intentando via systemctl"
+        if systemctl start mariadb 2>/dev/null; then
+            log_info "start_mariadb: iniciado via systemctl"
+            started=true
+        else
+            log_debug "start_mariadb: systemctl fallo — continuando cadena"
+        fi
     fi
 
     # Arranque directo con mariadbd (sin init system)
@@ -68,26 +80,44 @@ start_mariadb() {
         local daemon
         if   command -v mariadbd &>/dev/null; then daemon="mariadbd"
         elif command -v mysqld    &>/dev/null; then daemon="mysqld"
-        else log_error "No se encontró mariadbd ni mysqld"; return 1; fi
+        else
+            log_error "start_mariadb: no se encontró mariadbd ni mysqld"
+            return 1
+        fi
 
-        log_info "Arrancando $daemon directamente..."
+        # H-MDB-007: detectar io_uring antes de arrancar directamente
+        local aio_flag=""
+        if declare -f _mariadb_io_uring_available &>/dev/null; then
+            if ! _mariadb_io_uring_available; then
+                aio_flag="--innodb-use-native-aio=0"
+                log_debug "start_mariadb: io_uring no disponible — usando ${aio_flag}"
+            else
+                log_debug "start_mariadb: io_uring disponible"
+            fi
+        fi
+
+        log_info "start_mariadb: arrancando ${daemon} directamente${aio_flag:+ (${aio_flag})}"
         mkdir -p /run/mysqld
         chown mysql:mysql /run/mysqld 2>/dev/null || true
 
         nohup su -s /bin/bash mysql -c \
-            "$daemon \
+            "${daemon} \
              --datadir=/var/lib/mysql \
              --socket=/run/mysqld/mysqld.sock \
              --pid-file=/run/mysqld/mysqld.pid \
              --log-error=/var/log/mysql/error.log \
              --bind-address=127.0.0.1 \
-             --port=3306" \
+             --port=3306 \
+             ${aio_flag}" \
             >/tmp/mariadbd_start.log 2>&1 &
     fi
 
     mariadb_wait_ready 30 && log_success "MariaDB activo" || {
-        log_error "MariaDB no respondió en 30s"
-        log_error "Log: $(tail -5 /tmp/mariadbd_start.log 2>/dev/null || echo 'no disponible')"
+        log_error "start_mariadb: MariaDB no respondió en 30s"
+        log_error "start_mariadb: ultimas lineas del log:"
+        tail -10 /tmp/mariadbd_start.log 2>/dev/null \
+            | while IFS= read -r line; do log_error "  ${line}"; done \
+            || log_error "  (log no disponible)"
         return 1
     }
 }

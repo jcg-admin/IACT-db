@@ -9,13 +9,13 @@
 #   1. Variables requeridas en .env
 #   2. Herramientas CLI disponibles (mysql, psql, pg_isready)
 #   3. MariaDB responde (socket Unix → TCP)
+#  3b. Schema ivr_legacy completo (tablas analíticas, funciones, SPs)
 #   4. PostgreSQL responde (pg_isready → TCP)
 #   5. Conexión Django → ivr_legacy (READ-ONLY — CNST-003)
 #   6. Conexión Django → iact_analytics (READ+WRITE)
 #   7. tbl_temp_prueba_ivr existe y tiene registros (si aplica)
 #
 # Muestra resumen final con contadores OK / WARN / ERROR.
-# Equivalente a la sección "check_database_connectivity" de IACT-api check_tools.sh
 # =============================================================================
 
 set -euo pipefail
@@ -64,7 +64,7 @@ fail() { log_error   "$1"; ERR=$(( ERR + 1 ));  }
 # Sección 1 — Variables de .env
 # =============================================================================
 check_env_vars() {
-    log_header "1/7 Variables de entorno (.env)"
+    log_header "1/8 Variables de entorno (.env)"
 
     local required=(
         "MARIADB_HOST" "MARIADB_PORT"
@@ -86,7 +86,7 @@ check_env_vars() {
 # Sección 2 — Herramientas CLI
 # =============================================================================
 check_tools() {
-    log_header "2/7 Herramientas CLI"
+    log_header "2/8 Herramientas CLI"
 
     local tools=(
         "mysqladmin:MariaDB health check"
@@ -110,7 +110,22 @@ check_tools() {
 # Sección 3 — MariaDB activo
 # =============================================================================
 check_mariadb_running() {
-    log_header "3/7 MariaDB — conectividad"
+    log_header "3/8 MariaDB — conectividad"
+
+    # Detectar si MariaDB esta instalado antes de intentar conectar
+    local mariadb_installed=false
+    if command -v mysqladmin &>/dev/null \
+    || command -v mariadbd  &>/dev/null \
+    || command -v mysqld    &>/dev/null \
+    || dpkg -l mariadb-server mysql-server 2>/dev/null | grep -q "^ii"; then
+        mariadb_installed=true
+    fi
+
+    if [[ "$mariadb_installed" == "false" ]]; then
+        warn "MariaDB no instalado en este entorno — seccion omitida"
+        warn "  Instala con: sudo bash provisioners/mariadb/bootstrap.sh"
+        return 0
+    fi
 
     # Intentar socket Unix primero
     local socket_ok=false
@@ -127,9 +142,129 @@ check_mariadb_running() {
         if mariadb_is_running "$MARIADB_HOST" "$MARIADB_PORT"; then
             ok "MariaDB activo via TCP: ${MARIADB_HOST}:${MARIADB_PORT}"
         else
-            fail "MariaDB NO responde en ${MARIADB_HOST}:${MARIADB_PORT}"
-            warn "  Arranca con: sudo bash bootstrap.sh"
+            fail "MariaDB instalado pero NO responde en ${MARIADB_HOST}:${MARIADB_PORT}"
+            warn "  Arranca con: sudo bash start.sh mariadb"
         fi
+    fi
+}
+
+# =============================================================================
+# Sección 3b — Schema MariaDB ivr_legacy
+# =============================================================================
+# Verifica que el provisionamiento --full fue ejecutado correctamente:
+# tablas analíticas, funciones de utilidad, SPs ETL y SPs de reporte.
+# Se omite si MariaDB no está instalado o no responde.
+# Criterios de severidad:
+#   fail → tablas analíticas faltantes (el pipeline ETL no puede funcionar)
+#   warn → funciones o SPs faltantes (degradan funcionalidad, no impiden conexión)
+# =============================================================================
+check_mariadb_schema() {
+    log_header "3b/8 MariaDB — schema ivr_legacy"
+
+    if ! command -v mysql &>/dev/null; then
+        warn "mysql CLI no disponible — verificación de schema omitida"
+        return
+    fi
+
+    if ! mariadb_is_running "$MARIADB_HOST" "$MARIADB_PORT"; then
+        warn "MariaDB no responde — verificación de schema omitida"
+        return
+    fi
+
+    # Preferir root via socket: information_schema.routines solo muestra rutinas
+    # para las que el usuario tiene EXECUTE. django_user puede no tenerlo, lo que
+    # daría conteos de 0 aunque los SPs existan. Root los ve todos.
+    local mysql_root
+    local sock="/run/mysqld/mysqld.sock"
+    if [[ -S "$sock" ]] \
+    && mysql --socket="$sock" -u root \
+        -e "SELECT 1;" "$DB_MARIADB_NAME" &>/dev/null 2>&1; then
+        mysql_root="mysql --socket=${sock} -u root"
+        log_debug "check_mariadb_schema: conectando via socket como root"
+    else
+        mysql_root="mysql -h ${MARIADB_HOST} -P ${MARIADB_PORT} \
+            -u ${DB_MARIADB_USER} -p${DB_MARIADB_PASSWORD}"
+        warn "check_mariadb_schema: sin acceso root via socket — conteo de SPs puede ser inexacto"
+    fi
+
+    # Helper local para consultas sobre information_schema
+    _mdb_schema_q() {
+        $mysql_root --batch --silent --skip-column-names \
+            -e "$1" information_schema 2>/dev/null || echo "-1"
+    }
+
+    # ── Tablas analíticas (schema_base_ivr.sql) ───────────────────────────────
+    local tbl_ok=0 tbl_miss=0
+    for tbl in base_ivr_detalle base_ivr_clientes \
+               job_execution_log etl_runs job_config; do
+        local exists
+        exists=$(_mdb_schema_q \
+            "SELECT COUNT(*) FROM tables
+             WHERE table_schema='${DB_MARIADB_NAME}'
+             AND table_name='${tbl}';")
+        if [[ "${exists:-0}" -eq 1 ]]; then
+            log_debug "  tabla OK: ${tbl}"
+            (( ++tbl_ok )) || true
+        else
+            fail "  tabla FALTANTE: ${tbl}"
+            (( ++tbl_miss )) || true
+        fi
+    done
+
+    if [[ $tbl_miss -eq 0 ]]; then
+        ok "Tablas analíticas completas (${tbl_ok}/5)"
+    else
+        fail "Tablas analíticas incompletas: ${tbl_ok}/5 — ejecutar: sudo bash setup.sh mariadb --full"
+    fi
+
+    # ── Funciones de utilidad (funciones_utilidad.sql) ────────────────────────
+    local fn_ok=0 fn_miss=0
+    for fn in fn_did_segmento fn_normalizar_menu fn_normalizar_centro \
+              fn_duracion_seg ivr_es_dia_semana; do
+        local exists
+        exists=$(_mdb_schema_q \
+            "SELECT COUNT(*) FROM routines
+             WHERE routine_schema='${DB_MARIADB_NAME}'
+             AND routine_name='${fn}';")
+        if [[ "${exists:-0}" -eq 1 ]]; then
+            log_debug "  función OK: ${fn}"
+            (( ++fn_ok )) || true
+        else
+            warn "  función FALTANTE: ${fn}"
+            (( ++fn_miss )) || true
+        fi
+    done
+
+    if [[ $fn_miss -eq 0 ]]; then
+        ok "Funciones de utilidad completas (${fn_ok}/5)"
+    else
+        warn "Funciones de utilidad incompletas: ${fn_ok}/5 — ejecutar: sudo bash setup.sh mariadb --full"
+    fi
+
+    # ── SPs ETL (sp_etl_pipeline.sql) ─────────────────────────────────────────
+    local sp_etl
+    sp_etl=$(_mdb_schema_q \
+        "SELECT COUNT(*) FROM routines
+         WHERE routine_schema='${DB_MARIADB_NAME}'
+         AND routine_type='PROCEDURE'
+         AND routine_name LIKE 'sp_etl%';")
+    if [[ "${sp_etl:-0}" -gt 0 ]]; then
+        ok "SPs ETL presentes: ${sp_etl}"
+    else
+        warn "SPs ETL no encontrados — ejecutar: sudo bash setup.sh mariadb --full"
+    fi
+
+    # ── SPs de reporte (sp_rpt_reportes.sql) ─────────────────────────────────
+    local sp_rpt
+    sp_rpt=$(_mdb_schema_q \
+        "SELECT COUNT(*) FROM routines
+         WHERE routine_schema='${DB_MARIADB_NAME}'
+         AND routine_type='PROCEDURE'
+         AND routine_name LIKE 'sp_rpt%';")
+    if [[ "${sp_rpt:-0}" -gt 0 ]]; then
+        ok "SPs Reporte presentes: ${sp_rpt}"
+    else
+        warn "SPs Reporte no encontrados — ejecutar: sudo bash setup.sh mariadb --full"
     fi
 }
 
@@ -137,7 +272,7 @@ check_mariadb_running() {
 # Sección 4 — PostgreSQL activo
 # =============================================================================
 check_postgres_running() {
-    log_header "4/7 PostgreSQL — conectividad"
+    log_header "4/8 PostgreSQL — conectividad"
 
     if command -v pg_isready &>/dev/null && \
        pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -q 2>/dev/null; then
@@ -154,7 +289,7 @@ check_postgres_running() {
 # Sección 5 — Conexión Django → ivr_legacy (READ-ONLY)
 # =============================================================================
 check_mariadb_django() {
-    log_header "5/7 Django → ivr_legacy (READ-ONLY — CNST-003)"
+    log_header "5/8 Django → ivr_legacy (READ-ONLY — CNST-003)"
 
     if ! command -v mysql &>/dev/null; then
         warn "mysql CLI no disponible — saltar verificación"
@@ -197,7 +332,7 @@ check_mariadb_django() {
 # Sección 6 — Conexión Django → iact_analytics (READ+WRITE)
 # =============================================================================
 check_postgres_django() {
-    log_header "6/7 Django → iact_analytics (READ+WRITE)"
+    log_header "6/8 Django → iact_analytics (READ+WRITE)"
 
     if ! command -v psql &>/dev/null; then
         warn "psql CLI no disponible — saltar verificación"
@@ -230,7 +365,7 @@ check_postgres_django() {
 # Sección 7 — tbl_temp_prueba_ivr (datos de prueba ivr_legacy)
 # =============================================================================
 check_seed_table() {
-    log_header "7/7 tbl_temp_prueba_ivr (datos de prueba ivr_legacy)"
+    log_header "7/8 tbl_temp_prueba_ivr (datos de prueba ivr_legacy)"
 
     if ! command -v mysql &>/dev/null; then
         warn "mysql CLI no disponible — saltar verificación"
@@ -269,6 +404,8 @@ echo ""
 check_tools
 echo ""
 check_mariadb_running
+echo ""
+check_mariadb_schema
 echo ""
 check_postgres_running
 echo ""
