@@ -8,6 +8,9 @@
 #   · GRANT es idempotente en PostgreSQL — se re-aplica siempre
 #   · ALTER DEFAULT PRIVILEGES garantiza permisos en tablas futuras
 #
+# H-PG-005: main() NO se llama incondicionalmente.
+#   · Ejecucion directa  (bash setup.sh)    → guard activa main()
+#   · Source desde bootstrap.sh             → bootstrap.sh llama main() explicitamente
 # El usuario recibe CREATEDB para que pytest cree test_iact_analytics.
 #
 # NO instala PostgreSQL. Requiere que el cluster esté corriendo.
@@ -133,4 +136,8 @@ SQL
     echo "    DATABASE default: HOST=${host} PORT=${port} NAME=${db_name} USER=${db_user}"
 }
 
-main
+# H-PG-005: ejecutar main solo cuando el script es el punto de entrada directo.
+# Al hacer source desde bootstrap.sh, main() es llamado explicitamente por bootstrap.
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

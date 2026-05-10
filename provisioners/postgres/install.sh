@@ -1,7 +1,7 @@
 #!/bin/bash
 # install.sh
 # PostgreSQL installation script
-# Version: 1.0.4 - Uses archived repository (Ubuntu 20.04 focal was EOL on July 2025)
+# Version: 1.0.5 - Deteccion dinamica de codename OS (H-PG-003)
 
 set -euo pipefail
 
@@ -63,39 +63,32 @@ main() {
     return 0
 }
 
-# Add PostgreSQL repository (MODERN METHOD)
+# Add PostgreSQL repository
+# H-PG-003: detecta el codename del SO en tiempo de ejecucion.
+# Ubuntu 20.04 (focal) usa el repo archivado; el resto usa el repo activo de PGDG.
 add_postgresql_repository() {
     log_info "Adding PostgreSQL ${POSTGRES_VERSION} repository"
 
-    # Install prerequisites
-    if ! install_package wget; then
-        return 1
-    fi
+    # Prereqs
+    for pkg in wget ca-certificates gnupg curl lsb-release; do
+        if ! install_package "$pkg"; then
+            log_error "Failed to install prerequisite: ${pkg}"
+            return 1
+        fi
+    done
 
-    if ! install_package ca-certificates; then
-        return 1
-    fi
-
-    if ! install_package gnupg; then
-        return 1
-    fi
-
-    if ! install_package curl; then
-        return 1
-    fi
-
-    # Create keyrings directory if it doesn't exist
     if ! ensure_dir /usr/share/keyrings; then
         log_error "Failed to create keyrings directory"
         return 1
     fi
 
-    # Import PostgreSQL GPG key (MODERN METHOD)
+    # GPG key
     log_info "Importing PostgreSQL GPG key"
     local keyring_file="/usr/share/keyrings/postgresql-archive-keyring.gpg"
 
     if [[ ! -f "$keyring_file" ]]; then
-        if ! wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o "$keyring_file" 2>/dev/null; then
+        if ! wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+                | gpg --dearmor -o "$keyring_file" 2>/dev/null; then
             log_error "Failed to import GPG key"
             return 1
         fi
@@ -104,13 +97,38 @@ add_postgresql_repository() {
         log_info "GPG key already exists"
     fi
 
-    # Add repository with signed-by keyring (ARCHIVED REPOSITORY for focal)
-    log_info "Adding repository to sources.list.d"
-    local repo_file="/etc/apt/sources.list.d/pgdg.list"
+    # Detectar codename del SO (H-PG-003)
+    local os_codename
+    os_codename=$(lsb_release -cs 2>/dev/null \
+        || { . /etc/os-release 2>/dev/null && echo "${VERSION_CODENAME:-}"; } \
+        || echo "")
 
+    if [[ -z "$os_codename" ]]; then
+        log_error "No se pudo determinar el codename del SO"
+        return 1
+    fi
+
+    log_info "OS codename detectado: ${os_codename}"
+
+    # focal (Ubuntu 20.04) usa el repo archivado; cualquier otro usa el activo
+    local repo_base repo_suite
+    case "$os_codename" in
+        focal)
+            repo_base="https://apt-archive.postgresql.org/pub/repos/apt"
+            log_info "Ubuntu 20.04 (focal) — usando repo PGDG archivado"
+            ;;
+        *)
+            repo_base="https://apt.postgresql.org/pub/repos/apt"
+            log_info "Ubuntu ${os_codename} — usando repo PGDG activo"
+            ;;
+    esac
+    repo_suite="${os_codename}-pgdg"
+
+    # Escribir sources.list.d
+    local repo_file="/etc/apt/sources.list.d/pgdg.list"
     cat > "$repo_file" << EOF
-# PostgreSQL ${POSTGRES_VERSION} repository (archived for Ubuntu 20.04)
-deb [signed-by=/usr/share/keyrings/postgresql-archive-keyring.gpg] https://apt-archive.postgresql.org/pub/repos/apt focal-pgdg main
+# PostgreSQL ${POSTGRES_VERSION} repository — ${os_codename}
+deb [signed-by=/usr/share/keyrings/postgresql-archive-keyring.gpg] ${repo_base} ${repo_suite} main
 EOF
 
     if [[ ! -f "$repo_file" ]]; then
@@ -118,19 +136,19 @@ EOF
         return 1
     fi
 
-    # Show repository configuration for debugging
     log_info "Repository configuration:"
     cat "$repo_file"
 
-    # Test connectivity to PostgreSQL repository (ARCHIVED)
-    log_info "Testing connectivity to PostgreSQL archived repository"
-    if curl -s -o /dev/null -w "%{http_code}" https://apt-archive.postgresql.org/pub/repos/apt/dists/focal-pgdg/Release | grep -q "200"; then
-        log_success "Archived repository is accessible"
+    # Verificar conectividad al repo seleccionado
+    local test_url="${repo_base}/dists/${repo_suite}/Release"
+    log_info "Verificando conectividad: ${test_url}"
+    if curl -s -o /dev/null -w "%{http_code}" "$test_url" | grep -q "200"; then
+        log_success "Repositorio accesible"
     else
-        log_warn "Archived repository may not be accessible (continuing anyway)"
+        log_warn "Repositorio puede no ser accesible (continuando de todas formas)"
     fi
 
-    # Update package index
+    # apt-get update
     log_info "Updating package index"
     if ! apt-get update 2>&1 | tee /tmp/apt-update.log; then
         log_error "Failed to update package index"
@@ -143,7 +161,7 @@ EOF
         return 1
     fi
 
-    log_success "PostgreSQL repository added"
+    log_success "PostgreSQL repository added (${os_codename})"
     return 0
 }
 
@@ -204,6 +222,30 @@ configure_postgresql() {
     if ! backup_file "$pg_hba_conf"; then
         log_error "Failed to backup pg_hba.conf"
         return 1
+    fi
+
+    # H-PG-002: Regla socket Unix para django_user
+    # django_user no existe como usuario del SO — peer auth falla.
+    # Se inserta ANTES de la primera linea "local all all peer".
+    log_info "Configurando autenticacion local por socket Unix para django_user"
+
+    local socket_user="${DB_POSTGRES_USER:-django_user}"
+    local socket_rule="local   all             ${socket_user}                          scram-sha-256"
+
+    if ! grep -qE "^local\s+all\s+${socket_user}\s+scram-sha-256" "$pg_hba_conf"; then
+        # Insertar antes de la primera regla "local all all peer"
+        if grep -qE "^local\s+all\s+all\s+peer" "$pg_hba_conf"; then
+            sed -i "/^local[[:space:]]\+all[[:space:]]\+all[[:space:]]\+peer/i ${socket_rule}" \
+                "$pg_hba_conf"
+        else
+            # Si no existe la linea peer generica, agregar al final del bloque local
+            echo "" >> "$pg_hba_conf"
+            echo "# Socket Unix — autenticacion por password para ${socket_user}" >> "$pg_hba_conf"
+            echo "$socket_rule" >> "$pg_hba_conf"
+        fi
+        log_success "Regla socket Unix agregada para ${socket_user}"
+    else
+        log_info "Regla socket Unix para ${socket_user} ya existe"
     fi
 
     # Permitir conexiones desde localhost (loopback) — suficiente para desarrollo local

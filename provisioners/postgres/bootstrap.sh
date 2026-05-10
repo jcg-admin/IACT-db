@@ -1,7 +1,7 @@
 #!/bin/bash
 # bootstrap.sh
 # Bootstrap script for PostgreSQL VM
-# Version: 1.0.2 - Variables from Vagrantfile
+# Version: 1.0.3 - Alineacion de nombres de variable con .env.example (H-PG-004)
 
 set -euo pipefail
 
@@ -35,12 +35,13 @@ postgres_install() {
 postgres_setup() {
     init_log "postgres_setup"
     source "${PROJECT_ROOT}/provisioners/postgres/setup.sh"
-    main
 }
 
-# Variables are exported from Vagrantfile - validate they exist
-require_vars POSTGRES_VERSION DB_NAME DB_USER DB_PASSWORD \
-             POSTGRES_PASSWORD POSTGRES_IP POSTGRES_PORT
+# H-PG-004: variables alineadas con .env.example y setup.sh
+# Convencion unificada: DB_POSTGRES_* para BD/usuario, POSTGRES_HOST para host
+require_vars POSTGRES_VERSION \
+             DB_POSTGRES_NAME DB_POSTGRES_USER DB_POSTGRES_PASSWORD \
+             POSTGRES_PASSWORD POSTGRES_HOST POSTGRES_PORT
 
 # Component header
 step_header "PostgreSQL" "PostgreSQL ${POSTGRES_VERSION} Database Server"
@@ -59,16 +60,16 @@ fi
 
 # Show results
 show_results "PostgreSQL ${POSTGRES_VERSION}" \
-    "IP: ${POSTGRES_IP}" \
+    "Host: ${POSTGRES_HOST}" \
     "Port: ${POSTGRES_PORT}" \
-    "Database: ${DB_NAME}" \
+    "Database: ${DB_POSTGRES_NAME}" \
     "Status: Running"
 
 show_connection_info \
     "PostgreSQL" \
-    "${POSTGRES_IP}" \
+    "${POSTGRES_HOST}" \
     "${POSTGRES_PORT}" \
-    "${DB_NAME}" \
-    "${DB_USER}"
+    "${DB_POSTGRES_NAME}" \
+    "${DB_POSTGRES_USER}"
 
 log_success "PostgreSQL provisioning completed successfully"
