@@ -2,66 +2,61 @@
 # =============================================================================
 # scripts/provision-mariadb.sh — Provisionamiento completo de MariaDB
 # =============================================================================
-# Versión: 1.3.0
+# Versión: 1.4.0
 #
-# v1.3.0 (2026-05-10):
-#   · T-EXEC-001: después de sp_rpt_reportes.sql, otorgar GRANT EXECUTE
-#     a django_user en todos los routines de ivr_legacy.
-#     Sin este grant, todo callproc() desde Django falla con ERROR 1370
-#     aunque los SPs sean SQL SECURITY DEFINER root.
-#     EXECUTE e SQL SECURITY son dos capas de seguridad independientes:
-#       - SQL SECURITY DEFINER: qué puede hacer el SP cuando corre
-#       - EXECUTE: quién puede invocar el SP
-#     CNST-ETL-001 se mantiene: django_user no tiene acceso directo a
-#     tbl_historico_* — el SP los lee como root (DEFINER).
+# CHANGELOG:
+#   v1.4.0 (2026-05-10):
+#     H-GRANT-001..006: refactoring completo para instalación en N servidores
+#       · Código de ejecución envuelto en main() — local válido dentro de funciones
+#       · GRANT DML extraído a función independiente _apply_dml_grants()
+#       · GRANT EXECUTE extraído a función independiente _apply_execute_grants()
+#       · Ambas funciones son idempotentes: consultan estado actual de la BD,
+#         aplican solo lo que existe, seguro re-ejecutar en cualquier estado
+#       · PASO_SQL_ERRORS reemplaza PASO4_ERRORS — sin números en nombres
+#       · PASO dedicado para grants (independiente del loop de SQL)
+#       · verify.sh: COUNT(DISTINCT Routine_name) en lugar de COUNT(*)
+#         para reportar 12 SPs y 7 funciones, no 24 y 14 (×2 por host)
 #
-# v1.0.0 — Flujo original:
-#   1. Arranca MariaDB  2. setup.sh  3. schema_historico  4. schema_seed  5. SPs
+#   v1.3.0 (2026-05-10):
+#     T-EXEC-001: GRANT EXECUTE para django_user — sin este grant todo
+#       callproc() desde Django falla con ERROR 1370 aunque los SPs sean
+#       SQL SECURITY DEFINER root (dos capas de seguridad independientes)
 #
-# v1.1.0 (2026-05-10):
-#   · H-MDB-010: agrega schema_base_ivr.sql en orden correcto de dependencias
-#   · H-MDB-012: agrega network.sh en la cadena de carga
-#   · H-MDB-015: verifica socket antes de usarlo; fallback a TCP
-#   · PASO 0: FLUSH PRIVILEGES condicional (solo en skip-grant-tables)
+#   v1.2.1 (2026-05-10):
+#     H-EXEC-003: local grant= → GRANT_STMT= — local inválido fuera de función
 #
-# v1.2.0 (2026-05-10):
-#   · T-1.1: agrega sql_exec_query() para queries inline (paralelo a sql_exec_file)
-#   · T-1.2: PASO 5 usa sql_exec_query — elimina mysql --socket="$SOCK" directo
-#     que falla silenciosamente cuando SOCK está vacío (fallback TCP activo)
-#   · T-1.4: después de schema_base_ivr.sql, otorga DML a django_user en tablas
-#     analíticas (base_ivr_detalle, base_ivr_clientes, job_execution_log,
-#     etl_runs, job_config) — setup.sh da solo READ-ONLY sobre ivr_legacy.*
-#   · T-1.5: PASO 5 verifica objetos por nombre en lugar de solo contar:
-#     tablas analíticas, tabla de prueba, funciones de utilidad, SPs ETL y reporte
+#   v1.2.0 (2026-05-10):
+#     T-1.1..T-1.5: sql_exec_query, DML grants para tablas analíticas,
+#       verificación nominal por nombre
 #
-# v1.2.1 (2026-05-10):
-#   · H-EXEC-003: corregido local grant= → GRANT_STMT= en bloque de grants DML.
-#     local solo es válido dentro de funciones — con set -euo pipefail, el script
-#     abortaba en línea 194 antes de otorgar los grants analíticos a django_user.
+#   v1.1.0 (2026-05-10):
+#     H-MDB-010..015: orden de dependencias, network.sh, socket-first
+#
+#   v1.0.0: flujo original
 #
 # EJECUTA todos los pasos de provisionamiento de MariaDB en orden:
 #
-#   1. Arranca MariaDB si no esta corriendo  (via start.sh mariadb)
-#   2. setup.sh         — BD ivr_legacy + usuario django_user + grants
-#   3. schema_historico — Tablas tbl_historico_tN_YYYY (con seed si aplica)
-#   4. schema_seed      — tbl_temp_prueba_ivr (3000 registros de prueba)
-#   5. SPs/schema       — funciones_utilidad, schema_base_ivr,
-#                         sp_etl_pipeline, sp_rpt_reportes
+#   Paso arrancar:    Arranca MariaDB si no está corriendo (via start.sh)
+#   Paso setup:       BD ivr_legacy + usuario django_user + grants base
+#   Paso historico:   Tablas tbl_historico_tN_YYYY + seed (schema_historico.sh)
+#   Paso seed:        Tabla de prueba tbl_temp_prueba_ivr (schema_seed.sh)
+#   Paso sql:         funciones_utilidad, schema_base_ivr, sp_etl_pipeline,
+#                     sp_rpt_reportes
+#   Paso grants:      GRANT DML en tablas analíticas + GRANT EXECUTE en routines
+#                     (independiente del paso sql — idempotente y re-ejecutable)
+#   Paso verificar:   Objetos esperados por nombre
 #
-# IDEMPOTENTE: se puede ejecutar N veces sin efectos adversos.
+# IDEMPOTENTE: seguro ejecutar en cualquier estado — en instalación fresca,
+#   en servidor con schema parcial, o en re-ejecución sobre entorno completo.
 #
 # USO:
 #   sudo bash scripts/provision-mariadb.sh             # completo
-#   sudo bash scripts/provision-mariadb.sh --skip-seed # sin re-sembrar datos
+#   sudo bash scripts/provision-mariadb.sh --skip-seed # sin seed
 #
 # REQUISITOS:
-#   - MariaDB 10.11 instalado (ver provisioners/mariadb/install.sh)
-#   - Archivo .env configurado (cp .env.example .env)
-#   - Ejecutar como root
-#
-# DIFERENCIA con bootstrap.sh:
-#   bootstrap.sh instala MariaDB desde cero (apt-get install).
-#   Este script asume que MariaDB ya esta instalado y solo provisiona la BD.
+#   · MariaDB 10.11 instalado (ver provisioners/mariadb/install.sh)
+#   · Archivo .env configurado (cp .env.example .env)
+#   · Ejecutar como root
 # =============================================================================
 
 set -euo pipefail
@@ -82,85 +77,16 @@ if [[ ! -f "$ENV_FILE" ]]; then
 fi
 set -a; source "$ENV_FILE"; set +a
 
-# Argumentos
-SKIP_SEED="${SKIP_SEED:-0}"
-for arg in "$@"; do
-    case "$arg" in
-        --skip-seed) SKIP_SEED=1 ;;
-        --help|-h)
-            echo "Uso: sudo bash scripts/provision-mariadb.sh [--skip-seed]"
-            exit 0 ;;
-    esac
-done
-
-PROV="${PROJECT_ROOT}/provisioners/mariadb"
-
-log_header "IACT-db — Provisionamiento MariaDB"
-log_info "PROJECT_ROOT: ${PROJECT_ROOT}"
-log_info "SKIP_SEED:    ${SKIP_SEED}"
-
-# ── PASO 0: Arrancar MariaDB ──────────────────────────────────────────────────
-log_step 0 5 "Arrancar MariaDB"
-bash "${PROJECT_ROOT}/start.sh" mariadb 2>&1
-
-# Verificar que responde
-if ! mariadb_is_running; then
-    log_fatal "MariaDB no esta disponible tras start.sh"
-fi
-
-# FLUSH PRIVILEGES solo si el proceso corre con --skip-grant-tables.
-# En instalación normal es innecesario y produce un mensaje de éxito engañoso.
-if ps aux 2>/dev/null | grep -q "[m]ariadbd.*skip.grant.tables"; then
-    log_info "skip-grant-tables detectado — ejecutando FLUSH PRIVILEGES"
-    mysql --socket=/run/mysqld/mysqld.sock -e "FLUSH PRIVILEGES;" 2>/dev/null \
-        && log_success "FLUSH PRIVILEGES completado" \
-        || log_warn "FLUSH PRIVILEGES fallo (no critico)"
-else
-    log_debug "skip-grant-tables no activo — FLUSH PRIVILEGES omitido"
-fi
-
-log_success "MariaDB lista"
-
-# ── PASO 1: setup.sh ─────────────────────────────────────────────────────────
-log_step 1 5 "BD + usuario + grants (setup.sh)"
-bash "${PROV}/setup.sh"
-log_success "setup.sh completado"
-
-# ── PASO 2: schema_historico.sh ──────────────────────────────────────────────
-log_step 2 5 "Tablas tbl_historico_* (schema_historico.sh)"
-SKIP_SEED="${SKIP_SEED}" bash "${PROV}/schema_historico.sh"
-log_success "schema_historico.sh completado"
-
-# ── PASO 3: schema_seed.sh ───────────────────────────────────────────────────
-log_step 3 5 "Tabla de prueba tbl_temp_prueba_ivr (schema_seed.sh)"
-bash "${PROV}/schema_seed.sh"
-log_success "schema_seed.sh completado"
-
-# ── PASO 4: Stored Procedures y schema analítico ──────────────────────────────
-log_step 4 5 "Stored Procedures y schema analítico"
-
-# H-MDB-015: resolver mecanismo de conexión una vez, usarlo en todo el paso.
-# SOCK vacío = fallback TCP activo en sql_exec_file y sql_exec_query.
-SOCK="/run/mysqld/mysqld.sock"
-DB="${DB_MARIADB_NAME:-ivr_legacy}"
-DB_USER="${DB_MARIADB_USER:-django_user}"
-
-if [[ ! -S "$SOCK" ]]; then
-    log_warn "Socket ${SOCK} no encontrado — usando TCP"
-    SOCK=""
-else
-    log_debug "Usando socket ${SOCK}"
-fi
-
-# T-1.1: helpers de ejecución SQL.
-# Ambos usan el mismo mecanismo: socket si disponible, TCP como fallback.
-# La diferencia es la fuente: archivo vs. query inline.
+# ---------------------------------------------------------------------------
+# Helpers de ejecución SQL
+# ---------------------------------------------------------------------------
 
 # sql_exec_file <archivo.sql>
-#   Ejecuta un archivo SQL completo. Usado para DDL/DML de schema y SPs.
+#   Ejecuta un archivo SQL completo como root.
+#   Usado para DDL/DML de schema y stored procedures.
 sql_exec_file() {
     local sql_file="$1"
-    if [[ -n "$SOCK" ]]; then
+    if [[ -n "${SOCK:-}" && -S "${SOCK}" ]]; then
         mysql --socket="$SOCK" "$DB" < "$sql_file" 2>&1
     else
         mysql -h "${MARIADB_HOST:-127.0.0.1}" -P "${MARIADB_PORT:-3306}" \
@@ -169,212 +95,345 @@ sql_exec_file() {
 }
 
 # sql_exec_query <query> [base_de_datos]
-#   Ejecuta una query inline. Usado para verificaciones y GRANTs.
-#   Retorna el resultado sin encabezados de columna (-N).
+#   Ejecuta una query inline como root. Retorna sin encabezados de columna.
+#   Usado para verificaciones y GRANTs.
 sql_exec_query() {
     local query="$1"
-    local db="${2:-$DB}"
-    if [[ -n "$SOCK" ]]; then
-        mysql --socket="$SOCK" "$db" -N -e "$query" 2>/dev/null
+    local db="${2:-${DB:-}}"
+    if [[ -n "${SOCK:-}" && -S "${SOCK}" ]]; then
+        mysql --socket="$SOCK" "${db}" -N -e "$query" 2>/dev/null
     else
         mysql -h "${MARIADB_HOST:-127.0.0.1}" -P "${MARIADB_PORT:-3306}" \
-              -u root "$db" -N -e "$query" 2>/dev/null
+              -u root "${db}" -N -e "$query" 2>/dev/null
     fi
 }
 
-# H-MDB-010: orden de aplicación con dependencias explícitas:
-#   1. funciones_utilidad.sql  — prerequisito de schema_base_ivr y SPs
-#   2. schema_base_ivr.sql     — crea tablas analíticas (base_ivr_*, job_*, etl_runs)
-#   3. sp_etl_pipeline.sql     — usa tablas de schema_base_ivr
-#   4. sp_rpt_reportes.sql     — lee base_ivr_detalle
-PASO4_ERRORS=0
-for sql in funciones_utilidad.sql schema_base_ivr.sql sp_etl_pipeline.sql sp_rpt_reportes.sql; do
-    SQL_PATH="${PROV}/${sql}"
-    if [[ ! -f "$SQL_PATH" ]]; then
-        log_warn "  ${sql} no encontrado en ${PROV} — omitido"
-        continue
-    fi
+# ---------------------------------------------------------------------------
+# _apply_dml_grants
+#
+# Otorga SELECT, INSERT, UPDATE, DELETE a DB_USER en las tablas analíticas.
+# Idempotente: GRANT en MariaDB no falla si el grant ya existe.
+# Seguro si las tablas no existen aún: GRANT falla silenciosamente, el script
+# continúa — la próxima ejecución lo reintentará cuando las tablas existan.
+#
+# Separada del loop de SQL (H-GRANT-002): puede ejecutarse en cualquier
+# estado de la BD sin depender del éxito de schema_base_ivr.sql.
+# ---------------------------------------------------------------------------
+_apply_dml_grants() {
+    local dml_ok=0 dml_skip=0
 
-    log_info "  -> ${sql}"
-    if sql_exec_file "$SQL_PATH"; then
-        log_success "  ${sql} aplicado"
+    log_info "  Tablas analíticas que necesitan DML para ${DB_USER}:"
+    for tbl in base_ivr_detalle base_ivr_clientes \
+               job_execution_log etl_runs job_config; do
+        # Verificar que la tabla existe antes de intentar el grant
+        local exists
+        exists=$(sql_exec_query \
+            "SELECT COUNT(*) FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA='${DB}' AND TABLE_NAME='${tbl}';")
 
-        # T-1.4: después de schema_base_ivr.sql, otorgar DML a django_user
-        # en las tablas analíticas. setup.sh da READ-ONLY sobre ivr_legacy.*;
-        # el pipeline ETL necesita INSERT/UPDATE/DELETE en estas tablas específicas.
-        if [[ "$sql" == "schema_base_ivr.sql" ]]; then
-            log_info "  Otorgando DML en tablas analíticas a ${DB_USER}"
-            for tbl in base_ivr_detalle base_ivr_clientes \
-                       job_execution_log etl_runs job_config; do
-                # 'local' solo es válido dentro de funciones — usar variable simple
-                GRANT_STMT="GRANT SELECT, INSERT, UPDATE, DELETE \
-                    ON \`${DB}\`.\`${tbl}\` TO '${DB_USER}'@'localhost';"
-                sql_exec_query "$GRANT_STMT" "mysql" \
-                    && log_debug "    GRANT ${tbl} @localhost OK" \
-                    || log_warn  "    GRANT ${tbl} @localhost fallo"
-
-                GRANT_STMT="GRANT SELECT, INSERT, UPDATE, DELETE \
-                    ON \`${DB}\`.\`${tbl}\` TO '${DB_USER}'@'%';"
-                sql_exec_query "$GRANT_STMT" "mysql" \
-                    && log_debug "    GRANT ${tbl} @'%' OK" \
-                    || log_warn  "    GRANT ${tbl} @'%' fallo"
-            done
-            sql_exec_query "FLUSH PRIVILEGES;" "mysql" \
-                && log_success "  Grants analíticos aplicados" \
-                || log_warn    "  FLUSH PRIVILEGES fallo (no crítico)"
-        fi
-        # T-EXEC-001 (v1.3.0): después de sp_rpt_reportes.sql todos los SPs
-        # y funciones están desplegados. Otorgar EXECUTE a django_user para
-        # que pueda invocar callproc() desde Django.
-        #
-        # Por qué se otorga aquí y no antes:
-        #   - GRANT EXECUTE sobre una routine que no existe genera ERROR 1305.
-        #   - El orden garantiza que al llegar aquí los 19 routines ya existen.
-        #
-        # Por qué django_user necesita EXECUTE aunque los SPs sean DEFINER root:
-        #   - SQL SECURITY DEFINER: qué puede hacer el SP una vez invocado.
-        #   - EXECUTE: quién puede invocar el SP.
-        #   Son dos capas independientes. Sin EXECUTE: ERROR 1370.
-        #
-        # CNST-ETL-001 se mantiene: django_user no tiene acceso directo a
-        # tbl_historico_* — el SP las lee como root (DEFINER), no como django_user.
-        #
-        # Sintaxis MariaDB: GRANT EXECUTE ON PROCEDURE|FUNCTION <db>.<name>
-        # No existe GRANT EXECUTE ON <db>.<name> genérico (ERROR 1144).
-        if [[ "$sql" == "sp_rpt_reportes.sql" ]]; then
-            log_info "  Otorgando EXECUTE en routines a ${DB_USER}"
-            local exec_ok=0 exec_fail=0
-
-            # Stored Procedures
-            while IFS= read -r sp_name; do
-                [[ -z "$sp_name" || "$sp_name" == "ROUTINE_NAME" ]] && continue
-                for host in "localhost" "%"; do
-                    GRANT_STMT="GRANT EXECUTE ON PROCEDURE \`${DB}\`.\`${sp_name}\`
-                        TO '${DB_USER}'@'${host}';"
-                    sql_exec_query "$GRANT_STMT" "mysql" \
-                        && (( ++exec_ok ))  || { (( ++exec_fail )) || true; }
-                done
-            done < <(sql_exec_query \
-                "SELECT ROUTINE_NAME FROM information_schema.ROUTINES
-                 WHERE ROUTINE_SCHEMA='${DB}'
-                 AND ROUTINE_TYPE='PROCEDURE';" "mysql")
-
-            # Functions
-            while IFS= read -r fn_name; do
-                [[ -z "$fn_name" || "$fn_name" == "ROUTINE_NAME" ]] && continue
-                for host in "localhost" "%"; do
-                    GRANT_STMT="GRANT EXECUTE ON FUNCTION \`${DB}\`.\`${fn_name}\`
-                        TO '${DB_USER}'@'${host}';"
-                    sql_exec_query "$GRANT_STMT" "mysql" \
-                        && (( ++exec_ok ))  || { (( ++exec_fail )) || true; }
-                done
-            done < <(sql_exec_query \
-                "SELECT ROUTINE_NAME FROM information_schema.ROUTINES
-                 WHERE ROUTINE_SCHEMA='${DB}'
-                 AND ROUTINE_TYPE='FUNCTION';" "mysql")
-
-            sql_exec_query "FLUSH PRIVILEGES;" "mysql" \
-                && log_success "  GRANT EXECUTE aplicado (${exec_ok} OK, ${exec_fail} fallo)" \
-                || log_warn    "  FLUSH PRIVILEGES fallo (no crítico)"
+        if [[ "${exists:-0}" -ne 1 ]]; then
+            log_debug "    SKIP ${tbl} — tabla no existe aún"
+            (( ++dml_skip ))
+            continue
         fi
 
+        for host in "localhost" "%"; do
+            local stmt
+            stmt="GRANT SELECT, INSERT, UPDATE, DELETE
+                ON \`${DB}\`.\`${tbl}\` TO '${DB_USER}'@'${host}';"
+            sql_exec_query "$stmt" "mysql" \
+                && (( ++dml_ok )) \
+                || log_warn "    WARN: GRANT DML ${tbl} @${host} fallo"
+        done
+    done
+
+    sql_exec_query "FLUSH PRIVILEGES;" "mysql" \
+        || log_warn "  FLUSH PRIVILEGES fallo (no crítico)"
+
+    if [[ $dml_skip -gt 0 ]]; then
+        log_warn "  Grants DML: ${dml_ok} OK, ${dml_skip} omitidos (tablas pendientes)"
+        log_warn "  Re-ejecutar provision-mariadb.sh cuando schema_base_ivr.sql esté aplicado"
     else
-        log_error "  ${sql} fallo — revisar log de MariaDB"
-        (( ++PASO4_ERRORS )) || true
+        log_success "  Grants DML aplicados (${dml_ok} grants)"
     fi
-done
+}
 
-[[ $PASO4_ERRORS -eq 0 ]] \
-    && log_success "Todos los archivos SQL aplicados" \
-    || log_warn    "${PASO4_ERRORS} archivo(s) SQL con errores — revisar antes de continuar"
+# ---------------------------------------------------------------------------
+# _apply_execute_grants
+#
+# Otorga EXECUTE a DB_USER en todos los PROCEDURE y FUNCTION existentes
+# en la BD. Idempotente: GRANT EXECUTE no falla si ya existe.
+# Solo otorga en routines que existen — no falla si la BD está vacía.
+#
+# Separada del loop de SQL (H-GRANT-001): puede ejecutarse en cualquier
+# momento sin depender del orden o éxito de los archivos SQL.
+#
+# Por qué django_user necesita EXECUTE aunque los SPs sean DEFINER root:
+#   SQL SECURITY DEFINER controla qué puede hacer el SP una vez invocado.
+#   EXECUTE controla quién puede invocarlo. Sin EXECUTE: ERROR 1370.
+#   CNST-ETL-001 se mantiene: django_user no accede a tbl_historico_*
+#   directamente — los SPs las leen como root (DEFINER).
+#
+# Sintaxis MariaDB: GRANT EXECUTE ON PROCEDURE|FUNCTION <db>.<name>
+#   GRANT EXECUTE ON <db>.<name> genérico produce ERROR 1144.
+# ---------------------------------------------------------------------------
+_apply_execute_grants() {
+    local exec_ok=0 exec_skip=0
 
-# ── PASO 5: Verificación nominal ──────────────────────────────────────────────
-log_step 5 5 "Verificación"
+    log_info "  Routines que necesitan EXECUTE para ${DB_USER}:"
 
-# T-1.2: usar sql_exec_query en lugar de mysql --socket="$SOCK" directo.
-# Cuando SOCK está vacío (fallback TCP activo), el socket directo falla silenciosamente
-# y los conteos quedan vacíos sin ningún aviso.
+    # Procedures
+    while IFS= read -r sp_name; do
+        [[ -z "$sp_name" ]] && continue
+        for host in "localhost" "%"; do
+            local stmt
+            stmt="GRANT EXECUTE ON PROCEDURE \`${DB}\`.\`${sp_name}\`
+                TO '${DB_USER}'@'${host}';"
+            sql_exec_query "$stmt" "mysql" \
+                && (( ++exec_ok )) \
+                || { log_warn "    WARN: GRANT EXECUTE PROCEDURE ${sp_name} @${host} fallo"
+                     (( ++exec_skip )) || true; }
+        done
+    done < <(sql_exec_query \
+        "SELECT ROUTINE_NAME FROM information_schema.ROUTINES
+         WHERE ROUTINE_SCHEMA='${DB}'
+         AND ROUTINE_TYPE='PROCEDURE';" "mysql")
 
-SP_COUNT=$(sql_exec_query \
-    "SELECT COUNT(*) FROM information_schema.routines
-     WHERE routine_schema='${DB}';")
+    # Functions
+    while IFS= read -r fn_name; do
+        [[ -z "$fn_name" ]] && continue
+        for host in "localhost" "%"; do
+            local stmt
+            stmt="GRANT EXECUTE ON FUNCTION \`${DB}\`.\`${fn_name}\`
+                TO '${DB_USER}'@'${host}';"
+            sql_exec_query "$stmt" "mysql" \
+                && (( ++exec_ok )) \
+                || { log_warn "    WARN: GRANT EXECUTE FUNCTION ${fn_name} @${host} fallo"
+                     (( ++exec_skip )) || true; }
+        done
+    done < <(sql_exec_query \
+        "SELECT ROUTINE_NAME FROM information_schema.ROUTINES
+         WHERE ROUTINE_SCHEMA='${DB}'
+         AND ROUTINE_TYPE='FUNCTION';" "mysql")
 
-TABLE_COUNT=$(sql_exec_query \
-    "SELECT COUNT(*) FROM information_schema.tables
-     WHERE table_schema='${DB}' AND table_type='BASE TABLE';")
+    sql_exec_query "FLUSH PRIVILEGES;" "mysql" \
+        || log_warn "  FLUSH PRIVILEGES fallo (no crítico)"
 
-log_info "Tablas totales:              ${TABLE_COUNT:-0}"
-log_info "Routines (SPs + Functions):  ${SP_COUNT:-0}"
-
-# T-1.5: verificación nominal — confirmar objetos específicos por nombre.
-# Un conteo agregado no detecta si faltó un archivo SQL individual.
-log_info "Verificando objetos esperados..."
-VERIFY_ERRORS=0
-
-# Tablas analíticas (creadas por schema_base_ivr.sql)
-for tbl in base_ivr_detalle base_ivr_clientes job_execution_log etl_runs job_config; do
-    exists=$(sql_exec_query \
-        "SELECT COUNT(*) FROM information_schema.tables
-         WHERE table_schema='${DB}' AND table_name='${tbl}';")
-    if [[ "${exists:-0}" -eq 1 ]]; then
-        log_debug "  tabla OK: ${tbl}"
+    if [[ $exec_skip -gt 0 ]]; then
+        log_warn "  Grants EXECUTE: ${exec_ok} OK, ${exec_skip} fallo"
     else
-        log_error "  tabla FALTANTE: ${tbl} (revisar schema_base_ivr.sql)"
-        (( ++VERIFY_ERRORS )) || true
+        log_success "  Grants EXECUTE aplicados (${exec_ok} grants — $((exec_ok / 2)) routines × 2 hosts)"
     fi
-done
+}
 
-# Tabla de prueba (creada por schema_seed.sh)
-exists=$(sql_exec_query \
-    "SELECT COUNT(*) FROM information_schema.tables
-     WHERE table_schema='${DB}' AND table_name='tbl_temp_prueba_ivr';")
-if [[ "${exists:-0}" -eq 1 ]]; then
-    log_debug "  tabla OK: tbl_temp_prueba_ivr"
-else
-    log_warn "  tabla FALTANTE: tbl_temp_prueba_ivr (schema_seed.sh no aplicado)"
-fi
+# ---------------------------------------------------------------------------
+# main
+# ---------------------------------------------------------------------------
+main() {
+    # Argumentos
+    local skip_seed="${SKIP_SEED:-0}"
+    for arg in "$@"; do
+        case "$arg" in
+            --skip-seed) skip_seed=1 ;;
+            --help|-h)
+                echo "Uso: sudo bash scripts/provision-mariadb.sh [--skip-seed]"
+                exit 0 ;;
+        esac
+    done
 
-# Funciones de utilidad (creadas por funciones_utilidad.sql)
-for fn in fn_did_segmento fn_normalizar_menu fn_normalizar_centro \
-          fn_duracion_seg ivr_es_dia_semana; do
-    exists=$(sql_exec_query \
-        "SELECT COUNT(*) FROM information_schema.routines
-         WHERE routine_schema='${DB}' AND routine_name='${fn}';")
-    if [[ "${exists:-0}" -eq 1 ]]; then
-        log_debug "  función OK: ${fn}"
+    local prov="${PROJECT_ROOT}/provisioners/mariadb"
+    local sock="/run/mysqld/mysqld.sock"
+    local db="${DB_MARIADB_NAME:-ivr_legacy}"
+    local db_user="${DB_MARIADB_USER:-django_user}"
+
+    # Exportar para los helpers (usadas también en sql_exec_file/sql_exec_query)
+    SOCK="$sock"
+    DB="$db"
+    DB_USER="$db_user"
+
+    if [[ ! -S "$SOCK" ]]; then
+        log_warn "Socket ${SOCK} no encontrado — usando TCP"
+        SOCK=""
+    fi
+
+    log_header "IACT-db — Provisionamiento MariaDB"
+    log_info "PROJECT_ROOT: ${PROJECT_ROOT}"
+    log_info "skip_seed:    ${skip_seed}"
+    log_info "BD:           ${DB}"
+    log_info "Usuario:      ${DB_USER}"
+    echo ""
+
+    # ── Paso arrancar ─────────────────────────────────────────────────────────
+    log_step 1 6 "Arrancar MariaDB"
+    bash "${PROJECT_ROOT}/start.sh" mariadb 2>&1
+
+    if ! mariadb_is_running; then
+        log_fatal "MariaDB no está disponible tras start.sh"
+    fi
+
+    # FLUSH PRIVILEGES solo si el proceso corre con --skip-grant-tables.
+    if ps aux 2>/dev/null | grep -q "[m]ariadbd.*skip.grant.tables"; then
+        log_info "skip-grant-tables detectado — ejecutando FLUSH PRIVILEGES"
+        mysql --socket=/run/mysqld/mysqld.sock -e "FLUSH PRIVILEGES;" 2>/dev/null \
+            && log_success "FLUSH PRIVILEGES completado" \
+            || log_warn    "FLUSH PRIVILEGES fallo (no critico)"
+    fi
+
+    log_success "MariaDB lista"
+
+    # ── Paso setup ────────────────────────────────────────────────────────────
+    log_step 2 6 "BD + usuario + grants base (setup.sh)"
+    bash "${prov}/setup.sh"
+    log_success "setup.sh completado"
+
+    # ── Paso historico ────────────────────────────────────────────────────────
+    log_step 3 6 "Tablas históricas + seed (schema_historico.sh)"
+    SKIP_SEED="${skip_seed}" bash "${prov}/schema_historico.sh"
+    log_success "schema_historico.sh completado"
+
+    # ── Paso seed ─────────────────────────────────────────────────────────────
+    log_step 4 6 "Tabla de prueba tbl_temp_prueba_ivr (schema_seed.sh)"
+    bash "${prov}/schema_seed.sh"
+    log_success "schema_seed.sh completado"
+
+    # ── Paso SQL: funciones, schema analítico, SPs ────────────────────────────
+    log_step 5 6 "Stored Procedures y schema analítico"
+
+    # H-MDB-010: orden de aplicación con dependencias explícitas.
+    # No usar números en los nombres de archivo — el orden lo impone esta lista.
+    #   funciones_utilidad.sql  prerequisito de schema_base_ivr y SPs
+    #   schema_base_ivr.sql     crea tablas analíticas (base_ivr_*, job_*, etl_runs)
+    #   sp_etl_pipeline.sql     usa tablas de schema_base_ivr
+    #   sp_rpt_reportes.sql     lee base_ivr_detalle
+    local sql_deploy_errors=0
+    for sql in funciones_utilidad.sql schema_base_ivr.sql \
+               sp_etl_pipeline.sql sp_rpt_reportes.sql; do
+        local sql_path="${prov}/${sql}"
+        if [[ ! -f "$sql_path" ]]; then
+            log_warn "  ${sql} no encontrado en ${prov} — omitido"
+            continue
+        fi
+        log_info "  -> ${sql}"
+        if sql_exec_file "$sql_path"; then
+            log_success "  ${sql} aplicado"
+        else
+            log_error "  ${sql} fallo — revisar log de MariaDB"
+            (( ++sql_deploy_errors )) || true
+        fi
+    done
+
+    if [[ $sql_deploy_errors -eq 0 ]]; then
+        log_success "Todos los archivos SQL aplicados"
     else
-        log_error "  función FALTANTE: ${fn} (revisar funciones_utilidad.sql)"
-        (( ++VERIFY_ERRORS )) || true
+        log_warn "${sql_deploy_errors} archivo(s) SQL con errores — revisar antes de continuar"
     fi
-done
 
-# SPs ETL y reporte — verificar al menos 1 de cada grupo
-sp_etl_count=$(sql_exec_query \
-    "SELECT COUNT(*) FROM information_schema.routines
-     WHERE routine_schema='${DB}' AND routine_type='PROCEDURE'
-     AND routine_name LIKE 'sp_etl%';")
-sp_rpt_count=$(sql_exec_query \
-    "SELECT COUNT(*) FROM information_schema.routines
-     WHERE routine_schema='${DB}' AND routine_type='PROCEDURE'
-     AND routine_name LIKE 'sp_rpt%';")
+    # ── Paso grants ───────────────────────────────────────────────────────────
+    # Separado del paso SQL (H-GRANT-001, H-GRANT-002):
+    #   · Idempotente — seguro re-ejecutar en cualquier estado
+    #   · No depende del éxito de archivos SQL específicos
+    #   · Aplica solo en objetos que existen en la BD en este momento
+    #   · Si alguna tabla o routine falta, la función lo notifica y sigue
+    log_step 6 6 "Grants de acceso (DML + EXECUTE)"
 
-[[ "${sp_etl_count:-0}" -gt 0 ]] \
-    && log_debug "  SPs ETL OK: ${sp_etl_count}" \
-    || { log_error "  SPs ETL FALTANTES (revisar sp_etl_pipeline.sql)"; (( ++VERIFY_ERRORS )) || true; }
+    log_info "DML grants en tablas analíticas:"
+    _apply_dml_grants
 
-[[ "${sp_rpt_count:-0}" -gt 0 ]] \
-    && log_debug "  SPs Reporte OK: ${sp_rpt_count}" \
-    || { log_error "  SPs Reporte FALTANTES (revisar sp_rpt_reportes.sql)"; (( ++VERIFY_ERRORS )) || true; }
+    log_info "EXECUTE grants en routines:"
+    _apply_execute_grants
 
-# Resumen final
-echo ""
-if [[ $VERIFY_ERRORS -eq 0 ]]; then
-    log_success "Verificación nominal completada — todos los objetos presentes"
-    log_success "Provisionamiento completado — ${SP_COUNT:-0} routines, ${TABLE_COUNT:-0} tablas"
-else
-    log_error   "Verificación nominal: ${VERIFY_ERRORS} objeto(s) faltante(s)"
-    log_error   "Revisar los errores anteriores antes de ejecutar el pipeline ETL"
-fi
+    # ── Verificación nominal ─────────────────────────────────────────────────
+    log_info ""
+    log_info "Verificando objetos esperados..."
+    local verify_errors=0
 
-echo ""
-log_info "Para verificar el entorno completo: bash verify.sh"
+    for tbl in base_ivr_detalle base_ivr_clientes \
+               job_execution_log etl_runs job_config; do
+        local exists
+        exists=$(sql_exec_query \
+            "SELECT COUNT(*) FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA='${DB}' AND TABLE_NAME='${tbl}';")
+        if [[ "${exists:-0}" -eq 1 ]]; then
+            log_debug "  tabla OK: ${tbl}"
+        else
+            log_error "  tabla FALTANTE: ${tbl} (revisar schema_base_ivr.sql)"
+            (( ++verify_errors )) || true
+        fi
+    done
+
+    local tbl_prueba_exists
+    tbl_prueba_exists=$(sql_exec_query \
+        "SELECT COUNT(*) FROM information_schema.TABLES
+         WHERE TABLE_SCHEMA='${DB}' AND TABLE_NAME='tbl_temp_prueba_ivr';")
+    [[ "${tbl_prueba_exists:-0}" -eq 1 ]] \
+        && log_debug "  tabla OK: tbl_temp_prueba_ivr" \
+        || log_warn  "  tabla FALTANTE: tbl_temp_prueba_ivr"
+
+    for fn in fn_did_segmento fn_normalizar_menu fn_normalizar_centro \
+              fn_duracion_seg ivr_es_dia_semana; do
+        local fn_exists
+        fn_exists=$(sql_exec_query \
+            "SELECT COUNT(*) FROM information_schema.ROUTINES
+             WHERE ROUTINE_SCHEMA='${DB}' AND ROUTINE_NAME='${fn}';")
+        if [[ "${fn_exists:-0}" -eq 1 ]]; then
+            log_debug "  función OK: ${fn}"
+        else
+            log_error "  función FALTANTE: ${fn} (revisar funciones_utilidad.sql)"
+            (( ++verify_errors )) || true
+        fi
+    done
+
+    local sp_etl_count sp_rpt_count
+    sp_etl_count=$(sql_exec_query \
+        "SELECT COUNT(*) FROM information_schema.ROUTINES
+         WHERE ROUTINE_SCHEMA='${DB}' AND ROUTINE_TYPE='PROCEDURE'
+         AND ROUTINE_NAME LIKE 'sp_etl%';")
+    sp_rpt_count=$(sql_exec_query \
+        "SELECT COUNT(*) FROM information_schema.ROUTINES
+         WHERE ROUTINE_SCHEMA='${DB}' AND ROUTINE_TYPE='PROCEDURE'
+         AND ROUTINE_NAME LIKE 'sp_rpt%';")
+
+    [[ "${sp_etl_count:-0}" -gt 0 ]] \
+        && log_debug "  SPs ETL OK: ${sp_etl_count}" \
+        || { log_error "  SPs ETL FALTANTES (revisar sp_etl_pipeline.sql)"
+             (( ++verify_errors )) || true; }
+
+    [[ "${sp_rpt_count:-0}" -gt 0 ]] \
+        && log_debug "  SPs Reporte OK: ${sp_rpt_count}" \
+        || { log_error "  SPs Reporte FALTANTES (revisar sp_rpt_reportes.sql)"
+             (( ++verify_errors )) || true; }
+
+    # Verificar que los grants EXECUTE están aplicados
+    local exec_grants_count
+    exec_grants_count=$(sql_exec_query \
+        "SELECT COUNT(DISTINCT Routine_name) FROM mysql.procs_priv
+         WHERE User='${DB_USER}' AND Db='${DB}'
+         AND Proc_priv LIKE '%Execute%';" "mysql")
+
+    if [[ "${exec_grants_count:-0}" -gt 0 ]]; then
+        log_debug "  GRANT EXECUTE OK: ${exec_grants_count} routines"
+    else
+        log_error "  GRANT EXECUTE faltante — django_user no puede invocar routines"
+        (( ++verify_errors )) || true
+    fi
+
+    echo ""
+    local sp_count table_count
+    sp_count=$(sql_exec_query \
+        "SELECT COUNT(*) FROM information_schema.ROUTINES
+         WHERE ROUTINE_SCHEMA='${DB}';")
+    table_count=$(sql_exec_query \
+        "SELECT COUNT(*) FROM information_schema.TABLES
+         WHERE TABLE_SCHEMA='${DB}' AND TABLE_TYPE='BASE TABLE';")
+
+    if [[ $verify_errors -eq 0 ]]; then
+        log_success "Provisionamiento completado — ${sp_count:-0} routines, ${table_count:-0} tablas"
+    else
+        log_error   "Verificación: ${verify_errors} objeto(s) faltante(s) — revisar errores anteriores"
+    fi
+
+    echo ""
+    log_info "Para verificar el entorno completo: bash verify.sh"
+}
+
+main "$@"

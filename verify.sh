@@ -300,13 +300,13 @@ check_mariadb_schema() {
     # en MariaDB 10.11 — usar mysql.procs_priv (tabla de sistema directa).
     local exec_procs exec_funcs
     exec_procs=$($mysql_root --batch --silent --skip-column-names \
-        -e "SELECT COUNT(*) FROM mysql.procs_priv
+        -e "SELECT COUNT(DISTINCT Routine_name) FROM mysql.procs_priv
             WHERE User='${DB_MARIADB_USER}'
             AND Db='${DB_MARIADB_NAME}'
             AND Routine_type='PROCEDURE'
             AND Proc_priv LIKE '%Execute%';" 2>/dev/null)
     exec_funcs=$($mysql_root --batch --silent --skip-column-names \
-        -e "SELECT COUNT(*) FROM mysql.procs_priv
+        -e "SELECT COUNT(DISTINCT Routine_name) FROM mysql.procs_priv
             WHERE User='${DB_MARIADB_USER}'
             AND Db='${DB_MARIADB_NAME}'
             AND Routine_type='FUNCTION'
