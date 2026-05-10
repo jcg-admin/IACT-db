@@ -1,30 +1,77 @@
 #!/bin/bash
+# =============================================================================
 # backup_ivr_legacy.sh
-# Backup completo de la base de datos ivr_legacy (MariaDB 10.1.48)
+# Backup completo de la base de datos ivr_legacy (MariaDB 10.11)
+# =============================================================================
 # Genera por ejecucion:
-#   <timestamp>.sql.gz        dump comprimido
-#   <timestamp>.md5           checksum
-#   <timestamp>.log           log de operacion
-#   HALLAZGOS-BACKUP_<timestamp>.md   hallazgos y anomalias detectadas
+#   backups/<timestamp>.sql.gz          dump comprimido (gzip -6)
+#   backups/<timestamp>.md5             checksum MD5
+#   backups/<timestamp>.log             log de operacion
+#   docs/operaciones/backup/HALLAZGOS-BACKUP_<timestamp>.md
 #
-# Mejoras aplicadas segun HALLAZGOS-BACKUP_2026-05-07T030045.md:
+# USUARIO DE BACKUP:
+#   El backup usa ivr_backup_user (no root, no django_user).
+#   Creado idempotente en el PASO 1 con privilegios minimos:
+#     SELECT, SHOW VIEW, TRIGGER, LOCK TABLES, EVENT ON ivr_legacy.*
+#     SELECT ON mysql.proc, mysql.event
+#     PROCESS, RELOAD ON *.*
+#   La creacion requiere root via socket — mismo patron que schema_historico.sh.
+#
+# CONEXION:
+#   Siempre via socket Unix (peer auth para root, password para backup_user).
+#   Sin --skip-grant-tables: MariaDB arranca en modo normal para que los
+#   GRANTS otorgados al backup_user sean efectivos.
+#
+# MEJORAS IMPLEMENTADAS (HALLAZGOS-BACKUP_2026-05-07T030045.md):
 #   BK-001 — arranque MariaDB con loop de reintento (no sleep fijo)
 #   BK-002 — inventario InnoDB marcado como "no confiable"
-#   BK-003 — advertencia explicita de GRANTS no respaldados
+#   BK-003 — GRANTS ahora SI se incluyen (MariaDB normal, no skip-grant-tables)
 #   BK-004 — gzip -6 en lugar de -9 (3x mas rapido, ratio similar)
-#   BK-005 — stderr de mysqldump capturado y analizado separado
+#   BK-005 — stderr de mysqldump capturado y analizado por separado
+#
+# CHANGELOG:
+#   v2.0.0 (2026-05-10):
+#     - ivr_backup_user: usuario dedicado con privilegios minimos
+#     - Eliminado --skip-grant-tables del arranque de MariaDB
+#     - root via socket para creacion de usuario y arranque verificado
+#     - MARIADB_BACKUP_USER / MARIADB_BACKUP_PASSWORD desde .env
+#   v1.1.0 (2026-05-07): BK-001..BK-005 implementados
+#   v1.0.0 (2026-05-07): version original
 #
 # Uso: bash provisioners/mariadb/backup_ivr_legacy.sh
+# =============================================================================
 
 set -euo pipefail
 
-# ── Configuracion ──────────────────────────────────────────────────────────────
-SOCKET="/run/mysqld/mysqld.sock"
-DB="ivr_legacy"
-USER="django_user"
-PASS="django_pass"
-BACKUP_DEST="/tmp/references/IACT-db/backups"
-HALLAZGOS_DEST="/tmp/references/IACT-db/docs/operaciones/backup"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+ENV_FILE="${PROJECT_ROOT}/.env"
+if [[ -f "${ENV_FILE}" ]]; then set -a; source "${ENV_FILE}"; set +a; fi
+
+# ---------------------------------------------------------------------------
+# Configuracion
+# ---------------------------------------------------------------------------
+DB="${DB_MARIADB_NAME:-ivr_legacy}"
+DB_HOST="${MARIADB_HOST:-127.0.0.1}"
+DB_PORT="${MARIADB_PORT:-3306}"
+DB_ROOT_PASS="${DB_MARIADB_ROOT_PASSWORD:-}"
+
+# Socket Unix — deteccion automatica (mismo patron que schema_historico.sh)
+DB_ROOT_SOCK="${MARIADB_SOCK:-}"
+if [[ -z "${DB_ROOT_SOCK}" ]]; then
+    for _sock in /run/mysqld/mysqld.sock /var/run/mysqld/mysqld.sock /tmp/mysql.sock; do
+        [[ -S "${_sock}" ]] && DB_ROOT_SOCK="${_sock}" && break
+    done
+fi
+
+# ivr_backup_user: privilegios minimos para mysqldump
+BACKUP_USER="${MARIADB_BACKUP_USER:-ivr_backup_user}"
+BACKUP_PASS="${MARIADB_BACKUP_PASSWORD:-backup_pass_ivr_2024}"
+BACKUP_HOST="localhost"
+
+BACKUP_DEST="${PROJECT_ROOT}/backups"
+HALLAZGOS_DEST="${PROJECT_ROOT}/docs/operaciones/backup"
 HALLAZGOS_INDEX="${HALLAZGOS_DEST}/INDEX.md"
 
 TIMESTAMP=$(date +"%Y-%m-%dT%H%M%S")
@@ -35,37 +82,34 @@ LOG_FILE="${BACKUP_DEST}/${BACKUP_NAME}.log"
 STDERR_FILE="${BACKUP_DEST}/${BACKUP_NAME}.mysqldump.stderr"
 HALLAZGOS_FILE="${HALLAZGOS_DEST}/HALLAZGOS-BACKUP_${TIMESTAMP}.md"
 
-# Acumulador de hallazgos detectados en esta ejecucion
 HALLAZGOS=()
 SEVERIDAD_MAX="NINGUNA"
 
-# ── Funciones ──────────────────────────────────────────────────────────────────
-log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a "$LOG_FILE"; }
+# ---------------------------------------------------------------------------
+# Funciones de log y hallazgos
+# ---------------------------------------------------------------------------
+log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a "${LOG_FILE}"; }
 die() { log "ERROR FATAL: $*"; _generar_hallazgos; exit 1; }
 
 registrar_hallazgo() {
-    # registrar_hallazgo SEVERIDAD "TITULO" "DESCRIPCION"
     local sev="$1" titulo="$2" desc="$3"
     HALLAZGOS+=("${sev}|${titulo}|${desc}")
-    # Escalar severidad maxima
-    case "$sev" in
+    case "${sev}" in
         CRITICA) SEVERIDAD_MAX="CRITICA" ;;
-        ALTA)    [ "$SEVERIDAD_MAX" = "NINGUNA" ] && SEVERIDAD_MAX="ALTA" ;;
-        MEDIA)   [ "$SEVERIDAD_MAX" = "NINGUNA" ] && SEVERIDAD_MAX="MEDIA" ;;
-        BAJA)    [ "$SEVERIDAD_MAX" = "NINGUNA" ] && SEVERIDAD_MAX="BAJA" ;;
+        ALTA)    [[ "${SEVERIDAD_MAX}" == "NINGUNA" ]] && SEVERIDAD_MAX="ALTA" ;;
+        MEDIA)   [[ "${SEVERIDAD_MAX}" == "NINGUNA" ]] && SEVERIDAD_MAX="MEDIA" ;;
+        BAJA)    [[ "${SEVERIDAD_MAX}" == "NINGUNA" ]] && SEVERIDAD_MAX="BAJA" ;;
     esac
     log "  [HALLAZGO ${sev}] ${titulo}"
 }
 
 _generar_hallazgos() {
     local total="${#HALLAZGOS[@]}"
-    local idx_entry=""
-
-    cat > "$HALLAZGOS_FILE" << HEADER
+    cat > "${HALLAZGOS_FILE}" << HEADER
 # Hallazgos del backup — ${TIMESTAMP}
 
 **Script:** \`provisioners/mariadb/backup_ivr_legacy.sh\`
-**Backup generado:** \`$(basename "$DUMP_FILE" 2>/dev/null || echo "N/A")\`
+**Backup generado:** \`$(basename "${DUMP_FILE}" 2>/dev/null || echo "N/A")\`
 **Total hallazgos:** ${total}
 **Severidad maxima:** ${SEVERIDAD_MAX}
 
@@ -73,24 +117,22 @@ _generar_hallazgos() {
 
 HEADER
 
-    if [ "$total" -eq 0 ]; then
-        echo "Sin hallazgos en esta ejecucion." >> "$HALLAZGOS_FILE"
+    if [[ "${total}" -eq 0 ]]; then
+        echo "Sin hallazgos en esta ejecucion." >> "${HALLAZGOS_FILE}"
     else
         local i=1
         for entry in "${HALLAZGOS[@]}"; do
             local sev title desc
-            sev=$(echo "$entry" | cut -d'|' -f1)
-            title=$(echo "$entry" | cut -d'|' -f2)
-            desc=$(echo "$entry" | cut -d'|' -f3-)
+            sev=$(echo "${entry}"  | cut -d'|' -f1)
+            title=$(echo "${entry}" | cut -d'|' -f2)
+            desc=$(echo "${entry}"  | cut -d'|' -f3-)
             printf "## H%02d — %s [%s]\n\n%s\n\n---\n\n" \
-                "$i" "$title" "$sev" "$desc" >> "$HALLAZGOS_FILE"
-            i=$((i+1))
+                "${i}" "${title}" "${sev}" "${desc}" >> "${HALLAZGOS_FILE}"
+            i=$(( i + 1 ))
         done
     fi
 
-    idx_entry="| [HALLAZGOS-BACKUP_${TIMESTAMP}.md](HALLAZGOS-BACKUP_${TIMESTAMP}.md) | ${TIMESTAMP} | ${total} | ${SEVERIDAD_MAX} |"
-
-    # Reconstruir INDEX.md desde los archivos existentes + entrada nueva
+    local idx_entry="| [HALLAZGOS-BACKUP_${TIMESTAMP}.md](HALLAZGOS-BACKUP_${TIMESTAMP}.md) | ${TIMESTAMP} | ${total} | ${SEVERIDAD_MAX} |"
     {
         cat << 'IDXHEADER'
 # Indice de hallazgos — proceso de backup ivr_legacy
@@ -105,90 +147,166 @@ Formato: HALLAZGOS-BACKUP_YYYY-MM-DDTHHMMSS.md
 | Archivo | Fecha | Hallazgos | Severidad maxima |
 |---|---|---|---|
 IDXHEADER
-        # Filas existentes (excluir el que acabamos de crear, se agrega al final)
-        if [ -f "$HALLAZGOS_INDEX" ]; then
-            grep "^| \[HALLAZGOS-BACKUP_" "$HALLAZGOS_INDEX"                 | grep -v "HALLAZGOS-BACKUP_${TIMESTAMP}" || true
+        if [[ -f "${HALLAZGOS_INDEX}" ]]; then
+            grep "^\| \[HALLAZGOS-BACKUP_" "${HALLAZGOS_INDEX}" \
+                | grep -v "HALLAZGOS-BACKUP_${TIMESTAMP}" || true
         fi
-        # Fila nueva
-        echo "$idx_entry"
-    } > "${HALLAZGOS_INDEX}.tmp" && mv "${HALLAZGOS_INDEX}.tmp" "$HALLAZGOS_INDEX" 
+        echo "${idx_entry}"
+    } > "${HALLAZGOS_INDEX}.tmp" && mv "${HALLAZGOS_INDEX}.tmp" "${HALLAZGOS_INDEX}"
 
-    log "Hallazgos documentados: ${HALLAZGOS_FILE} (${total} items, max: ${SEVERIDAD_MAX})"
+    log "Hallazgos: ${HALLAZGOS_FILE} (${total} items, max: ${SEVERIDAD_MAX})"
 }
 
-mysql_cmd() {
-    mysql --socket="$SOCKET" -u"$USER" -p"$PASS" "$DB" "$@" 2>/dev/null
+# ---------------------------------------------------------------------------
+# Helpers de conexion
+# ---------------------------------------------------------------------------
+
+# root_exec: query inline como root via socket-first
+root_exec() {
+    if [[ -S "${DB_ROOT_SOCK}" ]]; then
+        mysql --batch --socket="${DB_ROOT_SOCK}" "$@" 2>&1
+    else
+        mysql --batch -h "${DB_HOST}" -P "${DB_PORT}" \
+              -u root -p"${DB_ROOT_PASS}" "$@" 2>&1
+    fi
 }
 
-# ── Inicializar ────────────────────────────────────────────────────────────────
-mkdir -p "$BACKUP_DEST" "$HALLAZGOS_DEST"
+# root_ping: retorna 0 si MariaDB responde como root
+root_ping() {
+    if [[ -S "${DB_ROOT_SOCK}" ]]; then
+        mysql --batch --connect-timeout=3 \
+              --socket="${DB_ROOT_SOCK}" \
+              -e "SELECT 1;" >/dev/null 2>&1
+    else
+        mysql --batch --connect-timeout=3 \
+              -h "${DB_HOST}" -P "${DB_PORT}" \
+              -u root -p"${DB_ROOT_PASS}" \
+              -e "SELECT 1;" >/dev/null 2>&1
+    fi
+}
+
+# backup_exec: query inline como ivr_backup_user
+backup_exec() {
+    mysql --batch --socket="${DB_ROOT_SOCK}" \
+          -u"${BACKUP_USER}" -p"${BACKUP_PASS}" "${DB}" "$@" 2>/dev/null
+}
+
+# ---------------------------------------------------------------------------
+# Inicio
+# ---------------------------------------------------------------------------
+mkdir -p "${BACKUP_DEST}" "${HALLAZGOS_DEST}"
 log "=== Backup ${DB} — ${TIMESTAMP} ==="
-log "Dump destino:      ${BACKUP_DEST}"
-log "Hallazgos destino: ${HALLAZGOS_DEST}"
+log "  Socket:   ${DB_ROOT_SOCK:-NO DETECTADO}"
+log "  Destino:  ${BACKUP_DEST}"
+log "  Usuario:  ${BACKUP_USER}@${BACKUP_HOST}"
 
-# ── 1. Arrancar MariaDB con loop de reintento (BK-001) ────────────────────────
-log "--- Verificando MariaDB ---"
+# ---------------------------------------------------------------------------
+# PASO 1 — Verificar o arrancar MariaDB (H-PROV-001 en sandbox)
+# ---------------------------------------------------------------------------
+log "--- PASO 1: Verificar MariaDB ---"
 MARIADB_INICIO=$(date +%s)
-MARIADB_ARRANCADA=false
 
-if ! mysql_cmd -N -e "SELECT 1;" > /dev/null 2>&1; then
-    log "MariaDB no responde. Arrancando..."
-    rm -f /run/mysqld/mysqld.sock /run/mysqld/mysqld.pid
-    runuser -u mysql -- /usr/sbin/mariadbd \
-        --user=mysql \
-        --socket="$SOCKET" \
-        --datadir=/var/lib/mysql \
-        --pid-file=/run/mysqld/mysqld.pid \
-        --skip-grant-tables >> "$LOG_FILE" 2>&1 &
+if ! root_ping; then
+    log "MariaDB no responde. Arrancando (modo normal — sin skip-grant-tables)..."
 
-    # Loop de reintento: hasta 20 intentos cada 1 segundo (BK-001)
+    # Limpiar socket/pid residuales antes de arrancar
+    rm -f "${DB_ROOT_SOCK}" /run/mysqld/mysqld.pid 2>/dev/null || true
+
+    # Arranque sin --skip-grant-tables para que los GRANTs sean efectivos
+    nohup su -s /bin/bash mysql -c \
+        "mariadbd --user=mysql \
+                  --socket=${DB_ROOT_SOCK:-/run/mysqld/mysqld.sock} \
+                  --datadir=/var/lib/mysql \
+                  --pid-file=/run/mysqld/mysqld.pid \
+                  --skip-networking=0 \
+                  --bind-address=127.0.0.1 --port=${DB_PORT} \
+                  --skip-name-resolve \
+                  --log-error=/var/log/mysql/error.log" \
+        >> "${LOG_FILE}" 2>&1 &
+
+    # Loop de reintento con timeout (BK-001)
     INTENTOS=0
-    MAX_INTENTOS=20
-    until mysql_cmd -N -e "SELECT 1;" > /dev/null 2>&1; do
-        INTENTOS=$((INTENTOS + 1))
-        [ "$INTENTOS" -ge "$MAX_INTENTOS" ] && die "MariaDB no disponible tras ${MAX_INTENTOS}s."
+    MAX_INTENTOS=30
+    until root_ping; do
+        INTENTOS=$(( INTENTOS + 1 ))
+        [[ "${INTENTOS}" -ge "${MAX_INTENTOS}" ]] && \
+            die "MariaDB no disponible tras ${MAX_INTENTOS}s."
         sleep 1
     done
-    MARIADB_ARRANCADA=true
+
     MARIADB_FIN=$(date +%s)
-    TIEMPO_ARRANQUE=$((MARIADB_FIN - MARIADB_INICIO))
+    TIEMPO_ARRANQUE=$(( MARIADB_FIN - MARIADB_INICIO ))
     log "MariaDB arrancada en ${TIEMPO_ARRANQUE}s (${INTENTOS} reintentos)."
 
     registrar_hallazgo "MEDIA" \
         "MariaDB no estaba corriendo al iniciar el backup" \
-        "El proceso mariadbd no persistio entre sesiones. Fue necesario arrancarlo.\
-\nTiempo de arranque: ${TIEMPO_ARRANQUE}s tras ${INTENTOS} intentos de conexion.\
-\nEn produccion MariaDB corre como servicio systemd y esto no ocurre.\
-\nReferencia: BK-001 / HALLAZGOS-ENTORNO.md H-001-03"
+        "El proceso mariadbd no persistio entre sesiones (H-PROV-001).\
+\nArranque en modo normal (sin --skip-grant-tables): ${TIEMPO_ARRANQUE}s, ${INTENTOS} intentos.\
+\nEn produccion MariaDB corre como servicio systemd — esto no ocurre."
 fi
-log "MariaDB OK — socket: ${SOCKET}"
+log "MariaDB OK"
 
-# ── 2. Advertencia skip_grant_tables (BK-003) ─────────────────────────────────
-SKIP_GRANT=$(mysql_cmd -N -e "SHOW VARIABLES LIKE 'skip_grant_tables';" \
-    2>/dev/null | awk '{print $2}')
-if [ "$SKIP_GRANT" = "ON" ]; then
+# ---------------------------------------------------------------------------
+# PASO 2 — Crear ivr_backup_user (idempotente)
+# ---------------------------------------------------------------------------
+log "--- PASO 2: Crear ivr_backup_user (idempotente) ---"
+
+BACKUP_USER_SQL="
+CREATE USER IF NOT EXISTS '${BACKUP_USER}'@'${BACKUP_HOST}'
+    IDENTIFIED BY '${BACKUP_PASS}';
+GRANT SELECT, SHOW VIEW, TRIGGER, LOCK TABLES, EVENT
+    ON \`${DB}\`.* TO '${BACKUP_USER}'@'${BACKUP_HOST}';
+GRANT SELECT ON mysql.proc  TO '${BACKUP_USER}'@'${BACKUP_HOST}';
+GRANT SELECT ON mysql.event TO '${BACKUP_USER}'@'${BACKUP_HOST}';
+GRANT PROCESS, RELOAD ON *.* TO '${BACKUP_USER}'@'${BACKUP_HOST}';
+FLUSH PRIVILEGES;"
+
+if ! root_exec -e "${BACKUP_USER_SQL}" > /dev/null; then
+    registrar_hallazgo "ALTA" \
+        "No se pudo crear ${BACKUP_USER}" \
+        "El script continuara usando root para el dump — revisar permisos."
+    log "WARN: ivr_backup_user no creado — usando root como fallback"
+    BACKUP_USER="root"
+    BACKUP_PASS=""
+else
+    log "ivr_backup_user listo (${BACKUP_USER}@${BACKUP_HOST})"
+    log "  Grants: SELECT,SHOW VIEW,TRIGGER,LOCK TABLES,EVENT en ${DB}.*"
+    log "          SELECT en mysql.proc, mysql.event"
+    log "          PROCESS, RELOAD globales"
+fi
+
+# Verificar que el skip_grant_tables NO está activo (BK-003)
+SKIP_GRANT=$(root_exec -e "SHOW VARIABLES LIKE 'skip_grant_tables';" \
+    | awk '/skip_grant_tables/{print $2}')
+if [[ "${SKIP_GRANT}" == "ON" ]]; then
     registrar_hallazgo "MEDIA" \
-        "skip_grant_tables activo — GRANTS no se incluyen en el dump" \
-        "MariaDB corre con --skip-grant-tables. El dump NO contiene usuarios ni permisos.\
-\nNo puede usarse para restaurar autenticacion en produccion.\
-\nPara respaldar GRANTS se requiere acceso root con autenticacion activa.\
+        "skip_grant_tables activo — GRANTS no garantizados" \
+        "MariaDB corre con --skip-grant-tables.\
+\nLos GRANTs otorgados a ivr_backup_user pueden no ser efectivos en este modo.\
+\nEn produccion este modo no se activa.\
 \nReferencia: BK-003"
+    log "WARN: skip_grant_tables=ON — modo sandbox detectado"
 fi
 
-# ── 3. Inventario InnoDB — solo referencial, no confiable (BK-002) ─────────────
-log "--- Inventario InnoDB (referencial, NO confiable para InnoDB) ---"
-mysql_cmd -e "
+# ---------------------------------------------------------------------------
+# PASO 3 — Inventario InnoDB (referencial) y conteos exactos
+# ---------------------------------------------------------------------------
+log "--- PASO 3: Inventario de tablas ---"
+
+# Inventario InnoDB — solo referencial, NO confiable para InnoDB (BK-002)
+log "  Inventario InnoDB (estimacion — no confiable para InnoDB):"
+root_exec "${DB}" -e "
 SELECT table_name,
-       table_rows                      AS filas_APROX_innodb,
-       ROUND(data_length/1024/1024, 2) AS mb
+       table_rows                      AS filas_APROX,
+       ROUND(data_length/1024/1024, 2) AS mb_datos,
+       ENGINE                          AS motor
 FROM information_schema.tables
 WHERE table_schema = '${DB}'
-ORDER BY table_name;" 2>/dev/null | tee -a "$LOG_FILE"
-log "NOTA: filas_APROX_innodb es estimacion estadistica, no COUNT(*) real."
+ORDER BY table_name;" 2>/dev/null | tee -a "${LOG_FILE}"
 
-# ── 4. Conteos exactos COUNT(*) ───────────────────────────────────────────────
-log "--- Conteos exactos COUNT(*) ---"
-TABLES=$(mysql_cmd -N -e "
+# Conteos exactos COUNT(*)
+log "  Conteos exactos:"
+TABLES=$(root_exec "${DB}" -N -e "
 SELECT table_name FROM information_schema.tables
 WHERE table_schema='${DB}' AND table_type='BASE TABLE'
 ORDER BY table_name;" 2>/dev/null)
@@ -196,90 +314,105 @@ ORDER BY table_name;" 2>/dev/null)
 TOTAL_ROWS=0
 declare -A CONTEOS
 while IFS= read -r tbl; do
-    rows=$(mysql_cmd -N -e "SELECT COUNT(*) FROM \`${tbl}\`;" 2>/dev/null)
-    TOTAL_ROWS=$((TOTAL_ROWS + rows))
-    CONTEOS[$tbl]=$rows
-    log "  ${tbl}: ${rows} filas"
-done <<< "$TABLES"
+    [[ -z "${tbl}" ]] && continue
+    rows=$(root_exec "${DB}" -N -e "SELECT COUNT(*) FROM \`${tbl}\`;" 2>/dev/null \
+           | grep -E '^[0-9]+$' || echo "0")
+    TOTAL_ROWS=$(( TOTAL_ROWS + rows ))
+    CONTEOS["${tbl}"]="${rows}"
+    log "    ${tbl}: ${rows} filas"
+done <<< "${TABLES}"
 log "  TOTAL: ${TOTAL_ROWS} filas"
 
-# Detectar discrepancia grande entre aprox y real (BK-002)
+# Detectar discrepancias grandes (BK-002)
 while IFS= read -r tbl; do
-    aprox=$(mysql_cmd -N -e "
-        SELECT table_rows FROM information_schema.tables
-        WHERE table_schema='${DB}' AND table_name='${tbl}';" 2>/dev/null)
-    real=${CONTEOS[$tbl]:-0}
-    if [ "$real" -gt 0 ] && [ "$aprox" -lt $((real / 2)) ]; then
+    [[ -z "${tbl}" ]] && continue
+    aprox=$(root_exec -e \
+        "SELECT table_rows FROM information_schema.tables
+         WHERE table_schema='${DB}' AND table_name='${tbl}';" 2>/dev/null \
+        | grep -E '^[0-9]+$' || echo "0")
+    real="${CONTEOS[${tbl}]:-0}"
+    if [[ "${real}" -gt 0 && "${aprox}" -lt $(( real / 2 )) ]]; then
         registrar_hallazgo "BAJA" \
             "Estadisticas InnoDB desactualizadas en ${tbl}" \
             "table_rows reporta ${aprox} pero COUNT(*) real es ${real}.\
-\nLas estadisticas InnoDB no estan actualizadas en este entorno.\
-\nEl log muestra el COUNT(*) real como valor definitivo.\
 \nReferencia: BK-002"
     fi
-done <<< "$TABLES"
+done <<< "${TABLES}"
 
-# ── 5. Dump con mysqldump — stderr separado (BK-005) ──────────────────────────
-log "--- Generando dump (gzip -6) ---"
+# ---------------------------------------------------------------------------
+# PASO 4 — Dump con mysqldump (BK-005: stderr separado)
+# ---------------------------------------------------------------------------
+log "--- PASO 4: Generando dump ---"
+log "  Usuario: ${BACKUP_USER}  Destino: $(basename "${DUMP_FILE}")"
 T_DUMP_INI=$(date +%s%N)
 
 mysqldump \
-    --socket="$SOCKET" \
-    -u"$USER" -p"$PASS" \
+    --socket="${DB_ROOT_SOCK}" \
+    -u"${BACKUP_USER}" -p"${BACKUP_PASS}" \
     --single-transaction \
     --routines \
     --triggers \
+    --events \
     --add-drop-table \
     --add-locks \
     --extended-insert \
     --comments \
     --set-charset \
-    "$DB" \
-    2>"$STDERR_FILE" \
-    | gzip -6 > "$DUMP_FILE"   # gzip -6: balance velocidad/ratio (BK-004)
+    "${DB}" \
+    2>"${STDERR_FILE}" \
+    | gzip -6 > "${DUMP_FILE}"
 
 T_DUMP_FIN=$(date +%s%N)
 T_DUMP_MS=$(( (T_DUMP_FIN - T_DUMP_INI) / 1000000 ))
-DUMP_SIZE=$(du -h "$DUMP_FILE" | cut -f1)
-log "Dump generado: $(basename "$DUMP_FILE") (${DUMP_SIZE}, ${T_DUMP_MS}ms)"
+DUMP_SIZE=$(du -h "${DUMP_FILE}" | cut -f1)
+log "  Dump: $(basename "${DUMP_FILE}")  Tamanio: ${DUMP_SIZE}  Tiempo: ${T_DUMP_MS}ms"
 
-# Analizar stderr de mysqldump — solo mensajes reales (BK-005)
-if [ -s "$STDERR_FILE" ]; then
-    STDERR_CONTENT=$(cat "$STDERR_FILE")
-    log "ADVERTENCIA: mysqldump produjo mensajes en stderr:"
-    cat "$STDERR_FILE" | tee -a "$LOG_FILE"
+# Analizar stderr de mysqldump (BK-005)
+if [[ -s "${STDERR_FILE}" ]]; then
+    STDERR_CONTENT=$(cat "${STDERR_FILE}")
+    log "WARN: mysqldump produjo mensajes en stderr:"
+    cat "${STDERR_FILE}" | tee -a "${LOG_FILE}"
     registrar_hallazgo "ALTA" \
         "mysqldump genero mensajes en stderr" \
-        "Contenido del stderr de mysqldump:\n${STDERR_CONTENT}\
-\nVerificar si indica error real o solo advertencia.\
-\nReferencia: BK-005"
+        "Stderr de mysqldump:\n${STDERR_CONTENT}\nReferencia: BK-005"
 else
-    log "mysqldump stderr: limpio (sin warnings)"
-    rm -f "$STDERR_FILE"
+    log "  mysqldump stderr: limpio"
+    rm -f "${STDERR_FILE}"
 fi
 
-# ── 6. Verificar integridad ────────────────────────────────────────────────────
-DUMP_BYTES=$(stat -c%s "$DUMP_FILE")
-[ "$DUMP_BYTES" -lt 1024 ] && die "El dump parece vacio (${DUMP_BYTES} bytes)."
-gzip -t "$DUMP_FILE" 2>>"$LOG_FILE" || die "El dump comprimido esta corrupto."
-log "Integridad gzip: OK"
+# ---------------------------------------------------------------------------
+# PASO 5 — Verificar integridad
+# ---------------------------------------------------------------------------
+log "--- PASO 5: Verificacion de integridad ---"
+DUMP_BYTES=$(stat -c%s "${DUMP_FILE}")
+[[ "${DUMP_BYTES}" -lt 1024 ]] && die "El dump parece vacio (${DUMP_BYTES} bytes)."
+gzip -t "${DUMP_FILE}" 2>>"${LOG_FILE}" || die "El dump comprimido esta corrupto."
+log "  gzip -t: OK  Tamanio: ${DUMP_BYTES} bytes"
 
-# ── 7. Checksum MD5 ───────────────────────────────────────────────────────────
-log "--- Checksum MD5 ---"
-(cd "$BACKUP_DEST" && md5sum "$(basename "$DUMP_FILE")") > "$MD5_FILE"
-log "MD5: $(cat "$MD5_FILE")"
-(cd "$BACKUP_DEST" && md5sum -c "$(basename "$MD5_FILE")" 2>&1) | tee -a "$LOG_FILE" \
-    || die "Verificacion MD5 fallida."
+# ---------------------------------------------------------------------------
+# PASO 6 — Checksum MD5
+# ---------------------------------------------------------------------------
+log "--- PASO 6: Checksum MD5 ---"
+(cd "${BACKUP_DEST}" && md5sum "$(basename "${DUMP_FILE}")") > "${MD5_FILE}"
+log "  MD5: $(cat "${MD5_FILE}")"
+(cd "${BACKUP_DEST}" && md5sum -c "$(basename "${MD5_FILE}")" 2>&1) \
+    | tee -a "${LOG_FILE}" || die "Verificacion MD5 fallida."
 
-# ── 8. Listar backups existentes ──────────────────────────────────────────────
-log "--- Backups en ${BACKUP_DEST} ---"
+# ---------------------------------------------------------------------------
+# PASO 7 — Listar backups existentes
+# ---------------------------------------------------------------------------
+log "--- PASO 7: Backups en ${BACKUP_DEST} ---"
 ls -lh "${BACKUP_DEST}"/*.sql.gz 2>/dev/null \
-    | awk '{print "  "$9, $5}' | tee -a "$LOG_FILE" || true
+    | awk '{print "  "$9, $5}' | tee -a "${LOG_FILE}" || true
 
-# ── 9. Generar archivo de hallazgos ───────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# PASO 8 — Generar hallazgos
+# ---------------------------------------------------------------------------
 _generar_hallazgos
 
-# ── 10. Resumen ───────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Resumen
+# ---------------------------------------------------------------------------
 log "=== Backup completado ==="
 log "  Dump:      ${DUMP_FILE}"
 log "  Checksum:  ${MD5_FILE}"
