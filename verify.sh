@@ -9,13 +9,21 @@
 #   1. Variables requeridas en .env
 #   2. Herramientas CLI disponibles (mysql, psql, pg_isready)
 #   3. MariaDB responde (socket Unix → TCP)
-#  3b. Schema ivr_legacy completo (tablas analíticas, funciones, SPs)
+#  3b. Schema ivr_legacy completo (tablas históricas, analíticas, funciones, SPs)
 #   4. PostgreSQL responde (pg_isready → TCP)
 #   5. Conexión Django → ivr_legacy (READ-ONLY — CNST-003)
 #   6. Conexión Django → iact_analytics (READ+WRITE)
 #   7. tbl_temp_prueba_ivr existe y tiene registros (si aplica)
 #
 # Muestra resumen final con contadores OK / WARN / ERROR.
+#
+# CHANGELOG:
+#   2026-05-10:
+#     · H-EXEC-008: sección 3b ahora verifica tablas históricas tbl_historico_*
+#       (6 tablas: t1..t4 de 2025 + t1..t2 de 2026). Severidad fail — son el
+#       origen del pipeline ETL. Sin esta verificación, un entorno sin tablas
+#       históricas pasaba verify.sh con 0 errores (falso positivo). Ref: FASE 4.
+#     · Baseline actualizado: entorno completo reporta 26 OK (antes 25).
 # =============================================================================
 
 set -euo pipefail
@@ -152,10 +160,11 @@ check_mariadb_running() {
 # Sección 3b — Schema MariaDB ivr_legacy
 # =============================================================================
 # Verifica que el provisionamiento --full fue ejecutado correctamente:
-# tablas analíticas, funciones de utilidad, SPs ETL y SPs de reporte.
+# tablas históricas (tbl_historico_*), tablas analíticas (base_ivr_*, job_*,
+# etl_runs), funciones de utilidad, SPs ETL y SPs de reporte.
 # Se omite si MariaDB no está instalado o no responde.
 # Criterios de severidad:
-#   fail → tablas analíticas faltantes (el pipeline ETL no puede funcionar)
+#   fail → tablas faltantes — históricas o analíticas — el pipeline ETL no funciona
 #   warn → funciones o SPs faltantes (degradan funcionalidad, no impiden conexión)
 # =============================================================================
 check_mariadb_schema() {
@@ -215,6 +224,22 @@ check_mariadb_schema() {
         ok "Tablas analíticas completas (${tbl_ok}/5)"
     else
         fail "Tablas analíticas incompletas: ${tbl_ok}/5 — ejecutar: sudo bash setup.sh mariadb --full"
+    fi
+
+    # ── Tablas históricas (schema_historico.sh) ───────────────────────────────
+    # Verificación por patrón: los nombres son dinámicos (tbl_historico_tN_YYYY).
+    # Se esperan exactamente 6: t1..t4 de 2025 + t1..t2 de 2026.
+    # Severidad fail: son el origen del pipeline ETL. Sin ellas ningún SP de
+    # reporte puede ejecutarse.
+    local hist_count
+    hist_count=$(_mdb_schema_q \
+        "SELECT COUNT(*) FROM tables
+         WHERE table_schema='${DB_MARIADB_NAME}'
+         AND table_name LIKE 'tbl_historico_%';")
+    if [[ "${hist_count:-0}" -ge 6 ]]; then
+        ok "Tablas históricas presentes: ${hist_count}"
+    else
+        fail "Tablas históricas incompletas: ${hist_count}/6 — ejecutar: sudo bash setup.sh mariadb --full"
     fi
 
     # ── Funciones de utilidad (funciones_utilidad.sql) ────────────────────────
