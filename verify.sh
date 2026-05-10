@@ -291,6 +291,34 @@ check_mariadb_schema() {
     else
         warn "SPs Reporte no encontrados — ejecutar: sudo bash setup.sh mariadb --full"
     fi
+
+    # ── GRANT EXECUTE: django_user puede invocar los SPs ──────────────────────
+    # Sin este grant, callproc() desde Django falla con ERROR 1370 aunque
+    # los SPs existan y sean DEFINER root. EXECUTE y SQL SECURITY DEFINER
+    # son capas independientes en MariaDB.
+    # Nota: information_schema.ROUTINE_PRIVILEGES no refleja grants individuales
+    # en MariaDB 10.11 — usar mysql.procs_priv (tabla de sistema directa).
+    local exec_procs exec_funcs
+    exec_procs=$($mysql_root --batch --silent --skip-column-names \
+        -e "SELECT COUNT(*) FROM mysql.procs_priv
+            WHERE User='${DB_MARIADB_USER}'
+            AND Db='${DB_MARIADB_NAME}'
+            AND Routine_type='PROCEDURE'
+            AND Proc_priv LIKE '%Execute%';" 2>/dev/null)
+    exec_funcs=$($mysql_root --batch --silent --skip-column-names \
+        -e "SELECT COUNT(*) FROM mysql.procs_priv
+            WHERE User='${DB_MARIADB_USER}'
+            AND Db='${DB_MARIADB_NAME}'
+            AND Routine_type='FUNCTION'
+            AND Proc_priv LIKE '%Execute%';" 2>/dev/null)
+
+    if [[ "${exec_procs:-0}" -gt 0 && "${exec_funcs:-0}" -gt 0 ]]; then
+        ok "GRANT EXECUTE OK — ${DB_MARIADB_USER} puede invocar SPs (${exec_procs} PROCEDURE, ${exec_funcs} FUNCTION)"
+    else
+        fail "GRANT EXECUTE faltante — ${DB_MARIADB_USER} no puede invocar routines (${exec_procs:-0} PROC, ${exec_funcs:-0} FUNC)"
+        warn "  Corregir con: sudo bash scripts/provision-mariadb.sh"
+        warn "  Causa: ERROR 1370 en todo callproc() desde Django"
+    fi
 }
 
 # =============================================================================

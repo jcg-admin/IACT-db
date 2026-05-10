@@ -2,7 +2,18 @@
 # =============================================================================
 # scripts/provision-mariadb.sh — Provisionamiento completo de MariaDB
 # =============================================================================
-# Versión: 1.2.0
+# Versión: 1.3.0
+#
+# v1.3.0 (2026-05-10):
+#   · T-EXEC-001: después de sp_rpt_reportes.sql, otorgar GRANT EXECUTE
+#     a django_user en todos los routines de ivr_legacy.
+#     Sin este grant, todo callproc() desde Django falla con ERROR 1370
+#     aunque los SPs sean SQL SECURITY DEFINER root.
+#     EXECUTE e SQL SECURITY son dos capas de seguridad independientes:
+#       - SQL SECURITY DEFINER: qué puede hacer el SP cuando corre
+#       - EXECUTE: quién puede invocar el SP
+#     CNST-ETL-001 se mantiene: django_user no tiene acceso directo a
+#     tbl_historico_* — el SP los lee como root (DEFINER).
 #
 # v1.0.0 — Flujo original:
 #   1. Arranca MariaDB  2. setup.sh  3. schema_historico  4. schema_seed  5. SPs
@@ -212,6 +223,61 @@ for sql in funciones_utilidad.sql schema_base_ivr.sql sp_etl_pipeline.sql sp_rpt
                 && log_success "  Grants analíticos aplicados" \
                 || log_warn    "  FLUSH PRIVILEGES fallo (no crítico)"
         fi
+        # T-EXEC-001 (v1.3.0): después de sp_rpt_reportes.sql todos los SPs
+        # y funciones están desplegados. Otorgar EXECUTE a django_user para
+        # que pueda invocar callproc() desde Django.
+        #
+        # Por qué se otorga aquí y no antes:
+        #   - GRANT EXECUTE sobre una routine que no existe genera ERROR 1305.
+        #   - El orden garantiza que al llegar aquí los 19 routines ya existen.
+        #
+        # Por qué django_user necesita EXECUTE aunque los SPs sean DEFINER root:
+        #   - SQL SECURITY DEFINER: qué puede hacer el SP una vez invocado.
+        #   - EXECUTE: quién puede invocar el SP.
+        #   Son dos capas independientes. Sin EXECUTE: ERROR 1370.
+        #
+        # CNST-ETL-001 se mantiene: django_user no tiene acceso directo a
+        # tbl_historico_* — el SP las lee como root (DEFINER), no como django_user.
+        #
+        # Sintaxis MariaDB: GRANT EXECUTE ON PROCEDURE|FUNCTION <db>.<name>
+        # No existe GRANT EXECUTE ON <db>.<name> genérico (ERROR 1144).
+        if [[ "$sql" == "sp_rpt_reportes.sql" ]]; then
+            log_info "  Otorgando EXECUTE en routines a ${DB_USER}"
+            local exec_ok=0 exec_fail=0
+
+            # Stored Procedures
+            while IFS= read -r sp_name; do
+                [[ -z "$sp_name" || "$sp_name" == "ROUTINE_NAME" ]] && continue
+                for host in "localhost" "%"; do
+                    GRANT_STMT="GRANT EXECUTE ON PROCEDURE \`${DB}\`.\`${sp_name}\`
+                        TO '${DB_USER}'@'${host}';"
+                    sql_exec_query "$GRANT_STMT" "mysql" \
+                        && (( ++exec_ok ))  || { (( ++exec_fail )) || true; }
+                done
+            done < <(sql_exec_query \
+                "SELECT ROUTINE_NAME FROM information_schema.ROUTINES
+                 WHERE ROUTINE_SCHEMA='${DB}'
+                 AND ROUTINE_TYPE='PROCEDURE';" "mysql")
+
+            # Functions
+            while IFS= read -r fn_name; do
+                [[ -z "$fn_name" || "$fn_name" == "ROUTINE_NAME" ]] && continue
+                for host in "localhost" "%"; do
+                    GRANT_STMT="GRANT EXECUTE ON FUNCTION \`${DB}\`.\`${fn_name}\`
+                        TO '${DB_USER}'@'${host}';"
+                    sql_exec_query "$GRANT_STMT" "mysql" \
+                        && (( ++exec_ok ))  || { (( ++exec_fail )) || true; }
+                done
+            done < <(sql_exec_query \
+                "SELECT ROUTINE_NAME FROM information_schema.ROUTINES
+                 WHERE ROUTINE_SCHEMA='${DB}'
+                 AND ROUTINE_TYPE='FUNCTION';" "mysql")
+
+            sql_exec_query "FLUSH PRIVILEGES;" "mysql" \
+                && log_success "  GRANT EXECUTE aplicado (${exec_ok} OK, ${exec_fail} fallo)" \
+                || log_warn    "  FLUSH PRIVILEGES fallo (no crítico)"
+        fi
+
     else
         log_error "  ${sql} fallo — revisar log de MariaDB"
         (( ++PASO4_ERRORS )) || true
