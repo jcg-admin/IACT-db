@@ -41,6 +41,39 @@
 #
 #   # Solo el schema (sin seed)
 #   SKIP_SEED=1 sudo bash provisioners/mariadb/schema_historico.sh
+#
+# PREREQUISITOS:
+#   · MariaDB instalado y securizado via provisioners/mariadb/install.sh
+#     (install.sh ejecuta secure_mariadb() que establece password root válida).
+#   · DB_MARIADB_ROOT_PASSWORD en .env corresponde al password actual de root.
+#   · Socket Unix disponible (auto-detectado) O root accesible via TCP:
+#       - Detectado en orden: /run/mysqld/mysqld.sock, /var/run/mysqld/mysqld.sock,
+#         /tmp/mysql.sock. Override via MARIADB_SOCK en .env.
+#   · django_user NO es suficiente para este script (CNST-003: READ-ONLY).
+#     Las operaciones DDL y el seed requieren root.
+#   · Ejecutar como root del sistema operativo: sudo bash schema_historico.sh
+#
+# CHANGELOG:
+#   v2.2.0 (2026-05-10):
+#     FASE 0 — Helpers de conexión raíz (H-EXEC-005 prereq):
+#       · T-0.1: variables DB_ROOT_SOCK (detección automática de socket) y
+#               DB_ROOT_PASS (override via MARIADB_SOCK en .env)
+#       · T-0.2: my_exec_root()      — queries inline como root
+#       · T-0.3: my_exec_file_root() — archivos SQL como root (DDL)
+#       · T-0.4: my_exec_vars_root() — seed con variables de sesión como root
+#     FASE 1 — DDL y seed corregidos (H-EXEC-005, H-EXEC-006):
+#       · T-1.1: Paso 2 usa my_exec_file_root — django_user sin CREATE TABLE
+#       · T-1.2: manejo de errores explícito — elimina || true que swallowaba
+#               ERROR 1142, 1064 y 2002 emitiendo siempre SUCCESS falso
+#       · T-1.3: seed usa my_exec_vars_root — django_user sin INSERT en tbl_historico_*
+#       · T-1.4: Paso 1 verifica acceso raíz con mensaje diagnóstico antes del DDL
+#       · T-1.5: require_vars DB_MARIADB_ROOT_PASSWORD solo si no hay socket
+#     FASE 2 — column (H-EXEC-007):
+#       · T-2.1: historial de seed_executions separado en captura+formato —
+#               column ausente ya no dispara WARN "seed_executions no disponible"
+#     FASE 3 — SKIP_SEED (H-F3-001):
+#       · Fix (( consecutivos++ )) → (( ++consecutivos )) en verificar_estabilidad_mariadb
+#               (( var++ )) con set -e cuando var=0 retorna exit 1 y mata el script
 # =============================================================================
 
 set -euo pipefail
@@ -89,7 +122,7 @@ SCHEMA_SQL="${SCRIPT_DIR}/schema_historico.sql"
 SEED_SQL="${SCRIPT_DIR}/seed_historico.sql"
 
 COMMIT_HASH="$(cd "${PROJECT_ROOT}" && git rev-parse HEAD 2>/dev/null || echo 'sin-git')"
-SCRIPT_VERSION="2.1.0"
+SCRIPT_VERSION="2.2.0"
 
 # ---------------------------------------------------------------------------
 # Helpers MySQL
@@ -437,20 +470,38 @@ main() {
     # ------------------------------------------------------------------
     echo ""
     log_info "Ultimas 10 ejecuciones registradas en seed_executions:"
-    my_exec -e "
-        SELECT
-            id,
-            DATE_FORMAT(ejecutado_en,'%Y-%m-%d %H:%i:%s') AS cuando,
-            tabla,
-            accion,
-            filas_antes,
-            filas_despues,
-            seed_rows_cfg,
-            LEFT(COALESCE(commit_hash,'N/A'),8) AS commit
-        FROM seed_executions
-        ORDER BY id DESC
-        LIMIT 10;" 2>/dev/null | column -t \
-    || log_warn "seed_executions no disponible aun"
+    # T-2.1: column -t no está disponible en todos los entornos (Ubuntu minimal).
+    # Con la implementación anterior, su ausencia disparaba el || del pipeline
+    # y log_warn "seed_executions no disponible aun" — falso negativo: la tabla
+    # existía pero el binario faltaba.
+    #
+    # Solución: capturar el output de la query en una variable.
+    #   - Si la query falla (tabla no existe o sin acceso): mostrar el WARN correcto.
+    #   - Si la query tiene éxito: formatear con column -t si está disponible,
+    #     o imprimir sin formato como fallback.
+    # Esto separa "error de query" de "herramienta de formato ausente".
+    local seed_hist
+    if seed_hist=$(my_exec -e "
+            SELECT
+                id,
+                DATE_FORMAT(ejecutado_en,'%Y-%m-%d %H:%i:%s') AS cuando,
+                tabla,
+                accion,
+                filas_antes,
+                filas_despues,
+                seed_rows_cfg,
+                LEFT(COALESCE(commit_hash,'N/A'),8) AS commit
+            FROM seed_executions
+            ORDER BY id DESC
+            LIMIT 10;" 2>/dev/null); then
+        if command -v column &>/dev/null; then
+            echo "${seed_hist}" | column -t
+        else
+            echo "${seed_hist}"
+        fi
+    else
+        log_warn "seed_executions no disponible aun"
+    fi
 
     echo ""
     log_success "Script completado. Commit: ${COMMIT_HASH}"
