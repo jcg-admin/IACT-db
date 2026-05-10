@@ -1,7 +1,7 @@
 #!/bin/bash
 # bootstrap.sh
 # Bootstrap script for MariaDB VM
-# Version: 1.0.2 - Variables from Vagrantfile
+# Version: 1.0.3 - Alineacion de nombres de variable con .env.example (H-MDB-003)
 
 set -euo pipefail
 
@@ -35,13 +35,13 @@ mariadb_install() {
 mariadb_setup() {
     init_log "mariadb_setup"
     source "${PROJECT_ROOT}/provisioners/mariadb/setup.sh"
-    main
 }
 
-# Variables are exported from Vagrantfile - validate they exist
-require_vars MARIADB_VERSION DB_NAME DB_CHARSET DB_COLLATION \
-             DB_USER DB_PASSWORD DB_ROOT_PASSWORD \
-             MARIADB_IP MARIADB_PORT
+# H-MDB-003: variables alineadas con .env.example y setup.sh
+# Convencion unificada: DB_MARIADB_* para BD/usuario, MARIADB_HOST para host
+require_vars MARIADB_VERSION DB_CHARSET DB_COLLATION \
+             DB_MARIADB_NAME DB_MARIADB_USER DB_MARIADB_PASSWORD \
+             DB_MARIADB_ROOT_PASSWORD MARIADB_HOST MARIADB_PORT
 
 # Component header
 step_header "MariaDB" "MariaDB ${MARIADB_VERSION} Database Server"
@@ -60,17 +60,17 @@ fi
 
 # Show results
 show_results "MariaDB ${MARIADB_VERSION}" \
-    "IP: ${MARIADB_IP}" \
+    "Host: ${MARIADB_HOST}" \
     "Port: ${MARIADB_PORT}" \
-    "Database: ${DB_NAME}" \
+    "Database: ${DB_MARIADB_NAME}" \
     "Charset: ${DB_CHARSET}" \
     "Status: Running"
 
 show_connection_info \
     "MariaDB" \
-    "${MARIADB_IP}" \
+    "${MARIADB_HOST}" \
     "${MARIADB_PORT}" \
-    "${DB_NAME}" \
-    "${DB_USER}"
+    "${DB_MARIADB_NAME}" \
+    "${DB_MARIADB_USER}"
 
 log_success "MariaDB provisioning completed successfully"

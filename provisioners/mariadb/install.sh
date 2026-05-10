@@ -1,6 +1,6 @@
 #!/bin/bash
 # install.sh
-# MariaDB installation script — version 2.0.0
+# MariaDB installation script — version 2.1.0
 #
 # CAMBIOS v2.0.0 (2026-05-07):
 #   - MARIADB_VERSION corregida a 10.11 en .env/.env.example
@@ -10,6 +10,14 @@
 #   - Verificacion de version instalada al final del proceso
 #   - Para Ubuntu 24.04 (noble): MariaDB 10.11.14 ya esta en repos oficiales
 #     de Ubuntu, el repo de MariaDB.org se agrega solo si es necesario
+#
+# CAMBIOS v2.1.0 (2026-05-10):
+#   - H-MDB-003: require_vars y debconf-set-selections usan DB_MARIADB_ROOT_PASSWORD
+#   - H-MDB-004: secure_mariadb() detecta unix_socket auth antes de intentar password
+#   - H-MDB-007: configure_mariadb() detecta io_uring y escribe innodb_use_native_aio=0
+#               si no esta disponible (Firecracker, contenedores con seccomp)
+#   - H-MDB-008: install_mariadb() verifica ibdata1 y ejecuta mysql_install_db si ausente
+#   - apt-get update antes de instalar para resolver 404 por indice obsoleto
 
 set -euo pipefail
 
@@ -34,7 +42,8 @@ main() {
         log_fatal "This script must be run as root"
     fi
 
-    require_vars MARIADB_VERSION DB_ROOT_PASSWORD
+    # H-MDB-003: alineado con convencion DB_MARIADB_ROOT_PASSWORD
+    require_vars MARIADB_VERSION DB_MARIADB_ROOT_PASSWORD
 
     if ! ensure_dir "${PROJECT_ROOT}/logs"; then
         log_error "Failed to create log directory"
@@ -152,8 +161,17 @@ install_mariadb() {
 
     export DEBIAN_FRONTEND=noninteractive
 
-    debconf-set-selections <<< "mariadb-server mysql-server/root_password password ${DB_ROOT_PASSWORD}"
-    debconf-set-selections <<< "mariadb-server mysql-server/root_password_again password ${DB_ROOT_PASSWORD}"
+    # Actualizar el indice de paquetes antes de instalar.
+    # El 404 de iproute2 en la sesion anterior fue causado por un indice obsoleto
+    # que apuntaba a una version ya no disponible en el mirror.
+    # Un apt-get update fresco resuelve la referencia correcta y evita el error.
+    log_info "Actualizando indice de paquetes antes de instalar"
+    if ! apt-get update -qq 2>/dev/null; then
+        log_warn "apt-get update retorno error — continuando (puede haber repos opcionales fallando)"
+    fi
+
+    debconf-set-selections <<< "mariadb-server mysql-server/root_password password ${DB_MARIADB_ROOT_PASSWORD}"
+    debconf-set-selections <<< "mariadb-server mysql-server/root_password_again password ${DB_MARIADB_ROOT_PASSWORD}"
 
     # Intentar instalar version exacta; si no esta disponible, instalar la
     # mejor de la serie 10.11.x disponible
@@ -183,6 +201,31 @@ install_mariadb() {
         fi
     fi
 
+    # H-MDB-008: verificar e inicializar datadir si el postinst no lo hizo
+    # Ocurre cuando mariadb-server falla parcialmente (ej. iproute2 404) y solo
+    # mariadb-server-core queda instalado — el postinst no ejecuta mysql_install_db.
+    # Sin ibdata1, mariadbd arranca, intenta leer el datadir y termina silenciosamente.
+    if [[ ! -f /var/lib/mysql/ibdata1 ]]; then
+        log_info "H-MDB-008: datadir no inicializado (ibdata1 ausente) — ejecutando instalacion"
+
+        local init_cmd=""
+        if   command -v mariadb-install-db &>/dev/null; then init_cmd="mariadb-install-db"
+        elif command -v mysql_install_db    &>/dev/null; then init_cmd="mysql_install_db"
+        else
+            log_error "No se encontro mariadb-install-db ni mysql_install_db"
+            return 1
+        fi
+
+        if ! "$init_cmd" --user=mysql --datadir=/var/lib/mysql 2>/dev/null; then
+            log_error "Fallo la inicializacion del datadir via ${init_cmd}"
+            return 1
+        fi
+
+        log_success "Datadir inicializado via ${init_cmd}"
+    else
+        log_info "Datadir ya inicializado (ibdata1 presente)"
+    fi
+
     if ! enable_service mariadb; then
         log_error "Failed to enable MariaDB service"
         return 1
@@ -193,8 +236,19 @@ install_mariadb() {
         return 1
     fi
 
+    # H-MDB-006: si MariaDB no responde en 30s, mostrar ultimas lineas del log de error
     if ! mysql_wait_ready 30; then
         log_error "MariaDB did not start within 30 seconds"
+        local error_log
+        for f in /var/log/mysql/error.log /var/lib/mysql/*.err /tmp/mariadbd_startup.log; do
+            [[ -f "$f" ]] && error_log="$f" && break
+        done
+        if [[ -n "${error_log:-}" ]]; then
+            log_error "Ultimas lineas de ${error_log}:"
+            tail -20 "$error_log" | while IFS= read -r line; do
+                log_error "  ${line}"
+            done
+        fi
         return 1
     fi
 
@@ -229,6 +283,25 @@ configure_mariadb() {
         return 1
     fi
 
+    # H-MDB-007: escribir innodb_use_native_aio=0 si io_uring no esta disponible.
+    # Hace la opcion persistente para reinicios posteriores del servicio.
+    if ! _mariadb_io_uring_available; then
+        if ! grep -q "innodb_use_native_aio" "$config_file"; then
+            cat >> "$config_file" << 'EOF'
+
+# H-MDB-007: io_uring no disponible en este entorno (Firecracker/contenedor con seccomp)
+# MariaDB 10.11 usa io_uring por defecto para InnoDB AIO. Sin esta opcion, el daemon
+# arranca, reporta "ready for connections" y muere inmediatamente sin mensaje de error.
+innodb_use_native_aio = 0
+EOF
+            log_success "innodb_use_native_aio=0 configurado (io_uring no disponible en este entorno)"
+        else
+            log_info "innodb_use_native_aio ya configurado en ${config_file}"
+        fi
+    else
+        log_debug "io_uring disponible — innodb_use_native_aio no modificado"
+    fi
+
     if ! restart_service mariadb; then
         log_error "Failed to restart MariaDB"
         return 1
@@ -244,24 +317,47 @@ configure_mariadb() {
 }
 
 # Asegurar la instalacion
+# H-MDB-004: Ubuntu 24.04 usa unix_socket plugin para root@localhost en instalacion fresca.
+# mysql -u root sin password funciona via socket. Despues se establece el password.
 secure_mariadb() {
     log_info "Securing MariaDB installation"
 
-    mysql -u root -p"${DB_ROOT_PASSWORD}" \
-        -e "DELETE FROM mysql.user WHERE User='';" 2>/dev/null || true
+    # Determinar como conectar a root: socket Unix (instalacion fresca) o password
+    local mysql_root_cmd
+    if mysql -u root -e "SELECT 1;" &>/dev/null 2>&1; then
+        log_debug "secure_mariadb: autenticacion root via unix_socket (sin password)"
+        mysql_root_cmd="mysql -u root"
+    elif mysql -u root -p"${DB_MARIADB_ROOT_PASSWORD}" -e "SELECT 1;" &>/dev/null 2>&1; then
+        log_debug "secure_mariadb: autenticacion root via password"
+        mysql_root_cmd="mysql -u root -p${DB_MARIADB_ROOT_PASSWORD}"
+    else
+        log_error "No se pudo autenticar como root (ni socket ni password)"
+        return 1
+    fi
 
-    mysql -u root -p"${DB_ROOT_PASSWORD}" \
+    # Eliminar usuarios anonimos
+    $mysql_root_cmd -e "DELETE FROM mysql.user WHERE User='';" 2>/dev/null || true
+
+    # Restringir root a conexiones locales
+    $mysql_root_cmd \
         -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');" \
         2>/dev/null || true
 
-    mysql -u root -p"${DB_ROOT_PASSWORD}" \
-        -e "DROP DATABASE IF EXISTS test;" 2>/dev/null || true
+    # Eliminar BD de prueba
+    $mysql_root_cmd -e "DROP DATABASE IF EXISTS test;" 2>/dev/null || true
+    $mysql_root_cmd \
+        -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';" \
+        2>/dev/null || true
 
-    mysql -u root -p"${DB_ROOT_PASSWORD}" \
-        -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';" 2>/dev/null || true
+    # Establecer password para root (permite acceso TCP posterior con password)
+    $mysql_root_cmd \
+        -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_MARIADB_ROOT_PASSWORD}';" \
+        2>/dev/null || \
+    $mysql_root_cmd \
+        -e "UPDATE mysql.user SET Password=PASSWORD('${DB_MARIADB_ROOT_PASSWORD}') WHERE User='root';" \
+        2>/dev/null || true
 
-    mysql -u root -p"${DB_ROOT_PASSWORD}" \
-        -e "FLUSH PRIVILEGES;" 2>/dev/null || {
+    $mysql_root_cmd -e "FLUSH PRIVILEGES;" 2>/dev/null || {
         log_error "Failed to flush privileges"
         return 1
     }

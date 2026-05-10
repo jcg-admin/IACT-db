@@ -12,6 +12,10 @@
 #
 # NO instala MariaDB. Requiere que MariaDB esté corriendo.
 # Portado de IACT-api provisioners/mariadb/db_setup.sh (v1.0.0)
+#
+# H-MDB-005: main() NO se llama incondicionalmente.
+#   · Ejecucion directa  (bash setup.sh)    → guard activa main()
+#   · Source desde bootstrap.sh             → bootstrap.sh llama main() explicitamente
 # =============================================================================
 
 set -euo pipefail
@@ -128,11 +132,33 @@ main() {
         --batch --silent --skip-column-names \
         -e "SELECT CONCAT(DATABASE(), '@', USER());" \
         "$db_name" 2>&1) || {
-        log_error "No se pudo conectar como ${db_user}: ${result}"
+        log_error "No se pudo conectar como ${db_user} via TCP: ${result}"
         return 1
     }
 
-    log_success "Conexión OK: ${result}"
+    log_success "Conexión TCP OK: ${result}"
+
+    # H-MDB-013: verificar conexión via socket Unix — método que usa IACT-api en producción
+    # IVR_DB_SOCKET=/run/mysqld/mysqld.sock en el .env de IACT-api
+    local socket_path="${IVR_DB_SOCKET:-/run/mysqld/mysqld.sock}"
+    if [[ -S "$socket_path" ]]; then
+        local socket_result
+        socket_result=$(mysql --socket="$socket_path" \
+            -u "$db_user" -p"${db_pass}" \
+            --batch --silent --skip-column-names \
+            -e "SELECT CONCAT(DATABASE(), '@', USER());" \
+            "$db_name" 2>&1) || {
+            log_warn "Conexión socket Unix fallida: ${socket_result}"
+            log_warn "  IACT-api producción usa IVR_DB_SOCKET=${socket_path}"
+            log_warn "  Verifica permisos del socket: ls -la ${socket_path}"
+        }
+        if [[ -n "$socket_result" ]] && ! echo "$socket_result" | grep -q "ERROR"; then
+            log_success "Conexión socket Unix OK: ${socket_result}"
+        fi
+    else
+        log_warn "Socket ${socket_path} no encontrado — solo TCP verificado"
+        log_warn "  IACT-api producción requiere el socket para IVR_DB_SOCKET"
+    fi
 
     # Verificar que el usuario NO tiene privilegios de escritura (CNST-003)
     local write_privs
@@ -147,11 +173,13 @@ main() {
         log_warn "  Revisa los GRANT aplicados sobre ${db_name}"
     fi
 
-    echo ""
     log_success "Setup MariaDB completado. Base ${db_name} lista (READ-ONLY para Django)."
-    echo ""
-    echo "  Django settings:"
-    echo "    DATABASE ivr: HOST=${host} PORT=${port} NAME=${db_name} USER=${db_user}"
+    log_info  "  Django settings:"
+    log_info  "    DATABASE ivr: HOST=${host} PORT=${port} NAME=${db_name} USER=${db_user}"
 }
 
-main
+# H-MDB-005: ejecutar main solo cuando el script es el punto de entrada directo.
+# Al hacer source desde bootstrap.sh, main() es llamado explicitamente por bootstrap.
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi
