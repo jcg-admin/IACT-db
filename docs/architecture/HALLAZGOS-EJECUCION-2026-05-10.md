@@ -16,11 +16,11 @@
 | H-EXEC-002 | `_pg_start_ctlcluster` restart sin re-verificar `pg_is_running` | ALTA | RESUELTO |
 | H-EXEC-003 | `local` en cuerpo principal de `provision-mariadb.sh` | ALTA | RESUELTO |
 | H-EXEC-004 | `mariadb_cleanup_stale` funciona correctamente | — | POSITIVO |
-| H-EXEC-005 | `schema_historico.sh` usa `django_user` para CREATE TABLE | CRÍTICA | PENDIENTE |
-| H-EXEC-006 | `schema_historico.sh` swallows errores DDL y reporta SUCCESS | CRÍTICA | PENDIENTE |
-| H-EXEC-007 | `column` no disponible en `schema_historico.sh` línea 342 | BAJA | PENDIENTE |
-| H-EXEC-008 | `verify.sh 3b` no verifica tablas históricas `tbl_historico_*` | ALTA | PENDIENTE |
-| H-EXEC-009 | `${SKIP_SEED:+--skip-seed}` pasa `--skip-seed` cuando `SKIP_SEED=0` | ALTA | PENDIENTE |
+| H-EXEC-005 | `schema_historico.sh` usa `django_user` para CREATE TABLE | CRÍTICA | RESUELTO |
+| H-EXEC-006 | `schema_historico.sh` swallows errores DDL y reporta SUCCESS | CRÍTICA | RESUELTO |
+| H-EXEC-007 | `column` no disponible en `schema_historico.sh` línea 342 | BAJA | RESUELTO |
+| H-EXEC-008 | `verify.sh 3b` no verifica tablas históricas `tbl_historico_*` | ALTA | RESUELTO |
+| H-EXEC-009 | `${SKIP_SEED:+--skip-seed}` pasa `--skip-seed` cuando `SKIP_SEED=0` | ALTA | RESUELTO |
 
 ---
 
@@ -137,7 +137,8 @@ Renombrar `local grant=` a `GRANT_STMT=` (variable de shell sin scope de funció
 
 **Componente:** `provisioners/mariadb/schema_historico.sh`  
 **Severidad:** CRÍTICA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO (2026-05-10) — `schema_historico.sh` v2.2.0,
+FASE 0 T-0.2..T-0.4 (helpers raíz) + FASE 1 T-1.1 (`my_exec_file_root` en Paso 2)
 
 **Descripción:**
 `schema_historico.sh` conecta a MariaDB usando `DB_MARIADB_USER` (valor: `django_user`)
@@ -209,7 +210,8 @@ _mdb_exec_file_root() {
 
 **Componente:** `provisioners/mariadb/schema_historico.sh`  
 **Severidad:** CRÍTICA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO (2026-05-10) — `schema_historico.sh` v2.2.0,
+FASE 1 T-1.2 (captura de exit code explícita — elimina `|| true`)
 
 **Descripción:**
 El código de creación de tablas es:
@@ -264,7 +266,8 @@ log_success "Schema aplicado"
 
 **Componente:** `provisioners/mariadb/schema_historico.sh`  
 **Severidad:** BAJA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO (2026-05-10) — `schema_historico.sh` v2.2.0,
+FASE 2 T-2.1 (captura de output + `command -v column` como guarda)
 
 **Descripción:**
 La línea 342 de `schema_historico.sh` usa el comando `column` para formatear la
@@ -308,7 +311,8 @@ fi
 
 **Componente:** `verify.sh`, sección `check_mariadb_schema()`  
 **Severidad:** ALTA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO (2026-05-10) — `verify.sh`,
+FASE 4 T-4.1 (bloque `hist_count` con `fail` en `check_mariadb_schema`)
 
 **Descripción:**
 La sección `3b/8 MariaDB — schema ivr_legacy` de `verify.sh` verifica:
@@ -348,7 +352,8 @@ Usar `fail` (no `warn`) porque estas tablas son el origen de datos del pipeline 
 
 **Componente:** `setup.sh` (raíz IACT-db)  
 **Severidad:** ALTA  
-**Estado:** PENDIENTE — decisión de diseño: eliminar el patrón completamente
+**Estado:** RESUELTO (2026-05-10) — `setup.sh`,
+FASE 3 T-3.1..T-3.4 (patrón eliminado — `if [[ "${SKIP_SEED}" == "1" ]]` explícito)
 
 **Descripción:**
 En `setup.sh` líneas 63 y 127:
