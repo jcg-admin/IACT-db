@@ -111,7 +111,14 @@ COLS = ("(dFecha,dHoraInicio,dHoraFin,cDID_800Transfer,"
 
 def gen_phone():
     pref, digs = random.choices(PREFIJOS, weights=PESOS_PREFIJOS)[0]
-    return pref + str(random.randint(0, 10**digs - 1)).zfill(digs)
+    # H-F3-001 (2026-05-10): randint(0, 10**digs - 1).zfill(digs) producía
+    # ceros de padding cuando el número tenía menos de `digs` dígitos:
+    #   randint(0, 9_999_999) = 123  →  str(123).zfill(7) = '0000123'
+    #   CONCAT('443', '0000123') = '4430000123' — número irreal.
+    # Corrección: iniciar el rango en 10**(digs-1) garantiza exactamente
+    # `digs` dígitos y primer dígito siempre 1-9, sin necesidad de zfill.
+    #   randint(1_000_000, 9_999_999) → siempre 7 dígitos, sin cero inicial.
+    return pref + str(random.randint(10**(digs - 1), 10**digs - 1))
 
 def pick_from(tabla_acum):
     r = random.random()
