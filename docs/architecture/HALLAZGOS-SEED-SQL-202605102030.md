@@ -1,6 +1,7 @@
 # Hallazgos — Análisis del seed SQL vs datos reales y requisitos de rediseño
 
-**Versión:** 1.0.0  
+**Versión:** 2.0.0  
+**Fecha actualización:** 2026-05-10 (FASE 4)  
 **Fecha:** 2026-05-10  
 **Contexto:** Análisis solicitado por el equipo: comportamiento incremental,
 variaciones en datos generados y eliminación de TRUNCATE.  
@@ -11,21 +12,22 @@ variaciones en datos generados y eliminación de TRUNCATE.
 
 ## Resumen ejecutivo
 
-El SP `sp_seed_historico` en `seed_historico.sql` tiene tres categorías de
+El SP `sp_seed_historico` en `seed_historico.sql` tenía tres categorías de
 problemas: **comportamental** (skip en lugar de append, truncate que destruye
 datos), **distribucional** (proporciones alejadas de los datos reales) y
 **generacional** (números de teléfono con ceros internos por LPAD).
+Todos fueron resueltos en `seed_historico.sql` v3.0.0 (commit `c2890f0`).
 
 | ID | Hallazgo | Categoría | Severidad | Estado |
 |---|---|---|---|---|
-| H-SEED-001 | 2ª ejecución hace SKIP — no es incremental | Comportamiento | ALTA | PENDIENTE |
-| H-SEED-002 | FORCE_RESEED=TRUNCATE destruye datos con valor | Comportamiento | ALTA | PENDIENTE |
-| H-SEED-003 | G-29 (horas invertidas): 0.37% en seed vs 38.8% en producción | Distribución | CRÍTICA | PENDIENTE |
-| H-SEED-004 | `cMenu='cliente_colgo'`: 52.4% en seed vs 21.87% en producción | Distribución | ALTA | PENDIENTE |
-| H-SEED-005 | `cTelefono_Digitado IS NULL`: 30.9% en seed vs 21.2% en producción | Distribución | MEDIA | PENDIENTE |
-| H-SEED-006 | `cTelefono_Digitado = Origen`: 44.4% en seed vs 28.2% en producción | Distribución | MEDIA | PENDIENTE |
-| H-SEED-007 | LPAD genera ceros internos en números de teléfono (9.4% afectados) | Generación | MEDIA | PENDIENTE |
-| H-SEED-008 | `@SCRIPT_VER` sobreescrita en el SQL (ya documentado en H-F1-005) | Trazabilidad | BAJA | PENDIENTE |
+| H-SEED-001 | 2ª ejecución hace SKIP — no es incremental | Comportamiento | ALTA | RESUELTO |
+| H-SEED-002 | FORCE_RESEED=TRUNCATE destruye datos con valor | Comportamiento | ALTA | RESUELTO |
+| H-SEED-003 | G-29 (horas invertidas): 0.37% en seed vs 38.8% en producción | Distribución | CRÍTICA | RESUELTO |
+| H-SEED-004 | `cMenu='cliente_colgo'`: 52.4% en seed vs 21.87% en producción | Distribución | ALTA | RESUELTO |
+| H-SEED-005 | `cTelefono_Digitado IS NULL`: 30.9% en seed vs 21.2% en producción | Distribución | MEDIA | RESUELTO |
+| H-SEED-006 | `cTelefono_Digitado = Origen`: 44.4% en seed vs 28.2% en producción | Distribución | MEDIA | RESUELTO |
+| H-SEED-007 | LPAD genera ceros internos en números de teléfono (9.4% afectados) | Generación | MEDIA | RESUELTO |
+| H-SEED-008 | `@SCRIPT_VER` sobreescrita en el SQL (ya documentado en H-F1-005) | Trazabilidad | BAJA | RESUELTO |
 | H-SEED-009 | `poblar_historico.py` ya tiene el diseño correcto — el SQL debería alinearse | Referencia | — | DOCUMENTADO |
 
 ---
@@ -49,7 +51,7 @@ datos), **distribucional** (proporciones alejadas de los datos reales) y
 
 **Categoría:** Comportamiento  
 **Severidad:** ALTA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — `seed_historico.sql` v3.0.0 (T-1.4, commit `c2890f0`)
 
 ### Comportamiento actual
 
@@ -96,7 +98,7 @@ END IF;
 
 **Categoría:** Comportamiento  
 **Severidad:** ALTA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — `seed_historico.sql` v3.0.0 (T-1.2/T-1.3, commit `c2890f0`)
 
 ### Comportamiento actual
 
@@ -142,7 +144,7 @@ CALL sp_seed_historico('tbl_historico_t1_2025', ..., @SEED_ROWS, ...);
 
 **Categoría:** Distribución  
 **Severidad:** CRÍTICA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — `seed_historico.sql` v3.0.0 (T-1.6, commit `c2890f0`)
 
 ### Descripción
 
@@ -188,7 +190,7 @@ IF RAND() < 0.388 THEN
 
 **Categoría:** Distribución  
 **Severidad:** ALTA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — `seed_historico.sql` v3.0.0 (T-1.7, commit `c2890f0`)
 
 ### Descripción
 
@@ -239,7 +241,7 @@ Ajustar también los umbrales subsiguientes para mantener la suma en 1.0.
 
 **Categoría:** Distribución  
 **Severidad:** MEDIA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — `seed_historico.sql` v3.0.0 (T-1.8a, commit `c2890f0`)
 
 ### Descripción
 
@@ -279,7 +281,7 @@ ELSE  SET v_tel_digitado = CONCAT([prefijo_aleatorio],...);     -- 50.6%
 
 **Categoría:** Generación  
 **Severidad:** MEDIA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — `seed_historico.sql` v3.0.0 (T-1.9, commit `c2890f0`)
 
 ### Descripción
 
@@ -349,7 +351,7 @@ ceros iniciales — un número de teléfono realista.
 
 **Categoría:** Trazabilidad  
 **Severidad:** BAJA  
-**Estado:** PENDIENTE (documentado previamente como H-F1-005)
+**Estado:** RESUELTO — `seed_historico.sql` v3.0.0 (T-1.10, commit `c2890f0`)
 
 `seed_historico.sql` define `SET @SCRIPT_VER = '2.0.0';` sobreescribiendo
 la versión inyectada por `schema_historico.sh` (`2.2.0`). La corrección

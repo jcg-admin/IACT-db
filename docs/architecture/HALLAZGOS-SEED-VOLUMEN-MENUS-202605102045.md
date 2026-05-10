@@ -1,6 +1,7 @@
 # Hallazgos adicionales — Volumen, menús e identificadores del seed SQL
 
-**Versión:** 1.0.0  
+**Versión:** 2.0.0  
+**Fecha actualización:** 2026-05-10 (FASE 4)
 **Fecha:** 2026-05-10  
 **Contexto:** Hallazgos adicionales identificados en el análisis de
 `seed_historico.sql` vs `poblar_historico.py` y los perfiles de quarter.  
@@ -12,11 +13,11 @@
 
 | ID | Hallazgo | Severidad | Estado |
 |---|---|---|---|
-| H-SEED-010 | Todas las tablas tienen exactamente 3000 filas — irreal | ALTA | PENDIENTE |
-| H-SEED-011 | Sin escala por quarter — todos los quarters son iguales en volumen | ALTA | PENDIENTE |
-| H-SEED-012 | Los menús del SQL no son los menús reales del IVR | CRÍTICA | PENDIENTE |
-| H-SEED-013 | Solo 6 VDNs en el SQL vs 28+ reales en Q01 solo | CRÍTICA | PENDIENTE |
-| H-SEED-014 | Los menús cambian por quarter — el SQL usa el mismo catálogo para los 6 | ALTA | PENDIENTE |
+| H-SEED-010 | Todas las tablas tienen exactamente 3000 filas — irreal | ALTA | RESUELTO |
+| H-SEED-011 | Sin escala por quarter — todos los quarters son iguales en volumen | ALTA | RESUELTO |
+| H-SEED-012 | Los menús del SQL no son los menús reales del IVR | CRÍTICA | RESUELTO |
+| H-SEED-013 | Solo 6 VDNs en el SQL vs 28+ reales en Q01 solo | CRÍTICA | RESUELTO |
+| H-SEED-014 | Los menús cambian por quarter — el SQL usa el mismo catálogo para los 6 | ALTA | RESUELTO |
 | H-SEED-015 | `poblar_historico.py` ya implementa todo correctamente — el SQL es duplicación incorrecta | Arquitectura | DOCUMENTADO |
 
 ---
@@ -24,7 +25,7 @@
 ## H-SEED-010 — Todas las tablas tienen exactamente 3000 filas
 
 **Severidad:** ALTA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — `seed_historico.sql` v3.0.0 (T-1.11, commit `c2890f0`)
 
 ### Estado actual
 
@@ -86,7 +87,7 @@ que son críticos para la validación del pipeline.
 ## H-SEED-011 — Sin escala por quarter — todos iguales en volumen
 
 **Severidad:** ALTA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — `seed_historico.sql` v3.0.0 (T-1.11, commit `c2890f0`)
 
 ### Descripción
 
@@ -130,7 +131,7 @@ nunca idéntico entre ejecuciones.
 ## H-SEED-012 — Los menús del SQL no son los menús reales del IVR
 
 **Severidad:** CRÍTICA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO (Nivel 1) — `seed_historico.sql` v3.0.0 usa 22 menús reales Q01_2025 (T-1.7, commit `c2890f0`). Catálogo completo 39+ menús cubierto por Nivel 2 (`poblar_historico.py`)
 
 ### Comparativa
 
@@ -180,7 +181,7 @@ con los valores correctos — los tests pasan pero el ETL falla en producción.
 ## H-SEED-013 — Solo 6 VDNs en el SQL vs 28+ reales en Q01 solo
 
 **Severidad:** CRÍTICA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO (Nivel 1) — `seed_historico.sql` v3.0.0 usa VDNs reales por menú (T-1.8b, commit `c2890f0`). VDNs completos 28+ por menú cubiertos por Nivel 2 (`poblar_historico.py`)
 
 ### VDNs en el seed SQL actual
 
@@ -216,7 +217,7 @@ de destinos y los tests de los SPs no cubren la variedad real.
 ## H-SEED-014 — Los menús cambian por quarter — el SQL usa el mismo catálogo para los 6
 
 **Severidad:** ALTA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO vía Nivel 2 — `poblar_historico.py` usa perfiles por quarter acumulados. `schema_historico.sh` v2.3.0 integra Nivel 2 en PASO 4 con FULL_SEED=1 (commit `e825383`)
 
 ### Evolución real del catálogo de menús
 
@@ -245,7 +246,7 @@ en Q01_2025 aunque solo existe desde Q02_2025.
 ## H-SEED-015 — `poblar_historico.py` ya implementa todo correctamente
 
 **Severidad:** Arquitectónica  
-**Estado:** DOCUMENTADO
+**Estado:** RESUELTO — `schema_historico.sh` v2.3.0 integra `poblar_historico.py` como PASO 4 (FULL_SEED=1). Arquitectura dos niveles documentada en PLAN-SEED-HISTORICO-V2-202605102100.md
 
 ### Descripción
 

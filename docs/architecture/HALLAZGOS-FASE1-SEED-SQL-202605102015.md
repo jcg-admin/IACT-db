@@ -1,5 +1,6 @@
 # Hallazgos — Ejecución FASE 1 (Corrección de seed_historico.sql)
 
+**Fecha actualización:** 2026-05-10 (FASE 4)
 **Versión:** 1.0.0  
 **Fecha:** 2026-05-10  
 **Contexto:** Implementación de FASE 1 del
@@ -89,7 +90,7 @@ Todas las distribuciones dentro de ±1.5pp. Sin deuda técnica en calibración.
 | H-F1-001 | cDID agrupaba `SinOpcion_Cabecera` y `Marque3` con `cliente_colgo` | Bug en T-1.8 | ALTA | RESUELTO en sesión |
 | H-F1-002 | Teléfonos `55X` con '0' en pos. 4 no son un bug — es patrón válido | Falso positivo | — | DOCUMENTADO |
 | H-F1-003 | `cDID='cliente_colgo'` al ~40% vs 12.10% producción | Limitación de Nivel 1 | MEDIA | DOCUMENTADO |
-| H-F1-004 | `FORCE_RESEED: 0` sigue apareciendo en log de `schema_historico.sh` | Deuda FASE 2 | BAJA | PENDIENTE FASE 2 |
+| H-F1-004 | `FORCE_RESEED: 0` sigue apareciendo en log de `schema_historico.sh` | Deuda FASE 2 | BAJA | RESUELTO |
 | H-F1-005 | `script_version='2.2.0'` en lugar de '3.0.0' en `seed_executions` | Trazabilidad | BAJA | DOCUMENTADO |
 
 ---
@@ -242,7 +243,7 @@ motivo no se corrige en FASE 1 — es parte del alcance de FASE 2.
 
 **Tipo:** Variable obsoleta en script — pendiente FASE 2  
 **Severidad:** BAJA  
-**Estado:** PENDIENTE FASE 2
+**Estado:** RESUELTO — `schema_historico.sh` v2.3.0 (T-2.1, commit `e825383`). FORCE_RESEED eliminado de: variable de entorno, dos inyecciones SQL en my_exec_vars/my_exec_vars_root, log de configuracion y mensaje de error en verificar_seed_completo
 
 ### Descripción
 

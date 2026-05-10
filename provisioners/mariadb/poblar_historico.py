@@ -50,6 +50,30 @@ ARGUMENTOS:
     --user USER     (default: django_user)
     --password PWD  (default: django_pass)
     --db DB         (default: ivr_legacy)
+
+CONEXIÓN RECOMENDADA (schema_historico.sh PASO 4):
+    python3 poblar_historico.py \\
+        --rows 3000 \\
+        --socket /run/mysqld/mysqld.sock \\
+        --user ivr_seed_user \\
+        --password <MARIADB_SEED_PASSWORD> \\
+        --db ivr_legacy
+    ivr_seed_user requiere: SELECT, INSERT en tbl_historico_* y seed_executions.
+    Creado automáticamente por schema_historico.sh PASO 1.
+
+CHANGELOG:
+    v1.1.0 (2026-05-10):
+        H-F3-001: corregir gen_phone() — randint(0, 10**digs-1).zfill(digs)
+            producía ceros de padding cuando el número tenía menos dígitos
+            que el sufijo esperado (9.85% de ocurrencia). Corrección:
+            randint(10**(digs-1), 10**digs-1) garantiza exactamente digs
+            dígitos con primer dígito siempre 1-9, sin zfill necesario.
+            Análogo a H-SEED-007 corregido en seed_historico.sql v3.0.0.
+
+    v1.0.0 (2026-05-06):
+        Versión inicial. Motor Python para generación de registros históricos
+        IVR con perfiles por quarter, VDNs reales, distribuciones calibradas
+        con datos de producción Q1-Q3 2025 (34.1M registros).
 """
 
 import argparse
