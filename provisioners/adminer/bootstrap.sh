@@ -1,7 +1,7 @@
 #!/bin/bash
 # bootstrap.sh
 # Bootstrap script for Adminer VM
-# Version: 1.0.2 - Variables from Vagrantfile
+# Version: 1.0.3 - Variables alineadas con .env.example (MARIADB_HOST/POSTGRES_HOST)
 
 set -euo pipefail
 
@@ -44,10 +44,11 @@ adminer_ssl() {
     main
 }
 
-# Variables are exported from Vagrantfile - validate they exist
+# Variables exportadas desde .env — MARIADB_HOST y POSTGRES_HOST
+# reemplazan MARIADB_IP y POSTGRES_IP (variables Vagrant eliminadas)
 require_vars ADMINER_VERSION ADMINER_IP ADMINER_HTTP_PORT \
              ADMINER_HTTPS_PORT SWAP_SIZE \
-             MARIADB_IP POSTGRES_IP \
+             MARIADB_HOST POSTGRES_HOST \
              SSL_DAYS SSL_COUNTRY SSL_STATE SSL_CITY SSL_ORG SSL_OU SSL_CN
 
 # Component header
@@ -70,8 +71,8 @@ fi
 show_results "Adminer ${ADMINER_VERSION}" \
     "HTTP:  http://${ADMINER_IP}:${ADMINER_HTTP_PORT}" \
     "HTTPS: https://${ADMINER_IP}:${ADMINER_HTTPS_PORT}" \
-    "MariaDB:    ${MARIADB_IP}:3306" \
-    "PostgreSQL: ${POSTGRES_IP}:5432" \
+    "MariaDB:    ${MARIADB_HOST}:3306" \
+    "PostgreSQL: ${POSTGRES_HOST}:5432" \
     "Status: Running"
 
 log_success "Adminer provisioning completed successfully"
