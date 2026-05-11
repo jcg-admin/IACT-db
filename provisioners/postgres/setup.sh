@@ -116,6 +116,10 @@ SQL
             || log_warn "Extensión ${ext}: no disponible (opcional)"
     done
 
+    # Vincular config/postgres/99-iact.conf al sistema via symlink.
+    # Idempotente — ln -sf es seguro ejecutar N veces.
+    _apply_iact_postgres_config
+
     # PASO 5 — Verificar conexión con credenciales Django
     log_step 5 5 "Verificando conexión Django"
 
@@ -134,6 +138,41 @@ SQL
     echo ""
     echo "  Django settings:"
     echo "    DATABASE default: HOST=${host} PORT=${port} NAME=${db_name} USER=${db_user}"
+}
+
+# _apply_iact_postgres_config
+#
+# Crea un symlink de config/postgres/99-iact.conf en conf.d/ del sistema.
+# postgresql.conf ya tiene: include_dir = 'conf.d'
+#
+# Mismo principio que MariaDB: la fuente de verdad es el repo.
+# El symlink es transparente para PostgreSQL — lee el archivo del repo directamente.
+_apply_iact_postgres_config() {
+    local repo_config="${PROJECT_ROOT}/config/postgres/99-iact.conf"
+    local pg_version="${POSTGRES_VERSION:-16}"
+    local conf_d="/etc/postgresql/${pg_version}/main/conf.d"
+    local system_link="${conf_d}/99-iact.conf"
+
+    if [[ ! -f "$repo_config" ]]; then
+        log_warn "_apply_iact_postgres_config: no encontrado ${repo_config} — omitido"
+        return 0
+    fi
+
+    if [[ ! -d "$conf_d" ]]; then
+        log_warn "conf.d no existe en ${conf_d} — omitido"
+        log_warn "  Verificar que postgresql.conf tiene: include_dir = 'conf.d'"
+        return 0
+    fi
+
+    if ln -sf "$repo_config" "$system_link" 2>/dev/null; then
+        log_success "PostgreSQL config vinculada: ${system_link} → ${repo_config}"
+    else
+        log_error "No se pudo crear symlink: ${system_link}"
+        log_error "  Ejecutar manualmente: sudo ln -sf ${repo_config} ${system_link}"
+        return 1
+    fi
+
+    return 0
 }
 
 # H-PG-005: ejecutar main solo cuando el script es el punto de entrada directo.

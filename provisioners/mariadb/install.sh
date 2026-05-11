@@ -84,6 +84,12 @@ main() {
         return 1
     fi
 
+    # Vincular config/mariadb/99-iact.cnf al sistema via symlink.
+    # Idempotente — ln -sf es seguro ejecutar N veces.
+    if ! _apply_iact_mariadb_config; then
+        log_warn "IACT config no vinculada — continuar sin event_scheduler=ON"
+    fi
+
     if ! secure_mariadb; then
         log_error "Failed to secure MariaDB"
         return 1
@@ -313,6 +319,55 @@ EOF
     fi
 
     log_success "MariaDB configured"
+    return 0
+}
+
+# _apply_iact_mariadb_config
+#
+# Crea un symlink de config/mariadb/99-iact.cnf en conf.d/ del sistema.
+# No modifica archivos del sistema directamente — la fuente de verdad es
+# el archivo en el repo.
+#
+# Por qué symlink y no copy (como adminer):
+#   - Los archivos de configuración del sistema deben reflejar el repo
+#     inmediatamente al cambiar, sin re-provisionar.
+#   - MariaDB lee archivos .cnf via el filesystem — un symlink es
+#     transparente para el daemon.
+#   - ln -sf es idempotente: re-ejecutar el provisioner en 1..N servidores
+#     siempre deja el symlink apuntando al repo correcto.
+#
+# Por qué 99-iact.cnf y no 50-server.cnf:
+#   - 50-server.cnf pertenece al paquete mariadb-server. Modificarlo
+#     directamente es incorrecto: puede ser sobreescrito por apt upgrade.
+#   - conf.d/ lee archivos en orden alfabético. El prefijo 99 garantiza
+#     que nuestras opciones tienen precedencia sobre todos los defaults.
+_apply_iact_mariadb_config() {
+    local repo_config="${PROJECT_ROOT}/config/mariadb/99-iact.cnf"
+    local system_link="/etc/mysql/mariadb.conf.d/99-iact.cnf"
+
+    if [[ ! -f "$repo_config" ]]; then
+        log_warn "_apply_iact_mariadb_config: no encontrado ${repo_config} — omitido"
+        return 0
+    fi
+
+    # ln -sf: crea o actualiza el symlink. Idempotente.
+    if ln -sf "$repo_config" "$system_link" 2>/dev/null; then
+        log_success "MariaDB config vinculada: ${system_link} → ${repo_config}"
+    else
+        log_error "No se pudo crear symlink: ${system_link}"
+        log_error "  Ejecutar manualmente: sudo ln -sf ${repo_config} ${system_link}"
+        return 1
+    fi
+
+    # Verificar que MariaDB puede parsear el nuevo archivo (dry-run)
+    if command -v mariadbd &>/dev/null; then
+        if ! mariadbd --defaults-file=/etc/mysql/my.cnf \
+                      --help --verbose 2>&1 \
+                | grep -q "event_scheduler" 2>/dev/null; then
+            log_warn "Advertencia: event_scheduler puede no estar activo hasta el próximo inicio"
+        fi
+    fi
+
     return 0
 }
 

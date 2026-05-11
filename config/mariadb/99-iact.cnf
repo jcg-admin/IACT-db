@@ -1,0 +1,40 @@
+# =============================================================================
+# config/mariadb/99-iact.cnf — Overrides de MariaDB para el proyecto IACT
+# =============================================================================
+# Este archivo es la fuente de verdad para la configuración de MariaDB del
+# proyecto. Se vincula con symlink a /etc/mysql/mariadb.conf.d/99-iact.cnf
+# durante el provisionamiento (provisioners/mariadb/install.sh).
+#
+# Por qué 99-iact.cnf y no modificar 50-server.cnf:
+#   - 50-server.cnf es propiedad del paquete mariadb-server — puede ser
+#     sobreescrito en actualizaciones del paquete.
+#   - MariaDB lee los archivos de conf.d/ en orden alfabético. El prefijo
+#     99 garantiza que nuestras opciones se leen al final y tienen máxima
+#     precedencia sobre los defaults del sistema.
+#   - La modificación en el repo (no en el servidor) es la fuente de verdad.
+#
+# Idempotencia:
+#   El symlink se crea con ln -sf — re-ejecutar el provisioner es seguro.
+#   Si el archivo cambia en el repo, el cambio es inmediato en el servidor
+#   sin necesidad de re-provisionar (el symlink ya apunta al repo).
+#
+# Para activar en un servidor:
+#   sudo bash provisioners/mariadb/install.sh   (lo hace automáticamente)
+#   O manualmente:
+#   sudo ln -sf "$(pwd)/config/mariadb/99-iact.cnf" \
+#               /etc/mysql/mariadb.conf.d/99-iact.cnf
+#   sudo systemctl reload mariadb
+# =============================================================================
+
+[mariadb]
+
+# H-SRV-001: El Event Scheduler debe estar ON para que evt_etl_diario
+# dispare automáticamente a las 02:00 AM (ETL nocturno).
+# Sin esta línea el scheduler requiere --event-scheduler=ON en la línea
+# de comando, que se pierde en cada reinicio del servidor.
+# Ref: HALLAZGOS-JOB-ETL-SIMULACION-202605102245.md H-JOB-005
+event_scheduler = ON
+
+# Codificación por defecto — alinear con ivr_legacy y Django
+character-set-server  = utf8mb4
+collation-server      = utf8mb4_general_ci
