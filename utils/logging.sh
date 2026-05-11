@@ -137,7 +137,21 @@ log_error() {
 }
 
 log_fatal() {
+    # T-4.4 (H-ETL-003): log_fatal debe terminar el proceso, no solo imprimir.
+    #
+    # BUG previo: solo llamaba log_message y retornaba 0. Con el patrón:
+    #   if ! condicion; then log_fatal "msg"; fi
+    # el script CONTINUABA al siguiente paso con estado inconsistente.
+    #
+    # Análisis de contexto de uso:
+    #   - NUNCA se llama dentro de $(...) subshells en el proyecto
+    #   - Siempre en top-level de función (guard de precondición)
+    #   - exit 1 en script sourced: termina el shell padre (bootstrap)
+    #   - exit 1 en subprocess: termina el proceso, padre detecta exit != 0
+    #   - kill -TERM 0 descartado: demasiado agresivo en entornos de provisioning
+    #   - return 1 descartado: no termina el proceso, solo la función
     log_message "$LOG_LEVEL_FATAL" "FATAL  " "$COLOR_FATAL" "$1"
+    exit 1
 }
 
 # =============================================================================

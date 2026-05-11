@@ -227,6 +227,95 @@ _apply_execute_grants() {
 }
 
 # ---------------------------------------------------------------------------
+# _run_etl_backfill
+#
+# T-4.1 (H-ETL-001): backfill ETL opcional para instancias nuevas.
+#
+# En una instalación fresca, schema_historico.sh crea las tablas
+# tbl_historico_* y las puebla con datos sintéticos de seed. Sin embargo,
+# base_ivr_detalle y base_ivr_clientes (tablas analíticas) quedan vacías
+# hasta que se ejecuta el pipeline ETL manualmente.
+#
+# Esta función llama sp_etl_historico(p_year, p_quarter_num) para cada
+# quarter que tenga una tbl_historico_ correspondiente. Detecta
+# automáticamente cuáles existen — no asume un set fijo de quarters.
+#
+# Activación: RUN_ETL_BACKFILL=1 (default=0)
+#   sudo RUN_ETL_BACKFILL=1 bash scripts/provision-mariadb.sh
+#   o en .env: RUN_ETL_BACKFILL=1
+#
+# Idempotente: sp_etl_historico registra en job_execution_log y puede
+# detectar si el quarter ya fue procesado. No hace doble-insert.
+#
+# Prerequisito: sp_etl_historico debe existir (PASO 5) y los grants
+# EXECUTE deben estar aplicados (PASO 6).
+# ---------------------------------------------------------------------------
+_run_etl_backfill() {
+    log_info "Iniciando backfill ETL para quarters disponibles..."
+
+    # Detectar qué tablas tbl_historico_ existen
+    local hist_tables
+    hist_tables=$(sql_exec_query \
+        "SELECT TABLE_NAME FROM information_schema.TABLES
+         WHERE TABLE_SCHEMA='${DB}'
+         AND TABLE_NAME LIKE 'tbl_historico_t%'
+         ORDER BY TABLE_NAME;")
+
+    if [[ -z "$hist_tables" ]]; then
+        log_warn "  No se encontraron tablas tbl_historico_* — backfill omitido"
+        log_warn "  Ejecutar primero: sudo bash setup.sh mariadb --full"
+        return 0
+    fi
+
+    log_info "  Tablas históricas detectadas:"
+    echo "$hist_tables" | while IFS= read -r tbl; do
+        log_info "    ${tbl}"
+    done
+
+    local backfill_ok=0 backfill_err=0
+
+    # Para cada tabla tbl_historico_tQ_YYYY extraer Q y YYYY y llamar al SP
+    while IFS= read -r tbl; do
+        [[ -z "$tbl" ]] && continue
+
+        # Extraer quarter_num y year del nombre: tbl_historico_t{Q}_{YYYY}
+        local quarter_num year_val
+        quarter_num=$(echo "$tbl" | grep -oP '(?<=tbl_historico_t)\d(?=_)')
+        year_val=$(echo    "$tbl" | grep -oP '\d{4}$')
+
+        if [[ -z "$quarter_num" || -z "$year_val" ]]; then
+            log_warn "  No se pudo parsear quarter/year de: ${tbl} — omitido"
+            (( ++backfill_err )) || true
+            continue
+        fi
+
+        log_info "  ETL: Q${quarter_num}/${year_val} (tabla: ${tbl})"
+
+        local result
+        result=$(sql_exec_query \
+            "CALL sp_etl_historico(${year_val}, ${quarter_num});" \
+            "${DB}" 2>&1)
+
+        local rc=$?
+        if [[ $rc -eq 0 ]]; then
+            log_success "  Q${quarter_num}/${year_val}: OK — ${result}"
+            (( ++backfill_ok )) || true
+        else
+            log_error "  Q${quarter_num}/${year_val}: FALLO"
+            log_error "  ${result}"
+            (( ++backfill_err )) || true
+        fi
+    done <<< "$hist_tables"
+
+    echo ""
+    if [[ $backfill_err -eq 0 ]]; then
+        log_success "Backfill ETL completado: ${backfill_ok} quarters procesados"
+    else
+        log_warn "Backfill ETL: ${backfill_ok} OK, ${backfill_err} con errores — revisar job_execution_log"
+    fi
+}
+
+# ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
 main() {
@@ -342,6 +431,20 @@ main() {
     log_info "EXECUTE grants en routines:"
     _apply_execute_grants
 
+    # ── Paso 7: backfill ETL (opcional) ──────────────────────────────────────
+    # T-4.1 (H-ETL-001): ejecutar solo si RUN_ETL_BACKFILL=1.
+    # En instalaciones nuevas pobla base_ivr_detalle y base_ivr_clientes
+    # procesando los quarters históricos disponibles.
+    # Activar con: sudo RUN_ETL_BACKFILL=1 bash scripts/provision-mariadb.sh
+    if [[ "${RUN_ETL_BACKFILL:-0}" == "1" ]]; then
+        log_step 7 7 "Backfill ETL (RUN_ETL_BACKFILL=1)"
+        _run_etl_backfill
+    else
+        log_info ""
+        log_info "Backfill ETL omitido (RUN_ETL_BACKFILL=${RUN_ETL_BACKFILL:-0})"
+        log_info "  Para poblar tablas analíticas: sudo RUN_ETL_BACKFILL=1 bash scripts/provision-mariadb.sh"
+    fi
+
     # ── Verificación nominal ─────────────────────────────────────────────────
     log_info ""
     log_info "Verificando objetos esperados..."
@@ -369,8 +472,12 @@ main() {
         && log_debug "  tabla OK: tbl_temp_prueba_ivr" \
         || log_warn  "  tabla FALTANTE: tbl_temp_prueba_ivr"
 
+    # H-F4-001: loop actualizado de 5 a 7 funciones — mismo fix que H-ETL-002
+    # en verify.sh. ivr_contar_dias_semana e ivr_agregar_dias_semana son parte
+    # de funciones_utilidad.sql desde v1.0.0 pero no estaban en la verificación.
     for fn in fn_did_segmento fn_normalizar_menu fn_normalizar_centro \
-              fn_duracion_seg ivr_es_dia_semana; do
+              fn_duracion_seg ivr_es_dia_semana \
+              ivr_contar_dias_semana ivr_agregar_dias_semana; do
         local fn_exists
         fn_exists=$(sql_exec_query \
             "SELECT COUNT(*) FROM information_schema.ROUTINES

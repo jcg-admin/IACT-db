@@ -226,26 +226,15 @@ check_mariadb_schema() {
         fail "Tablas analíticas incompletas: ${tbl_ok}/5 — ejecutar: sudo bash setup.sh mariadb --full"
     fi
 
-    # ── Tablas históricas (schema_historico.sh) ───────────────────────────────
-    # Verificación por patrón: los nombres son dinámicos (tbl_historico_tN_YYYY).
-    # Se esperan exactamente 6: t1..t4 de 2025 + t1..t2 de 2026.
-    # Severidad fail: son el origen del pipeline ETL. Sin ellas ningún SP de
-    # reporte puede ejecutarse.
-    local hist_count
-    hist_count=$(_mdb_schema_q \
-        "SELECT COUNT(*) FROM tables
-         WHERE table_schema='${DB_MARIADB_NAME}'
-         AND table_name LIKE 'tbl_historico_%';")
-    if [[ "${hist_count:-0}" -ge 6 ]]; then
-        ok "Tablas históricas presentes: ${hist_count}"
-    else
-        fail "Tablas históricas incompletas: ${hist_count}/6 — ejecutar: sudo bash setup.sh mariadb --full"
-    fi
-
     # ── Funciones de utilidad (funciones_utilidad.sql) ────────────────────────
     local fn_ok=0 fn_miss=0
+    # T-4.2 (H-ETL-002): agregar ivr_contar_dias_semana e ivr_agregar_dias_semana.
+    # Ambas son usadas por sp_rpt_centros_xsegmento — sin ellas el SP falla
+    # en runtime aunque exista. Estaban en funciones_utilidad.sql desde v1.0.0
+    # pero el loop solo verificaba 5 de las 7 funciones del archivo.
     for fn in fn_did_segmento fn_normalizar_menu fn_normalizar_centro \
-              fn_duracion_seg ivr_es_dia_semana; do
+              fn_duracion_seg ivr_es_dia_semana \
+              ivr_contar_dias_semana ivr_agregar_dias_semana; do
         local exists
         exists=$(_mdb_schema_q \
             "SELECT COUNT(*) FROM routines
@@ -261,9 +250,9 @@ check_mariadb_schema() {
     done
 
     if [[ $fn_miss -eq 0 ]]; then
-        ok "Funciones de utilidad completas (${fn_ok}/5)"
+        ok "Funciones de utilidad completas (${fn_ok}/7)"
     else
-        warn "Funciones de utilidad incompletas: ${fn_ok}/5 — ejecutar: sudo bash setup.sh mariadb --full"
+        warn "Funciones de utilidad incompletas: ${fn_ok}/7 — ejecutar: sudo bash setup.sh mariadb --full"
     fi
 
     # ── SPs ETL (sp_etl_pipeline.sql) ─────────────────────────────────────────
@@ -318,6 +307,25 @@ check_mariadb_schema() {
         fail "GRANT EXECUTE faltante — ${DB_MARIADB_USER} no puede invocar routines (${exec_procs:-0} PROC, ${exec_funcs:-0} FUNC)"
         warn "  Corregir con: sudo bash scripts/provision-mariadb.sh"
         warn "  Causa: ERROR 1370 en todo callproc() desde Django"
+    fi
+
+    # ── Tablas históricas (schema_historico.sh) ───────────────────────────────
+    # T-4.3 (H-VFY-001): reordenado al final — son la fuente de datos crudos.
+    # El orden anterior (históricas antes que funciones) era conceptualmente
+    # incorrecto: las históricas son prerequisito de los SPs, no de las funciones.
+    # Orden correcto: analíticas → funciones → SPs ETL → SPs Reporte → EXECUTE
+    # → históricas (datos que alimentan el pipeline, no objetos del schema).
+    # Verificación por patrón: los nombres son dinámicos (tbl_historico_tN_YYYY).
+    # Se esperan exactamente 6: t1..t4 de 2025 + t1..t2 de 2026.
+    local hist_count
+    hist_count=$(_mdb_schema_q \
+        "SELECT COUNT(*) FROM tables
+         WHERE table_schema='${DB_MARIADB_NAME}'
+         AND table_name LIKE 'tbl_historico_%';")
+    if [[ "${hist_count:-0}" -ge 6 ]]; then
+        ok "Tablas históricas presentes: ${hist_count}"
+    else
+        fail "Tablas históricas incompletas: ${hist_count}/6 — ejecutar: sudo bash setup.sh mariadb --full"
     fi
 }
 
