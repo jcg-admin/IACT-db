@@ -42,7 +42,10 @@ main() {
         log_fatal "This script must be run as root"
     fi
 
-    # H-MDB-003: alineado con convencion DB_MARIADB_ROOT_PASSWORD
+    # T-2.6 (H-INST-001): DB_MARIADB_ROOT_PASSWORD se mantiene en require_vars
+    # porque _ensure_correct_mariadb_version lo usa para detectar la versión
+    # instalada autenticándose si unix_socket no está disponible.
+    # secure_mariadb() fue movida a config.sh/_secure_mariadb().
     require_vars MARIADB_VERSION DB_MARIADB_ROOT_PASSWORD
 
     if ! ensure_dir "${PROJECT_ROOT}/logs"; then
@@ -84,10 +87,10 @@ main() {
         return 1
     fi
 
-    if ! secure_mariadb; then
-        log_error "Failed to secure MariaDB"
-        return 1
-    fi
+    # Nota: el hardening (usuarios anónimos, BD test, password root) se
+    # realiza en config.sh/_secure_mariadb() — capa CONFIG, no INSTALL.
+    # El orden install → config → setup garantiza que el motor está instalado
+    # antes de configurarlo.
 
     if ! verify_mariadb_version; then
         log_error "Version verification failed"
@@ -313,164 +316,9 @@ install_mariadb() {
     return 0
 }
 
-# Configurar MariaDB para acceso remoto
-configure_mariadb() {
-    log_info "Configuring MariaDB"
-
-    local config_file="/etc/mysql/mariadb.conf.d/50-server.cnf"
-
-    if ! validate_file_exists "$config_file"; then
-        log_error "Config file not found: $config_file"
-        return 1
-    fi
-
-    if ! backup_file "$config_file"; then
-        log_error "Failed to backup configuration file"
-        return 1
-    fi
-
-    if grep -q "^bind-address" "$config_file"; then
-        sed -i 's/^bind-address.*/bind-address = 0.0.0.0/' "$config_file"
-    else
-        sed -i '/^\[mysqld\]/a bind-address = 0.0.0.0' "$config_file"
-    fi
-
-    if ! grep -q "bind-address = 0.0.0.0" "$config_file"; then
-        log_error "Failed to set bind-address"
-        return 1
-    fi
-
-    # H-MDB-007: escribir innodb_use_native_aio=0 si io_uring no esta disponible.
-    # Hace la opcion persistente para reinicios posteriores del servicio.
-    if ! _mariadb_io_uring_available; then
-        if ! grep -q "innodb_use_native_aio" "$config_file"; then
-            cat >> "$config_file" << 'EOF'
-
-# H-MDB-007: io_uring no disponible en este entorno (Firecracker/contenedor con seccomp)
-# MariaDB 10.11 usa io_uring por defecto para InnoDB AIO. Sin esta opcion, el daemon
-# arranca, reporta "ready for connections" y muere inmediatamente sin mensaje de error.
-innodb_use_native_aio = 0
-EOF
-            log_success "innodb_use_native_aio=0 configurado (io_uring no disponible en este entorno)"
-        else
-            log_info "innodb_use_native_aio ya configurado en ${config_file}"
-        fi
-    else
-        log_debug "io_uring disponible — innodb_use_native_aio no modificado"
-    fi
-
-    if ! restart_service mariadb; then
-        log_error "Failed to restart MariaDB"
-        return 1
-    fi
-
-    if ! mysql_wait_ready 30; then
-        log_error "MariaDB did not restart within 30 seconds"
-        return 1
-    fi
-
-    log_success "MariaDB configured"
-    return 0
-}
-
-# _apply_iact_mariadb_config
-#
-# Crea un symlink de config/mariadb/99-iact.cnf en conf.d/ del sistema.
-# No modifica archivos del sistema directamente — la fuente de verdad es
-# el archivo en el repo.
-#
-# Por qué symlink y no copy (como adminer):
-#   - Los archivos de configuración del sistema deben reflejar el repo
-#     inmediatamente al cambiar, sin re-provisionar.
-#   - MariaDB lee archivos .cnf via el filesystem — un symlink es
-#     transparente para el daemon.
-#   - ln -sf es idempotente: re-ejecutar el provisioner en 1..N servidores
-#     siempre deja el symlink apuntando al repo correcto.
-#
-# Por qué 99-iact.cnf y no 50-server.cnf:
-#   - 50-server.cnf pertenece al paquete mariadb-server. Modificarlo
-#     directamente es incorrecto: puede ser sobreescrito por apt upgrade.
-#   - conf.d/ lee archivos en orden alfabético. El prefijo 99 garantiza
-#     que nuestras opciones tienen precedencia sobre todos los defaults.
-_apply_iact_mariadb_config() {
-    local repo_config="${PROJECT_ROOT}/config/mariadb/99-iact.cnf"
-    local system_link="/etc/mysql/mariadb.conf.d/99-iact.cnf"
-
-    if [[ ! -f "$repo_config" ]]; then
-        log_warn "_apply_iact_mariadb_config: no encontrado ${repo_config} — omitido"
-        return 0
-    fi
-
-    # ln -sf: crea o actualiza el symlink. Idempotente.
-    if ln -sf "$repo_config" "$system_link" 2>/dev/null; then
-        log_success "MariaDB config vinculada: ${system_link} → ${repo_config}"
-    else
-        log_error "No se pudo crear symlink: ${system_link}"
-        log_error "  Ejecutar manualmente: sudo ln -sf ${repo_config} ${system_link}"
-        return 1
-    fi
-
-    # Verificar que MariaDB puede parsear el nuevo archivo (dry-run)
-    if command -v mariadbd &>/dev/null; then
-        if ! mariadbd --defaults-file=/etc/mysql/my.cnf \
-                      --help --verbose 2>&1 \
-                | grep -q "event_scheduler" 2>/dev/null; then
-            log_warn "Advertencia: event_scheduler puede no estar activo hasta el próximo inicio"
-        fi
-    fi
-
-    return 0
-}
-
-# Asegurar la instalacion
-# H-MDB-004: Ubuntu 24.04 usa unix_socket plugin para root@localhost en instalacion fresca.
-# mysql -u root sin password funciona via socket. Despues se establece el password.
-secure_mariadb() {
-    log_info "Securing MariaDB installation"
-
-    # Determinar como conectar a root: socket Unix (instalacion fresca) o password
-    local mysql_root_cmd
-    if mysql -u root -e "SELECT 1;" &>/dev/null 2>&1; then
-        log_debug "secure_mariadb: autenticacion root via unix_socket (sin password)"
-        mysql_root_cmd="mysql -u root"
-    elif mysql -u root -p"${DB_MARIADB_ROOT_PASSWORD}" -e "SELECT 1;" &>/dev/null 2>&1; then
-        log_debug "secure_mariadb: autenticacion root via password"
-        mysql_root_cmd="mysql -u root -p${DB_MARIADB_ROOT_PASSWORD}"
-    else
-        log_error "No se pudo autenticar como root (ni socket ni password)"
-        return 1
-    fi
-
-    # Eliminar usuarios anonimos
-    $mysql_root_cmd -e "DELETE FROM mysql.user WHERE User='';" 2>/dev/null || true
-
-    # Restringir root a conexiones locales
-    $mysql_root_cmd \
-        -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');" \
-        2>/dev/null || true
-
-    # Eliminar BD de prueba
-    $mysql_root_cmd -e "DROP DATABASE IF EXISTS test;" 2>/dev/null || true
-    $mysql_root_cmd \
-        -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';" \
-        2>/dev/null || true
-
-    # Establecer password para root (permite acceso TCP posterior con password)
-    $mysql_root_cmd \
-        -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_MARIADB_ROOT_PASSWORD}';" \
-        2>/dev/null || \
-    $mysql_root_cmd \
-        -e "UPDATE mysql.user SET Password=PASSWORD('${DB_MARIADB_ROOT_PASSWORD}') WHERE User='root';" \
-        2>/dev/null || true
-
-    $mysql_root_cmd -e "FLUSH PRIVILEGES;" 2>/dev/null || {
-        log_error "Failed to flush privileges"
-        return 1
-    }
-
-    log_success "MariaDB secured"
-    return 0
-}
+# Nota: la configuración del servicio (bind-address, AIO, symlink 99-iact.cnf,
+# hardening de root) se realiza en config.sh (capa CONFIG).
+# El aprovisionamiento de la BD se realiza en setup.sh (capa SETUP).
 
 # Verificar que la version instalada es la correcta
 verify_mariadb_version() {

@@ -45,8 +45,8 @@
 #   FULL_SEED=1 SEED_ROWS=50000 sudo bash provisioners/mariadb/schema_historico.sh
 #
 # PREREQUISITOS:
-#   · MariaDB instalado y securizado via provisioners/mariadb/install.sh
-#     (install.sh ejecuta secure_mariadb() que establece password root válida).
+#   · MariaDB instalado y securizado via provisioners/mariadb/config.sh
+#     (config.sh ejecuta _secure_mariadb() que establece password root válida).
 #   · DB_MARIADB_ROOT_PASSWORD en .env corresponde al password actual de root.
 #   · Socket Unix disponible (auto-detectado) O root accesible via TCP:
 #       - Detectado en orden: /run/mysqld/mysqld.sock, /var/run/mysqld/mysqld.sock,

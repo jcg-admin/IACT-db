@@ -26,8 +26,10 @@ main() {
         log_fatal "This script must be run as root"
     fi
 
-    # Validate required variables
-    require_vars POSTGRES_VERSION POSTGRES_PASSWORD
+    # T-2.3 (H-INST-003): POSTGRES_PASSWORD eliminado de require_vars.
+    # set_postgres_password() fue movida a config.sh/_secure_postgres().
+    # install.sh solo necesita POSTGRES_VERSION para instalar el paquete correcto.
+    require_vars POSTGRES_VERSION
 
     # Ensure log directory
     if ! ensure_dir "${PROJECT_ROOT}/logs"; then
@@ -52,11 +54,9 @@ main() {
         return 1
     fi
 
-    # Set PostgreSQL password
-    if ! set_postgres_password; then
-        log_error "Failed to set postgres password"
-        return 1
-    fi
+    # Nota: el hardening (password de postgres) se realiza en config.sh/_secure_postgres().
+    # El orden install → config → setup garantiza que el motor está instalado
+    # antes de configurarlo.
 
     log_success "PostgreSQL installation completed"
     return 0
@@ -255,164 +255,7 @@ install_postgresql() {
     return 0
 }
 
-# Configure PostgreSQL for remote access
-configure_postgresql() {
-    log_info "Configuring PostgreSQL for remote access"
-
-    local pg_hba_conf="/etc/postgresql/${POSTGRES_VERSION}/main/pg_hba.conf"
-    local postgresql_conf="/etc/postgresql/${POSTGRES_VERSION}/main/postgresql.conf"
-
-    # Validate config files exist
-    if ! validate_file_exists "$pg_hba_conf"; then
-        log_error "Config file not found: $pg_hba_conf"
-        return 1
-    fi
-
-    if ! validate_file_exists "$postgresql_conf"; then
-        log_error "Config file not found: $postgresql_conf"
-        return 1
-    fi
-
-    # Configure pg_hba.conf for remote access
-    log_info "Configuring pg_hba.conf for remote access"
-
-    # Backup pg_hba.conf
-    if ! backup_file "$pg_hba_conf"; then
-        log_error "Failed to backup pg_hba.conf"
-        return 1
-    fi
-
-    # H-PG-002: Regla socket Unix para django_user
-    # django_user no existe como usuario del SO — peer auth falla.
-    # Se inserta ANTES de la primera linea "local all all peer".
-    log_info "Configurando autenticacion local por socket Unix para django_user"
-
-    local socket_user="${DB_POSTGRES_USER:-django_user}"
-    local socket_rule="local   all             ${socket_user}                          scram-sha-256"
-
-    if ! grep -qE "^local\s+all\s+${socket_user}\s+scram-sha-256" "$pg_hba_conf"; then
-        # Insertar antes de la primera regla "local all all peer"
-        if grep -qE "^local\s+all\s+all\s+peer" "$pg_hba_conf"; then
-            sed -i "/^local[[:space:]]\+all[[:space:]]\+all[[:space:]]\+peer/i ${socket_rule}" \
-                "$pg_hba_conf"
-        else
-            # Si no existe la linea peer generica, agregar al final del bloque local
-            echo "" >> "$pg_hba_conf"
-            echo "# Socket Unix — autenticacion por password para ${socket_user}" >> "$pg_hba_conf"
-            echo "$socket_rule" >> "$pg_hba_conf"
-        fi
-        log_success "Regla socket Unix agregada para ${socket_user}"
-    else
-        log_info "Regla socket Unix para ${socket_user} ya existe"
-    fi
-
-    # Permitir conexiones desde localhost (loopback) — suficiente para desarrollo local
-    # Para acceso remoto, ajustar POSTGRES_REMOTE_CIDR en .env
-    local remote_cidr="${POSTGRES_REMOTE_CIDR:-127.0.0.1/32}"
-    local remote_rule="host    all             all             ${remote_cidr}         md5"
-
-    if ! grep -q "$remote_cidr" "$pg_hba_conf"; then
-        echo "" >> "$pg_hba_conf"
-        echo "# Allow connections from configured CIDR" >> "$pg_hba_conf"
-        echo "$remote_rule" >> "$pg_hba_conf"
-        log_success "Added remote access rule for ${remote_cidr} to pg_hba.conf"
-    else
-        log_warn "Remote access rule already exists in pg_hba.conf"
-    fi
-
-    # Configure postgresql.conf to listen on all addresses
-    log_info "Configuring postgresql.conf to listen on all addresses"
-
-    # Backup postgresql.conf
-    if ! backup_file "$postgresql_conf"; then
-        log_error "Failed to backup postgresql.conf"
-        return 1
-    fi
-
-    # Set listen_addresses
-    if grep -q "^listen_addresses" "$postgresql_conf"; then
-        sed -i "s/^listen_addresses.*/listen_addresses = '*'/" "$postgresql_conf"
-    elif grep -q "^#listen_addresses" "$postgresql_conf"; then
-        sed -i "s/^#listen_addresses.*/listen_addresses = '*'/" "$postgresql_conf"
-    else
-        echo "listen_addresses = '*'" >> "$postgresql_conf"
-    fi
-
-    # Verify the change was made
-    if ! grep -q "listen_addresses = '\*'" "$postgresql_conf"; then
-        log_error "Failed to set listen_addresses"
-        return 1
-    fi
-
-    log_success "Configuration updated"
-
-    # Restart PostgreSQL to apply changes
-    log_info "Restarting PostgreSQL to apply configuration"
-    if ! restart_service postgresql; then
-        log_error "Failed to restart PostgreSQL"
-        return 1
-    fi
-
-    # Wait for PostgreSQL to be ready again
-    if ! postgres_wait_ready 30; then
-        log_error "PostgreSQL did not restart within 30 seconds"
-        return 1
-    fi
-
-    log_success "PostgreSQL configured for remote access"
-    return 0
-}
-
-# _apply_iact_postgres_config
-#
-# Crea un symlink de config/postgres/99-iact.conf en conf.d/ del sistema.
-# postgresql.conf ya tiene: include_dir = 'conf.d'
-#
-# Misma capa que configure_postgresql() — ambas configuran el servicio del SO,
-# no la base de datos. Movida desde setup.sh para consistencia con MariaDB
-# (donde _apply_iact_mariadb_config vive en install.sh).
-#
-# Fuente de verdad: el repo. El symlink es transparente para PostgreSQL.
-_apply_iact_postgres_config() {
-    local repo_config="${PROJECT_ROOT}/config/postgres/99-iact.conf"
-    local pg_version="${POSTGRES_VERSION:-16}"
-    local conf_d="/etc/postgresql/${pg_version}/main/conf.d"
-    local system_link="${conf_d}/99-iact.conf"
-
-    if [[ ! -f "$repo_config" ]]; then
-        log_warn "_apply_iact_postgres_config: no encontrado ${repo_config} — omitido"
-        return 0
-    fi
-
-    if [[ ! -d "$conf_d" ]]; then
-        log_warn "conf.d no existe en ${conf_d} — omitido"
-        log_warn "  Verificar que postgresql.conf tiene: include_dir = 'conf.d'"
-        return 0
-    fi
-
-    if ln -sf "$repo_config" "$system_link" 2>/dev/null; then
-        log_success "PostgreSQL config vinculada: ${system_link} → ${repo_config}"
-    else
-        log_error "No se pudo crear symlink: ${system_link}"
-        log_error "  Ejecutar manualmente: sudo ln -sf ${repo_config} ${system_link}"
-        return 1
-    fi
-
-    return 0
-}
-
-# Set postgres user password
-set_postgres_password() {
-    log_info "Setting postgres user password"
-
-    # Set password for postgres user
-    if ! sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '${POSTGRES_PASSWORD}';" 2>/dev/null; then
-        log_error "Failed to set postgres password"
-        return 1
-    fi
-
-    log_success "Postgres password set successfully"
-    return 0
-}
-
-# Note: main() is called by bootstrap.sh, not auto-executed
+# Nota: main() es llamado por bootstrap.sh, no se auto-ejecuta.
+# La configuración del servicio (pg_hba.conf, postgresql.conf, symlinks,
+# password de postgres) se realiza en config.sh (capa CONFIG).
+# El aprovisionamiento de la BD se realiza en setup.sh (capa SETUP).
