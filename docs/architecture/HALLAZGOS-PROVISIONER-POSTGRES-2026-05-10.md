@@ -66,7 +66,7 @@ Cada nivel registra su decisión en el log del provisioner:
 ## H-PG-002 — `pg_hba.conf` no configura autenticación por socket Unix
 
 **Severidad:** ALTA — IACT-api producción falla al conectar con `DB_SOCKET`  
-**Estado:** PENDIENTE — requiere corrección en `provisioners/postgres/install.sh`  
+**Estado:** RESUELTO — FASE 1: config.sh/_configure_pg_hba() agrega la regla local scram-sha-256 · commit f4a9e98
 **Archivos:** `provisioners/postgres/install.sh` (`configure_postgresql`), `pg_hba.conf`
 
 ### Problema
@@ -121,7 +121,7 @@ fi
 ## H-PG-003 — Repositorio PGDG hardcodeado para Ubuntu 20.04 (focal)
 
 **Severidad:** MEDIA — errores de apt en Ubuntu 24.04, instalación por repo incorrecto  
-**Estado:** PENDIENTE — requiere corrección en `provisioners/postgres/install.sh`  
+**Estado:** RESUELTO — os_codename dinámico via lsb_release -cs (ya existía en el código)
 **Archivos:** `provisioners/postgres/install.sh` (`add_postgresql_repository`)
 
 ### Problema
@@ -166,7 +166,7 @@ EOF
 ## H-PG-004 — Inconsistencia de nombres de variable entre `bootstrap.sh` y `setup.sh`
 
 **Severidad:** MEDIA — `require_vars` falla al ejecutar `bootstrap.sh` con `.env` canónico  
-**Estado:** PENDIENTE — requiere alineación en `bootstrap.sh` o en `setup.sh`  
+**Estado:** RESUELTO — DB_NAME eliminado; todos los scripts usan DB_POSTGRES_NAME
 **Archivos:** `provisioners/postgres/bootstrap.sh`, `provisioners/postgres/setup.sh`, `.env.example`
 
 ### Problema
@@ -209,7 +209,7 @@ require_vars POSTGRES_VERSION DB_POSTGRES_NAME DB_POSTGRES_USER DB_POSTGRES_PASS
 ## H-PG-005 — `setup.sh` ejecuta `main()` dos veces al ser invocado desde `bootstrap.sh`
 
 **Severidad:** BAJA — doble ejecución, no error por idempotencia  
-**Estado:** PENDIENTE — requiere agregar guard de ejecución directa  
+**Estado:** RESUELTO — BASH_SOURCE guard en setup.sh impide doble ejecución al hacer source
 **Archivos:** `provisioners/postgres/setup.sh`
 
 ### Problema
@@ -251,10 +251,10 @@ que la ejecución ocurre exactamente una vez en ambos casos.
 | ID | Descripción | Severidad | Estado |
 |---|---|---|---|
 | H-PG-001 | `start_service`/`restart_service` sin fallback en contenedor | CRÍTICA | RESUELTO |
-| H-PG-002 | `pg_hba.conf` sin regla `local scram-sha-256` para socket Unix | ALTA | PENDIENTE |
-| H-PG-003 | Repositorio PGDG `focal-pgdg` hardcodeado en Ubuntu 24.04 | MEDIA | PENDIENTE |
-| H-PG-004 | Inconsistencia `DB_NAME` vs `DB_POSTGRES_NAME` en `bootstrap.sh` | MEDIA | PENDIENTE |
-| H-PG-005 | `setup.sh` ejecuta `main()` dos veces desde `bootstrap.sh` | BAJA | PENDIENTE |
+| H-PG-002 | `pg_hba.conf` sin regla `local scram-sha-256` para socket Unix | ALTA | RESUELTO — FASE 1: config.sh/_configure_pg_hba() agrega la regla · commit f4a9e98 |
+| H-PG-003 | Repositorio PGDG `focal-pgdg` hardcodeado en Ubuntu 24.04 | MEDIA | RESUELTO — install.sh usa lsb_release -cs dinámico (os_codename) |
+| H-PG-004 | Inconsistencia `DB_NAME` vs `DB_POSTGRES_NAME` en `bootstrap.sh` | MEDIA | RESUELTO — DB_NAME eliminado; solo DB_POSTGRES_NAME en todos los scripts |
+| H-PG-005 | `setup.sh` ejecuta `main()` dos veces desde `bootstrap.sh` | BAJA | RESUELTO — BASH_SOURCE guard en setup.sh: main() solo cuando es punto de entrada directo |
 
 ---
 

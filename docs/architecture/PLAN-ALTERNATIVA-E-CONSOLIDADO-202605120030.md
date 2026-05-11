@@ -789,4 +789,6 @@ Documentos a actualizar:
 **Archivos nuevos a crear: 2** (adminer/config.sh, docs/referencias/README.md)  
 **Archivos a eliminar del tracking: 2** (adminer.key, adminer.crt de git)  
 **Líneas netas eliminadas: ~360** (282 install.sh + 75 configure_apache)  
-**Baseline final esperado: ≥ 28 OK**
+**Baseline final real: 27 OK** (H-F4-002: la proyección de ≥28 era incorrecta —
+las 2 funciones nuevas se agregan al loop de un check existente, no crean un
+nuevo bloque de verificación. 27 OK es el resultado correcto y verificado.)

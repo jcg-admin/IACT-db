@@ -199,11 +199,11 @@ CALL sp_etl_historico(2026, 2);  -- Q02_26 parcial
 | ID | Hallazgo | Severidad | Estado |
 |---|---|---|---|
 | H-SP2-001 | `etl_runs` tiene nombres de columna distintos al documento | ALTA | DOCUMENTADO |
-| H-SP2-002 | `event_scheduler` está OFF — `evt_etl_diario` nunca dispara | ALTA | PENDIENTE |
+| H-SP2-002 | `event_scheduler` está OFF — `evt_etl_diario` nunca dispara | ALTA | RESUELTO — config/mariadb/99-iact.cnf con event_scheduler=ON; verificado ON |
 | H-SP2-003 | `fn_duracion_seg` definida pero no usada en ningún SP desplegado | MEDIA | DOCUMENTADO |
-| H-SP2-004 | `FLUJO-ETL-V2.1.md` describe incorrectamente `sp_etl_historico` | BAJA | DOCUMENTADO |
-| H-SP2-005 | `verify.sh` no verifica `ivr_contar_dias_semana` ni `ivr_agregar_dias_semana` | BAJA | PENDIENTE |
-| H-SP2-006 | `base_ivr_detalle` y `base_ivr_clientes` vacías — ETL histórico no ejecutado | ALTA | PENDIENTE |
+| H-SP2-004 | `FLUJO-ETL-V2.1.md` describe incorrectamente `sp_etl_historico` | BAJA | RESUELTO — FASE 5: FLUJO-ETL-V2.1.md corregido (H-ARCH-002) · commit 5a48040 |
+| H-SP2-005 | `verify.sh` no verifica `ivr_contar_dias_semana` ni `ivr_agregar_dias_semana` | BAJA | RESUELTO — FASE 4: loop de funciones 5→7 · commit 4ded8ab |
+| H-SP2-006 | `base_ivr_detalle` y `base_ivr_clientes` vacías — ETL histórico no ejecutado | ALTA | RESUELTO — FASE 4: `_run_etl_backfill()` en provision-mariadb.sh PASO 7 (RUN_ETL_BACKFILL=1) · commit 4ded8ab |
 
 ---
 
@@ -235,7 +235,7 @@ no un bug de código.
 ## H-SP2-002 — `event_scheduler` OFF: evt_etl_diario nunca dispara
 
 **Severidad:** ALTA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — event_scheduler=ON (config/mariadb/99-iact.cnf), verificado activo
 
 ```
 event_scheduler: OFF           ← global variable
@@ -302,7 +302,7 @@ a `sp_etl_base_detalle` y `sp_etl_base_clientes`, registrando en
 
 ## H-SP2-005 — verify.sh: cobertura incompleta de funciones
 
-**Estado:** PENDIENTE (mismo hallazgo H-SP-005 del análisis anterior)
+**Estado:** RESUELTO — FASE 4: verify.sh loop 5→7 funciones · commit 4ded8ab
 
 `verify.sh` verifica 5 de 7 funciones desplegadas. Las dos omitidas son
 usadas por `sp_rpt_centros_xsegmento`:
@@ -317,7 +317,7 @@ usadas por `sp_rpt_centros_xsegmento`:
 ## H-SP2-006 — base_ivr_* vacías: backfill pendiente
 
 **Severidad:** ALTA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — FASE 4: `_run_etl_backfill()` en provision-mariadb.sh (RUN_ETL_BACKFILL=1) · commit 4ded8ab
 
 ```
 base_ivr_detalle:   0 registros

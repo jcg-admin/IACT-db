@@ -19,7 +19,7 @@ instalación en N servidores.
 | H-GRANT-005 | `verify.sh` reporta 24/14 en lugar de 12/7 routines (cuenta @localhost + @%) | BAJA | RESUELTO |
 | H-GRANT-006 | `provision-mariadb.sh` sin función `main()` — código ejecutable en cuerpo | ALTA | RESUELTO |
 | H-GRANT-007 | La simulación anterior del job usó `root`, no `django_user` — resultados inválidos | Metodológico | DOCUMENTADO |
-| H-GRANT-008 | `seed_historico_real.sql` referencia `FORCE_RESEED` obsoleto — pendiente archivar | MEDIA | PENDIENTE |
+| H-GRANT-008 | `seed_historico_real.sql` referencia `FORCE_RESEED` obsoleto — pendiente archivar | MEDIA | RESUELTO — FASE 5: archivado en docs/referencias/scripts-sql/historico/ · commit 5a48040 |
 
 ---
 
@@ -204,7 +204,7 @@ es el mismo una vez aplicado el `GRANT EXECUTE` (H-GRANT-001).
 ## H-GRANT-008 — `seed_historico_real.sql` obsoleto
 
 **Severidad:** MEDIA  
-**Estado:** PENDIENTE (H-SP-004 del análisis anterior)
+**Estado:** RESUELTO — FASE 5: archivado en docs/referencias/scripts-sql/historico/ · commit 5a48040
 
 `provisioners/mariadb/seed_historico_real.sql` referencia `FORCE_RESEED`
 y `sp_seed_historico_real` — conceptos eliminados en `seed_historico.sql`

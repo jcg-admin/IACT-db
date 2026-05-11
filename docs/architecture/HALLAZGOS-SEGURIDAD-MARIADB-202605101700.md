@@ -12,9 +12,9 @@
 | ID | Hallazgo | Tipo | Severidad | Estado |
 |---|---|---|---|---|
 | H-SEC-001 | Conclusión inicial "root accesible sin password" era incorrecta | Metodología | — | DOCUMENTADO |
-| H-SEC-002 | `DB_ROOT_SOCK` hardcoded — no configurable desde entorno | Código | MEDIA | PENDIENTE |
-| H-SEC-003 | Root bloqueado para TCP (`authentication_string=invalid`) | Entorno | MEDIA | PENDIENTE |
-| H-SEC-004 | Prerequisito de securización no documentado en `schema_historico.sh` | Documentación | BAJA | PENDIENTE |
+| H-SEC-002 | `DB_ROOT_SOCK` hardcoded — no configurable desde entorno | Código | MEDIA | RESUELTO — FASE 5: MARIADB_SOCK documentada en .env.example; schema_historico.sh ya tenía auto-detección · commit 5a48040 |
+| H-SEC-003 | Root bloqueado para TCP (`authentication_string=invalid`) | Entorno | MEDIA | DOCUMENTADO — comportamiento correcto post _secure_mariadb; documentado en install.sh v2.2.0 (FASE 5) |
+| H-SEC-004 | Prerequisito de securización no documentado en `schema_historico.sh` | Documentación | BAJA | RESUELTO — FASE 2: schema_historico.sh L48-49 actualizado a config.sh (H-F2-004) · commit 8384bab |
 
 ---
 
@@ -86,7 +86,7 @@ root@TCP con pass:   FALLA     (ver H-SEC-003)
 
 **Componente:** `provisioners/mariadb/schema_historico.sh`  
 **Severidad:** MEDIA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — MARIADB_SOCK documentada en .env.example (FASE 5); schema_historico.sh ya tenía auto-detección · commit 5a48040
 
 ### Descripción
 
@@ -158,7 +158,7 @@ DB_ROOT_SOCK="${MARIADB_SOCK:-/run/mysqld/mysqld.sock}"
 
 **Componente:** MariaDB — estado de autenticación de root  
 **Severidad:** MEDIA — el fallback TCP de `schema_historico.sh` es inoperable  
-**Estado:** PENDIENTE — requiere investigación y corrección del estado MariaDB
+**Estado:** DOCUMENTADO — comportamiento correcto: root@TCP bloqueado es el resultado esperado de _secure_mariadb(); documentado en install.sh v2.2.0 (FASE 5)
 
 ### Descripción
 
@@ -237,7 +237,7 @@ aprovisionado con `install.sh` (que ejecuta `secure_mariadb()`). Ver H-SEC-004.
 
 **Componente:** `provisioners/mariadb/schema_historico.sh` — header y documentación  
 **Severidad:** BAJA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — FASE 2: schema_historico.sh L48-49 actualizado a config.sh/_secure_mariadb() · commit 8384bab
 
 ### Descripción
 

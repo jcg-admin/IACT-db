@@ -285,9 +285,9 @@ Si son reales (de un entorno de desarrollo compartido):
 
 | ID | Hallazgo | Severidad | Estado |
 |---|---|---|---|
-| H-ADM-001 | `configure_apache()` en `install.sh` — mezcla CONFIG con INSTALL | MEDIA | PENDIENTE D-ADM-001 |
-| H-ADM-002 | IP `192.168.56.12` hardcodeada en `config/vhost.conf` y `config/vhost_ssl.conf` | ALTA | PENDIENTE D-ADM-002 |
-| H-ADM-003 | `ssl.sh` escribe certificados en `config/certs/` (dentro del repo) — riesgo si se commitea | ALTA | PENDIENTE D-ADM-003 |
-| H-ADM-004 | `bootstrap.sh` de Adminer no tiene paso `adminer_config` — único de los tres provisioners sin la capa separada | MEDIA | PENDIENTE D-ADM-001 |
-| H-ADM-005 | `ADMINER_IP` variable existe y se usa en ssl.sh para el cert, pero no se usa en `vhost.conf` para el ServerAlias | ALTA | PENDIENTE D-ADM-002 |
+| H-ADM-001 | `configure_apache()` en `install.sh` — mezcla CONFIG con INSTALL | MEDIA | RESUELTO — T-3.4 (nuevo config.sh) + T-3.6 (eliminada de install.sh) · commit bb44944 |
+| H-ADM-002 | IP `192.168.56.12` hardcodeada en `config/vhost.conf` y `config/vhost_ssl.conf` | ALTA | RESUELTO — T-3.1 + T-3.2 (placeholder %%ADMINER_IP%% + sed) · commit bb44944 |
+| H-ADM-003 | `ssl.sh` escribe certificados en `config/certs/` (dentro del repo) — riesgo si se commitea | ALTA | RESUELTO — T-3.3 (.gitignore + git rm --cached) · commit bb44944 |
+| H-ADM-004 | `bootstrap.sh` de Adminer no tiene paso `adminer_config` — único de los tres provisioners sin la capa separada | MEDIA | RESUELTO — T-3.5 (paso adminer_config agregado) · commit bb44944 |
+| H-ADM-005 | `ADMINER_IP` variable existe y se usa en ssl.sh para el cert, pero no se usa en `vhost.conf` para el ServerAlias | ALTA | RESUELTO — T-3.1 (%%ADMINER_IP%% reemplaza 192.168.56.12 en vhost.conf) · commit bb44944 |
 | H-ADM-006 | `cp` para certificados es correcto (permisos `/etc/ssl/private`) — no cambiar a symlink | INFO | DOCUMENTADO |

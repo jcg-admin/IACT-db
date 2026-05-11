@@ -572,11 +572,11 @@ creando el mismo problema de separación en otro lenguaje.
 
 | ID | Hallazgo | Severidad | Origen |
 |---|---|---|---|
-| H-INST-001 | `secure_mariadb()` en install.sh — capa incorrecta | ALTA | Este análisis |
-| H-INST-002 | 220 líneas de código muerto en install.sh (configure + _apply_iact) | ALTA | Este análisis |
-| H-INST-003 | `set_postgres_password()` en install.sh — capa incorrecta | ALTA | Este análisis |
+| H-INST-001 | `secure_mariadb()` en install.sh — capa incorrecta | ALTA | RESUELTO — T-1.4 + T-2.6 · commit f4a9e98 + 8384bab |
+| H-INST-002 | 220 líneas de código muerto en install.sh (configure + _apply_iact) | ALTA | RESUELTO — T-2.1..T-2.6 · commit 8384bab |
+| H-INST-003 | `set_postgres_password()` en install.sh — capa incorrecta | ALTA | RESUELTO — T-1.7 + T-2.3 · commit f4a9e98 + 8384bab |
 | H-INST-004 | bootstrap.sh de ambos motores ya tiene la estructura de 4 pasos correcta | INFO | Este análisis |
 | H-INST-005 | 0 archivos nuevos necesarios para implementar Alternativa E | INFO | Este análisis |
-| H-INST-006 | `require_vars` en config.sh debe ampliarse: agregar `POSTGRES_PASSWORD` y `DB_MARIADB_ROOT_PASSWORD` | MEDIA | Este análisis |
-| H-INST-007 | `_secure_postgres()` debe ejecutarse ANTES de `_configure_pg_hba()` porque pg_hba scram-sha-256 requiere que postgres tenga password | ALTA | Este análisis |
-| H-INST-008 | `_secure_mariadb()` debe ejecutarse ANTES de `_configure_mariadb_server()` porque en instalación fresca root usa unix_socket auth — disponible solo antes de que se cambie la config de red | ALTA | Este análisis |
+| H-INST-006 | `require_vars` en config.sh debe ampliarse: agregar `POSTGRES_PASSWORD` y `DB_MARIADB_ROOT_PASSWORD` | MEDIA | RESUELTO — T-1.4 (mariadb) + T-1.7 (postgres) · commit f4a9e98 |
+| H-INST-007 | `_secure_postgres()` debe ejecutarse ANTES de `_configure_pg_hba()` porque pg_hba scram-sha-256 requiere que postgres tenga password | ALTA | RESUELTO — T-1.7 orden implementado correctamente · commit f4a9e98 |
+| H-INST-008 | `_secure_mariadb()` debe ejecutarse ANTES de `_configure_mariadb_server()` porque en instalación fresca root usa unix_socket auth — disponible solo antes de que se cambie la config de red | ALTA | RESUELTO — T-1.4 orden implementado correctamente · commit f4a9e98 |

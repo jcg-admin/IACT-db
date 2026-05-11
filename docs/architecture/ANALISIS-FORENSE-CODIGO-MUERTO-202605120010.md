@@ -414,10 +414,10 @@ Paso 4: verify.sh → 27 OK, 0 ERR (confirmar regresión cero)
 
 | ID | Hallazgo | Severidad | Acción |
 |---|---|---|---|
-| H-DEAD-001 | `backup_file` se omitió en `config.sh` al migrar — archivos del SO se editan sin respaldo | ALTA | Incorporar antes de eliminar |
-| H-DEAD-002 | `mysql_wait_ready(30)` se perdió en `_restart_mariadb()` — siguiente paso puede fallar por conexión no lista | ALTA | Incorporar antes de eliminar |
-| H-DEAD-003 | Verificación de parseo `mariadbd --help` se perdió en `_apply_iact_mariadb_config` — errores de sintaxis en 99-iact.cnf no se detectan | MEDIA | Incorporar antes de eliminar |
-| H-DEAD-004 | Verificación post-edición `listen_addresses` se perdió en `_configure_postgresql_conf` | MEDIA | Incorporar antes de eliminar |
+| H-DEAD-001 | `backup_file` se omitió en `config.sh` al migrar — archivos del SO se editan sin respaldo | ALTA | RESUELTO — T-1.1 (mariadb/config.sh), T-1.5 (postgres/config.sh) · commit f4a9e98 |
+| H-DEAD-002 | `mysql_wait_ready(30)` se perdió en `_restart_mariadb()` — siguiente paso puede fallar por conexión no lista | ALTA | RESUELTO — T-1.2 · commit f4a9e98 |
+| H-DEAD-003 | Verificación de parseo `mariadbd --help` se perdió en `_apply_iact_mariadb_config` — errores de sintaxis en 99-iact.cnf no se detectan | MEDIA | RESUELTO — T-1.3 · commit f4a9e98 |
+| H-DEAD-004 | Verificación post-edición `listen_addresses` se perdió en `_configure_postgresql_conf` | MEDIA | RESUELTO — T-1.6 · commit f4a9e98 |
 | H-DEAD-005 | `POSTGRES_REMOTE_CIDR` con `md5` en install.sh era abstracción incompleta — no documentada en .env.example | INFO | No recuperar — `scram-sha-256` + `0.0.0.0/0` es correcto |
-| H-DEAD-006 | `_apply_iact_postgres_config` es funcionalmente idéntica en install.sh y config.sh | INFO | Eliminar directamente sin incorporar |
+| H-DEAD-006 | `_apply_iact_postgres_config` es funcionalmente idéntica en install.sh y config.sh | INFO | RESUELTO — T-2.2 eliminada directamente · commit 8384bab |
 | H-DEAD-007 | `restart` vs `reload` para PostgreSQL: `pg_ctlcluster reload` en config.sh es la elección correcta (no interrumpe conexiones) | INFO | No recuperar el restart de install.sh |

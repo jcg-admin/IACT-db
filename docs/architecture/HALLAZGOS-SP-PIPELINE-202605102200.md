@@ -17,8 +17,8 @@ y explica por qué los SPs de reporte retornan 0 filas con datos en
 |---|---|---|---|
 | H-SP-001 | El plan referencia `sp_rpt_reportes` — SP que no existe | ERROR en documentación | RESUELTO |
 | H-SP-002 | Los SPs de reporte leen `base_ivr_*`, no `tbl_historico_*` directamente | Arquitectura — no bug | DOCUMENTADO |
-| H-SP-003 | `base_ivr_detalle` y `base_ivr_clientes` tienen 0 registros — ETL no ha corrido | ALTA | PENDIENTE |
-| H-SP-004 | `seed_historico_real.sql` referencia `FORCE_RESEED` y `sp_seed_historico_real` — obsoletos en v3.0.0 | MEDIA | PENDIENTE |
+| H-SP-003 | `base_ivr_detalle` y `base_ivr_clientes` tienen 0 registros — ETL no ha corrido | ALTA | RESUELTO — FASE 4: `_run_etl_backfill()` en provision-mariadb.sh PASO 7 (RUN_ETL_BACKFILL=1) · commit 4ded8ab |
+| H-SP-004 | `seed_historico_real.sql` referencia `FORCE_RESEED` y `sp_seed_historico_real` — obsoletos en v3.0.0 | MEDIA | RESUELTO — FASE 5: archivado en docs/referencias/scripts-sql/historico/ · commit 5a48040 |
 | H-SP-005 | `verify.sh` verifica solo 5 de 7 funciones de utilidad | BAJA | DOCUMENTADO |
 
 ---
@@ -103,7 +103,7 @@ tenga 30K+ registros.
 ## H-SP-003 — `base_ivr_detalle` y `base_ivr_clientes` vacías
 
 **Severidad:** ALTA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — FASE 4: `_run_etl_backfill()` en provision-mariadb.sh (RUN_ETL_BACKFILL=1) · commit 4ded8ab
 
 ### Descripción
 
@@ -148,7 +148,7 @@ esperado en el diseño del sistema.
 ## H-SP-004 — `seed_historico_real.sql` referencia `FORCE_RESEED` obsoleto
 
 **Severidad:** MEDIA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — FASE 5: archivado en docs/referencias/scripts-sql/historico/ · commit 5a48040
 
 ### Descripción
 
