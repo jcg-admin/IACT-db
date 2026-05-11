@@ -50,6 +50,11 @@ main() {
         return 1
     fi
 
+    # Detectar y purgar versión incorrecta antes de instalar
+    if ! _ensure_correct_mariadb_version; then
+        log_fatal "No se pudo asegurar la versión correcta de MariaDB"
+    fi
+
     # Detectar OS
     OS_CODENAME=$(lsb_release -cs 2>/dev/null || echo "noble")
     log_info "OS detectado: $(lsb_release -ds 2>/dev/null) (${OS_CODENAME})"
@@ -79,17 +84,6 @@ main() {
         return 1
     fi
 
-    if ! configure_mariadb; then
-        log_error "Failed to configure MariaDB"
-        return 1
-    fi
-
-    # Vincular config/mariadb/99-iact.cnf al sistema via symlink.
-    # Idempotente — ln -sf es seguro ejecutar N veces.
-    if ! _apply_iact_mariadb_config; then
-        log_warn "IACT config no vinculada — continuar sin event_scheduler=ON"
-    fi
-
     if ! secure_mariadb; then
         log_error "Failed to secure MariaDB"
         return 1
@@ -101,6 +95,63 @@ main() {
     fi
 
     log_success "MariaDB installation completed"
+    return 0
+}
+
+# _ensure_correct_mariadb_version
+#
+# Detecta si hay una versión incorrecta de MariaDB instalada y la purga.
+# apt no hace downgrade automático — si el servidor tiene MariaDB 11.4
+# y se requiere 10.11, la instalación falla sin esta purga previa.
+#
+# Idempotente: si la versión correcta ya está instalada, no hace nada.
+_ensure_correct_mariadb_version() {
+    local target_series="${MARIADB_SERIES}"  # ej: "10.11"
+
+    # Detectar versión instalada
+    local installed_version
+    installed_version=$(mysql --version 2>/dev/null \
+        | grep -oP '\d+\.\d+\.\d+-MariaDB' | head -1)
+
+    if [[ -z "$installed_version" ]]; then
+        log_info "MariaDB no instalado — instalación desde cero"
+        return 0
+    fi
+
+    local installed_series
+    installed_series=$(echo "$installed_version" | grep -oP '^\d+\.\d+')
+
+    log_info "Versión instalada: ${installed_version} (serie ${installed_series})"
+
+    if [[ "$installed_series" == "$target_series" ]]; then
+        log_success "Serie correcta ${target_series} ya instalada — sin cambios"
+        return 0
+    fi
+
+    log_warn "Serie incorrecta: ${installed_series} (se requiere ${target_series})"
+    log_warn "apt no hace downgrade automático — purgando versión incorrecta"
+
+    # Detener el servicio
+    service mariadb stop 2>/dev/null \
+        || systemctl stop mariadb 2>/dev/null \
+        || pkill -f mariadbd 2>/dev/null \
+        || true
+    sleep 2
+
+    # Purgar paquetes de la serie incorrecta
+    DEBIAN_FRONTEND=noninteractive apt-get purge -y \
+        mariadb-server mariadb-client mariadb-common \
+        "mariadb-server-${installed_series}" \
+        "mariadb-client-${installed_series}" \
+        2>/dev/null || true
+
+    # Limpiar archivos de configuración y datos del repo anterior
+    rm -f /etc/apt/sources.list.d/mariadb.list
+    rm -f /etc/apt/preferences.d/mariadb-pin
+    apt-get autoremove -y 2>/dev/null || true
+    apt-get update -qq 2>/dev/null || true
+
+    log_success "Versión incorrecta (${installed_version}) purgada"
     return 0
 }
 

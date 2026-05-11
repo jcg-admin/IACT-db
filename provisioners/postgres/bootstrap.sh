@@ -32,6 +32,12 @@ postgres_install() {
     main
 }
 
+postgres_config() {
+    init_log "postgres_config"
+    source "${PROJECT_ROOT}/provisioners/postgres/config.sh"
+    main
+}
+
 postgres_setup() {
     init_log "postgres_setup"
     source "${PROJECT_ROOT}/provisioners/postgres/setup.sh"
@@ -50,6 +56,7 @@ step_header "PostgreSQL" "PostgreSQL ${POSTGRES_VERSION} Database Server"
 steps=(
     "postgres_system"
     "postgres_install"
+    "postgres_config"
     "postgres_setup"
 )
 

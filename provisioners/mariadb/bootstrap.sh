@@ -32,6 +32,12 @@ mariadb_install() {
     main
 }
 
+mariadb_config() {
+    init_log "mariadb_config"
+    source "${PROJECT_ROOT}/provisioners/mariadb/config.sh"
+    main
+}
+
 mariadb_setup() {
     init_log "mariadb_setup"
     source "${PROJECT_ROOT}/provisioners/mariadb/setup.sh"
@@ -50,6 +56,7 @@ step_header "MariaDB" "MariaDB ${MARIADB_VERSION} Database Server"
 steps=(
     "mariadb_system"
     "mariadb_install"
+    "mariadb_config"
     "mariadb_setup"
 )
 

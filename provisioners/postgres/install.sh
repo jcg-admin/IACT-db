@@ -35,6 +35,11 @@ main() {
         return 1
     fi
 
+    # Detectar y manejar versión incorrecta pre-instalada
+    if ! _ensure_correct_postgres_version; then
+        log_fatal "No se pudo asegurar la versión correcta de PostgreSQL"
+    fi
+
     # Add PostgreSQL repository
     if ! add_postgresql_repository; then
         log_error "Failed to add PostgreSQL repository"
@@ -47,19 +52,6 @@ main() {
         return 1
     fi
 
-    # Configure PostgreSQL for remote access
-    if ! configure_postgresql; then
-        log_error "Failed to configure PostgreSQL"
-        return 1
-    fi
-
-    # Vincular config/postgres/99-iact.conf al sistema via symlink.
-    # Mismo patrón que MariaDB — ambos en install.sh (capa de servicio del SO).
-    # Idempotente — ln -sf es seguro ejecutar N veces.
-    if ! _apply_iact_postgres_config; then
-        log_warn "IACT config no vinculada — continuar sin 99-iact.conf"
-    fi
-
     # Set PostgreSQL password
     if ! set_postgres_password; then
         log_error "Failed to set postgres password"
@@ -67,6 +59,65 @@ main() {
     fi
 
     log_success "PostgreSQL installation completed"
+    return 0
+}
+
+# _ensure_correct_postgres_version
+#
+# Detecta si hay una versión incorrecta de PostgreSQL instalada y la purga
+# antes de instalar la versión correcta.
+#
+# Escenario que resuelve: servidor con PG14 preinstalado, se requiere PG16.
+#   Sin esta función: apt instala PG16 pero PG14 sigue corriendo en el puerto
+#   5432 — PG16 no puede iniciar. Estado inconsistente.
+#   Con esta función: PG14 se detiene y purga antes de instalar PG16.
+#
+# Idempotente: si la versión correcta ya está instalada, no hace nada.
+_ensure_correct_postgres_version() {
+    local target="${POSTGRES_VERSION:-16}"
+
+    local installed
+    installed=$(dpkg -l 'postgresql-[0-9]*' 2>/dev/null \
+        | awk '/^ii/{print $2}' | grep -oP '(?<=postgresql-)\d+' | sort -n)
+
+    if [[ -z "$installed" ]]; then
+        log_info "PostgreSQL no instalado — instalación desde cero"
+        return 0
+    fi
+
+    log_info "Versiones instaladas: $(echo "$installed" | tr '\n' ' ')"
+
+    local wrong=() correct_found=false
+    while IFS= read -r ver; do
+        [[ "$ver" == "$target" ]] && correct_found=true || wrong+=("$ver")
+    done <<< "$installed"
+
+    if $correct_found && [[ ${#wrong[@]} -eq 0 ]]; then
+        log_success "PostgreSQL ${target} ya instalado — sin cambios"
+        return 0
+    fi
+
+    if [[ ${#wrong[@]} -gt 0 ]]; then
+        log_warn "Versiones incorrectas: ${wrong[*]} (se requiere ${target})"
+        for ver in "${wrong[@]}"; do
+            log_info "  Deteniendo postgresql@${ver}..."
+            pg_ctlcluster "${ver}" main stop 2>/dev/null \
+                || systemctl stop "postgresql@${ver}-main" 2>/dev/null \
+                || true
+
+            log_info "  Purgando postgresql-${ver}..."
+            DEBIAN_FRONTEND=noninteractive apt-get purge -y \
+                "postgresql-${ver}" "postgresql-client-${ver}" \
+                "postgresql-contrib-${ver}" 2>/dev/null || true
+
+            [[ -d "/etc/postgresql/${ver}" ]] \
+                && rm -rf "/etc/postgresql/${ver}" \
+                && log_info "  Configuración huérfana /etc/postgresql/${ver} eliminada"
+        done
+        apt-get autoremove -y 2>/dev/null || true
+        log_success "Versiones incorrectas purgadas"
+    fi
+
     return 0
 }
 
