@@ -11,6 +11,41 @@
 # Requisitos: Ubuntu 22.04/24.04 o Debian 12+, acceso root
 # Idempotente: se puede ejecutar N veces sin efectos adversos
 # =============================================================================
+#
+# =============================================================================
+# INVENTARIO DE PAQUETES DEL SISTEMA — H-PKG-003 (decisión: Opción A)
+# =============================================================================
+# Los paquetes apt están declarados en cada provisioner (diseño autocontenido).
+# Este inventario es solo para visibilidad — la fuente de verdad son los
+# install.sh de cada provisioner.
+#
+# MariaDB (provisioners/mariadb/install.sh):
+#   prereqs del repositorio: software-properties-common, dirmngr,
+#                             apt-transport-https, curl, gpg
+#   motor: mariadb-server, mariadb-client (versión pinada via MARIADB_VERSION)
+#
+# PostgreSQL (provisioners/postgres/install.sh):
+#   motor: postgresql-${POSTGRES_VERSION}, postgresql-contrib-${POSTGRES_VERSION}
+#
+# Adminer (provisioners/adminer/install.sh):
+#   web server: apache2
+#   PHP (via ondrej/php PPA): php7.4, libapache2-mod-php7.4, php7.4-mysql,
+#                              php7.4-pgsql, php7.4-mbstring, php7.4-xml,
+#                              php7.4-curl, php7.4-zip
+#   prereqs del PPA: software-properties-common
+#
+# Clientes para CI (scripts/install-clients.sh):
+#   mariadb-client, postgresql-client,
+#   libpq-dev (compilar psycopg2), default-libmysqlclient-dev (compilar mysqlclient)
+#
+# Paquete compartido: software-properties-common (mariadb + adminer)
+# apt lo maneja como idempotente — no falla si ya está instalado.
+#
+# Decisión H-PKG-003: Opción A (patrón actual, provisioners autocontenidos).
+# Opción B (config/packages/*.txt) se descartó: 3 servicios, ~17 paquetes,
+# 1 compartido — la indirección agrega mantenimiento sin beneficio proporcional.
+# Revisar si el proyecto supera 5 servicios con paquetes compartidos.
+# =============================================================================
 
 set -euo pipefail
 
