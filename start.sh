@@ -58,8 +58,18 @@ start_mariadb() {
     if command -v service &>/dev/null; then
         log_debug "start_mariadb: intentando via service"
         if service mariadb start 2>/dev/null; then
-            log_info "start_mariadb: iniciado via service"
-            started=true
+            # H-SRV-002 (2026-05-10): verificar persistencia 2s después del arranque.
+            # En contenedores sin systemd, service mariadb start retorna 0 aunque el
+            # proceso muera inmediatamente. Sin esta verificación, started=true pero
+            # mariadb_wait_ready espera 30s antes de detectar el problema.
+            # Ref: HALLAZGOS-PROVISIONAMIENTO-202605101945.md H-PROV-001
+            sleep 2
+            if mariadb_is_running; then
+                log_info "start_mariadb: iniciado via service (persistencia OK)"
+                started=true
+            else
+                log_warn "start_mariadb: service arrancó pero el proceso no persistió — continuando cadena"
+            fi
         else
             log_debug "start_mariadb: service fallo — continuando cadena"
         fi
@@ -68,8 +78,14 @@ start_mariadb() {
     if ! $started && command -v systemctl &>/dev/null; then
         log_debug "start_mariadb: intentando via systemctl"
         if systemctl start mariadb 2>/dev/null; then
-            log_info "start_mariadb: iniciado via systemctl"
-            started=true
+            # Misma verificación de persistencia para systemctl
+            sleep 2
+            if mariadb_is_running; then
+                log_info "start_mariadb: iniciado via systemctl (persistencia OK)"
+                started=true
+            else
+                log_warn "start_mariadb: systemctl arrancó pero el proceso no persistió — continuando cadena"
+            fi
         else
             log_debug "start_mariadb: systemctl fallo — continuando cadena"
         fi
