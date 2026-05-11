@@ -18,9 +18,70 @@ gestionar configuración del SO. Esas son responsabilidades de capas distintas.
 
 ## H-ARCH-003 — `install.sh` mezcla instalación de paquetes con configuración del SO
 
-**Estado:** DECISIÓN TOMADA — ver resolución al final de esta sección
+**Estado:** RESUELTO — commit `21eb26e`
 
-### Arquitectura actual (post commit 7f279bc)
+### Problema concreto (no hipotético)
+
+El escenario que forzó la implementación inmediata:
+
+**Servidor con PostgreSQL 14 preinstalado, se requiere 16:**
+```
+install.sh instalaba PG16 pero PG14 seguía corriendo en puerto 5432
+→ PG16 no podía iniciar → estado inconsistente
+```
+
+**Servidor con MariaDB 11.4 preinstalado, se requiere 10.11:**
+```
+apt no hace downgrade automático
+→ la instalación fallaba con error sin mensaje claro
+```
+
+### Arquitectura implementada
+
+```
+bootstrap.sh
+    └── postgres/bootstrap.sh
+            ├── postgres_system()   → utils/system.sh         (paquetes base SO)
+            │
+            ├── postgres_install()  → provisioners/postgres/install.sh
+            │       _ensure_correct_postgres_version()  ← detecta y purga si incorrecta
+            │       add_postgresql_repository()
+            │       install_postgresql()
+            │       set_postgres_password()
+            │       SIN configure_postgresql — SIN symlinks
+            │
+            ├── postgres_config()   → provisioners/postgres/config.sh  [NUEVO]
+            │       _configure_pg_hba()         ← pg_hba.conf
+            │       _configure_postgresql_conf() ← listen_addresses
+            │       _apply_iact_postgres_config() ← symlink 99-iact.conf
+            │       _reload_postgresql()
+            │
+            └── postgres_setup()    → provisioners/postgres/setup.sh
+                    CREATE USER, DATABASE, GRANT, EXTENSION (solo BD)
+```
+
+### Por qué esto importa en N servidores
+
+Ahora cada script tiene una responsabilidad única y se puede ejecutar
+independientemente:
+
+| Script | Se puede ejecutar solo | Precondición |
+|---|---|---|
+| `install.sh` | Sí | Sistema operativo limpio |
+| `config.sh` | Sí | Motor instalado y arrancado |
+| `setup.sh` | Sí | Servicio configurado y accesible |
+
+Si el servidor tiene el motor correcto pero configuración rota:
+```bash
+sudo bash provisioners/postgres/config.sh   # solo reconfigura — no reinstala
+```
+
+Si el servidor tiene versión incorrecta:
+```bash
+sudo bash provisioners/postgres/install.sh  # purga + instala versión correcta
+sudo bash provisioners/postgres/config.sh   # configura el servicio
+sudo bash provisioners/postgres/setup.sh    # provisionamiento de BD
+```
 
 ```
 bootstrap.sh
