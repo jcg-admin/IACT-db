@@ -1,9 +1,140 @@
 # Hallazgo — Separación de responsabilidades en los provisioners
 
-**Versión:** 1.0.0  
-**Fecha:** 2026-05-11  
+**Versión:** 2.0.0  
+**Fecha original:** 2026-05-11  
+**Fecha actualización:** 2026-05-11 (tras commit 7f279bc y decisión de equipo)  
 **Contexto:** Análisis de donde deben declararse los paquetes del sistema
 en respuesta a la pregunta "¿pero no en el provisioner se aprovisiona la BD?"
+
+---
+
+## El punto central
+
+La pregunta del usuario es correcta: el **provisioner** de una base de datos
+debería aprovisionar la base de datos — no instalar software del sistema ni
+gestionar configuración del SO. Esas son responsabilidades de capas distintas.
+
+---
+
+## H-ARCH-003 — `install.sh` mezcla instalación de paquetes con configuración del SO
+
+**Estado:** DECISIÓN TOMADA — ver resolución al final de esta sección
+
+### Arquitectura actual (post commit 7f279bc)
+
+```
+bootstrap.sh
+    └── postgres/bootstrap.sh
+            ├── postgres_system()   → utils/system.sh
+            │       apt install curl, wget, git, ca-certificates...  (paquetes base)
+            │
+            ├── postgres_install()  → provisioners/postgres/install.sh
+            │       apt install postgresql-16                         (motor BD)
+            │       apt install postgresql-contrib-16                 (extensiones BD)
+            │       configure_postgresql():
+            │           editar pg_hba.conf                           ← config del SO
+            │           agregar regla scram-sha-256                  ← config del SO
+            │       _apply_iact_postgres_config():
+            │           ln -sf config/postgres/99-iact.conf          ← config del SO
+            │
+            └── postgres_setup()    → provisioners/postgres/setup.sh
+                    CREATE USER django_user                           (aprovisionar BD)
+                    CREATE DATABASE iact_analytics                    (aprovisionar BD)
+                    GRANT privileges                                  (aprovisionar BD)
+                    CREATE EXTENSION uuid-ossp, pg_trgm...           (aprovisionar BD)
+```
+
+El symlink de `99-iact.conf` fue movido de `setup.sh` a `install.sh` en el
+commit `7f279bc` para simetría con MariaDB. `setup.sh` ahora contiene
+únicamente operaciones de base de datos.
+
+### El problema original (parcialmente resuelto)
+
+~~`install.sh` hace dos cosas distintas:~~  
+~~1. Instala los paquetes del sistema (correcto — es "install")~~  
+~~2. Configura `pg_hba.conf` (incorrecto — es configuración del SO, no instalación)~~  
+
+~~`setup.sh` también tiene una responsabilidad mezclada:~~  
+~~2. Crea el symlink de `config/postgres/99-iact.conf` (configuración del SO)~~  
+
+El punto 2 de `setup.sh` fue corregido. `install.sh` sigue conteniendo
+`configure_postgresql()` junto con la instalación de paquetes.
+
+### Resolución y decisión tomada
+
+El patrón que sigue el proyecto es:
+
+```
+install.sh  = instalar el motor + configurar el servicio del SO
+setup.sh    = aprovisionar la base de datos
+```
+
+Este patrón es **coherente y válido** para el proyecto actual. Los argumentos:
+
+**Por qué `configure_postgresql()` pertenece en `install.sh`:**
+
+1. `pg_hba.conf` es configuración del **servicio PostgreSQL** — define quién
+   puede conectarse y cómo. Sin esta configuración el servicio no es utilizable.
+   Es parte del proceso de "dejar el servicio listo", no de "crear la BD".
+
+2. MariaDB sigue el mismo patrón: `configure_mariadb()` edita `50-server.cnf`
+   (bind-address) desde `install.sh`. La simetría entre los dos provisioners
+   es más valiosa que la pureza teórica de capas.
+
+3. En la práctica del proyecto, `bootstrap.sh` siempre ejecuta los tres pasos
+   en orden (`system → install → setup`). No hay escenario de uso actual donde
+   se ejecute `setup.sh` en un servidor con PostgreSQL pre-instalado.
+
+**Cuándo revisar esta decisión:**
+
+Si el proyecto crece a necesitar un modo "configure-only" (servidor con
+PostgreSQL pre-instalado, solo configurar auth y crear BD sin instalar
+paquetes), entonces sí tiene sentido extraer una capa `config.sh` entre
+`install.sh` y `setup.sh`. Mientras ese escenario no exista, el refactoring
+no aporta valor neto.
+
+---
+
+## H-ARCH-004 — `postgresql-contrib` pertenece en `install.sh`, no en `config/`
+
+**Estado:** CONFIRMADO — ubicación actual es correcta
+
+`postgresql-contrib` instala las extensiones del motor de PostgreSQL
+(uuid-ossp, pg_trgm, hstore, citext). Es un paquete apt del sistema
+operativo, no un archivo de configuración ni un objeto de la BD.
+
+**Jerarquía de responsabilidades — estado actual:**
+
+| Artefacto | Tipo | Capa | Ubicación | Estado |
+|---|---|---|---|---|
+| `postgresql-16` | Paquete SO — motor | Instalación | `install.sh` | Correcto |
+| `postgresql-contrib-16` | Paquete SO — extensiones | Instalación | `install.sh` | Correcto |
+| `pg_hba.conf` | Config del servicio | Instalación + config SO | `install.sh` | Decisión aceptada |
+| `config/postgres/99-iact.conf` | Config del proyecto | Config SO | symlink desde `install.sh` | Correcto (corregido 7f279bc) |
+| `CREATE USER django_user` | Objeto BD | Provisionar BD | `setup.sh` | Correcto |
+| `CREATE EXTENSION uuid-ossp` | Objeto BD | Provisionar BD | `setup.sh` | Correcto |
+
+---
+
+## Propuesta de refactoring — diferida
+
+Las opciones A y B documentadas originalmente quedan diferidas hasta que
+exista el escenario "servidor con servicio pre-instalado".
+
+La opción B (capa `config.sh` explícita) sigue siendo la arquitectura
+correcta a largo plazo — se implementará cuando el costo del refactoring
+esté justificado por el escenario que lo requiere.
+
+---
+
+## Resumen de estados
+
+| ID | Hallazgo | Estado |
+|---|---|---|
+| H-ARCH-003 | `install.sh` mezcla instalación con config del SO | DECISIÓN: patrón válido para el proyecto actual. Revisable cuando exista escenario "configure-only". |
+| H-ARCH-004 | `postgresql-contrib` correctamente en `install.sh` | CONFIRMADO |
+| — | Symlink `99-iact.conf` estaba en `setup.sh` | RESUELTO — commit 7f279bc |
+
 
 ---
 
