@@ -1,6 +1,6 @@
 #!/bin/bash
 # install.sh
-# MariaDB installation script — version 2.1.0
+# MariaDB installation script — version 2.2.0
 #
 # CAMBIOS v2.0.0 (2026-05-07):
 #   - MARIADB_VERSION corregida a 10.11 en .env/.env.example
@@ -18,6 +18,44 @@
 #               si no esta disponible (Firecracker, contenedores con seccomp)
 #   - H-MDB-008: install_mariadb() verifica ibdata1 y ejecuta mysql_install_db si ausente
 #   - apt-get update antes de instalar para resolver 404 por indice obsoleto
+#
+# CAMBIOS v2.2.0 (2026-05-11) — FASE 2 plan Alternativa E:
+#   - T-2.6 (H-INST-001): secure_mariadb() movida a config.sh/_secure_mariadb()
+#     install.sh ahora es puro INSTALL: _ensure_correct_mariadb_version,
+#     add_mariadb_repository, pin_mariadb_series, install_mariadb, verify_mariadb_version
+#
+# =============================================================================
+# EFECTOS POST-INSTALACIÓN ejecutados por config.sh/_secure_mariadb()
+# =============================================================================
+# T-5.2 (H-SEC-002, H-SEC-003): la securización ocurre en config.sh (capa CONFIG),
+# no aquí. Se documenta en install.sh porque el operador que instala MariaDB
+# debe conocer el estado resultante del sistema.
+#
+# _secure_mariadb() ejecuta el equivalente de mysql_secure_installation:
+#
+#   1. Usuarios anónimos eliminados:
+#      DELETE FROM mysql.user WHERE User=''
+#      → Las conexiones sin credenciales son rechazadas
+#
+#   2. root@TCP bloqueado:
+#      DELETE FROM mysql.user WHERE User='root'
+#        AND Host NOT IN ('localhost','127.0.0.1','::1')
+#      → root solo puede conectarse via socket Unix o loopback
+#      → Los scripts del proyecto usan socket Unix exclusivamente
+#      → El fallback TCP de schema_historico.sh nunca se activa
+#        en entornos securizados: es el comportamiento correcto
+#
+#   3. Base de datos 'test' eliminada:
+#      DROP DATABASE IF EXISTS test
+#      DELETE FROM mysql.db WHERE Db='test' OR Db='test\_%'
+#
+#   4. Password de root establecido:
+#      ALTER USER 'root'@'localhost'
+#        IDENTIFIED BY '${DB_MARIADB_ROOT_PASSWORD}'
+#      → Autenticación unix_socket sigue funcionando (Ubuntu 24.04)
+#      → Además requiere password para conexiones TCP al loopback
+#
+# =============================================================================
 
 set -euo pipefail
 

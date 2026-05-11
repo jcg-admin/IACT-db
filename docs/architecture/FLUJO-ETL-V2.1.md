@@ -236,10 +236,13 @@ class Command(BaseCommand):
         quarter = options.get('quarter') or self._calcular_quarter_actual()
 
         # 1. Registrar inicio con timeout_at
+        # H-ARCH-002: columnas reales de etl_runs:
+        #   inicio_at (no iniciado_en), status (no estado),
+        #   trigger_source (no ejecutado_por)
         with connections['ivr'].cursor() as c:
             c.execute("""
                 INSERT INTO etl_runs
-                    (trimestre, iniciado_en, timeout_at, estado, ejecutado_por)
+                    (trimestre, inicio_at, timeout_at, status, trigger_source)
                 VALUES (%s, NOW(), DATE_ADD(NOW(), INTERVAL 30 MINUTE),
                         'en_ejecucion', %s)
             """, [quarter, f'management_command'])
@@ -266,28 +269,32 @@ class Command(BaseCommand):
 
     def _heartbeat(self, run_id, stop_event):
         """Marca como timeout si el SP lleva mas de 30 min sin responder."""
-        while not stop_event.wait(timeout=120):   # check cada 2 min
+        # H-ARCH-002: intervalo corregido a 60s (schema heartbeat_at COMMENT).
+        # Columnas: status (no estado), fin_at (no finalizado_en),
+        #           error_message (no mensaje_error)
+        while not stop_event.wait(timeout=60):    # check cada 60s
             try:
                 with connections['ivr'].cursor() as c:
                     c.execute("""
                         UPDATE etl_runs
-                        SET estado='timeout',
-                            finalizado_en=NOW(),
-                            mensaje_error='Sin respuesta > 30 min'
+                        SET status='timeout',
+                            fin_at=NOW(),
+                            error_message='Sin respuesta > 30 min'
                         WHERE id=%s
-                          AND estado='en_ejecucion'
+                          AND status='en_ejecucion'
                           AND timeout_at < NOW()
                     """, [run_id])
             except Exception:
                 pass
 
-    def _update_run(self, run_id, estado, error=None):
+    def _update_run(self, run_id, status, error=None):
+        # H-ARCH-002: columnas corregidas: status, fin_at, error_message
         with connections['ivr'].cursor() as c:
             c.execute("""
                 UPDATE etl_runs
-                SET estado=%s, finalizado_en=NOW(), mensaje_error=%s
+                SET status=%s, fin_at=NOW(), error_message=%s
                 WHERE id=%s
-            """, [estado, error, run_id])
+            """, [status, error, run_id])
 ```
 
 ---
@@ -540,19 +547,23 @@ CREATE TABLE base_ivr_clientes (
 CREATE TABLE etl_runs (
     id                  INT AUTO_INCREMENT PRIMARY KEY,
     trimestre           VARCHAR(20)  NOT NULL,
-    iniciado_en         DATETIME     NOT NULL,
-    finalizado_en       DATETIME     DEFAULT NULL,
-    timeout_at          DATETIME     NOT NULL  COMMENT 'Heartbeat marca TIMEOUT si sigue RUNNING despues de esto',
-    estado              ENUM('en_ejecucion','exitoso','fallido','timeout','skip')
+    -- H-ARCH-002: columnas corregidas 2026-05-11
+    inicio_at           DATETIME     NOT NULL,
+    fin_at              DATETIME     DEFAULT NULL,
+    timeout_at          DATETIME     NOT NULL  COMMENT 'Fecha/hora limite. Si sigue en en_ejecucion despues → timeout.',
+    heartbeat_at        DATETIME     DEFAULT NULL
+                        COMMENT 'Actualizado cada 60s por el thread de heartbeat de run_etl.py',
+    status              ENUM('en_ejecucion','success','failed','timeout','skip')
                         NOT NULL DEFAULT 'en_ejecucion',
     registros_detalle   INT          DEFAULT 0,
     registros_clientes  INT          DEFAULT 0,
-    mensaje_error       TEXT         DEFAULT NULL,
-    ejecutado_por       VARCHAR(100) DEFAULT 'scheduler',
+    error_message       TEXT         DEFAULT NULL,
+    trigger_source      VARCHAR(100) DEFAULT 'django_command'
+                        COMMENT 'django_command | evt_etl_diario | manual',
 
-    KEY idx_estado_inicio (estado, iniciado_en DESC),
+    KEY idx_status_inicio (status, inicio_at DESC),
     KEY idx_trimestre     (trimestre),
-    KEY idx_timeout       (estado, timeout_at)  COMMENT 'Usado por el heartbeat'
+    KEY idx_timeout       (status, timeout_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
@@ -846,8 +857,11 @@ Frontend — consume JSON directamente sin post-procesamiento
 
 ```sql
 -- Ejecutar una sola vez para poblar los quarters historicos.
--- sp_etl_historico habilita temporalmente etl_historico en job_config,
--- corre el ETL, y deshabilita el job al terminar.
+-- sp_etl_historico(p_year INT, p_quarter_num INT):
+--   Escribe en job_execution_log (NO toca job_config).
+--   Flujo interno: sp_etl_base_detalle → SLEEP(5) →
+--                  sp_etl_base_clientes → sp_etl_validar
+--   H-ARCH-002: corregido 2026-05-11 — descripción anterior incorrecta.
 
 CALL sp_etl_historico(2025, 1);   -- Q01_25  ~11.6M filas reales  ~9 min
 CALL sp_etl_historico(2025, 2);   -- Q02_25  ~13.6M filas reales  ~10 min
