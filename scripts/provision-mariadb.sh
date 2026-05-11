@@ -254,12 +254,15 @@ _run_etl_backfill() {
     log_info "Iniciando backfill ETL para quarters disponibles..."
 
     # Detectar qué tablas tbl_historico_ existen
+    # Fix set-e-cmd-sub: || true porque si sql_exec_query falla (DB no responde),
+    # hist_tables queda vacío y el if -z lo detecta con un mensaje claro.
+    # Sin || true: set -e mataría el script aquí sin mensaje de error.
     local hist_tables
     hist_tables=$(sql_exec_query \
         "SELECT TABLE_NAME FROM information_schema.TABLES
          WHERE TABLE_SCHEMA='${DB}'
          AND TABLE_NAME LIKE 'tbl_historico_t%'
-         ORDER BY TABLE_NAME;")
+         ORDER BY TABLE_NAME;") || true
 
     if [[ -z "$hist_tables" ]]; then
         log_warn "  No se encontraron tablas tbl_historico_* — backfill omitido"
@@ -279,9 +282,11 @@ _run_etl_backfill() {
         [[ -z "$tbl" ]] && continue
 
         # Extraer quarter_num y year del nombre: tbl_historico_t{Q}_{YYYY}
+        # Fix set-e-cmd-sub: grep retorna exit 1 si no hay match.
+        # Con set -e, sin || true el script moriría antes de llegar al if -z.
         local quarter_num year_val
-        quarter_num=$(echo "$tbl" | grep -oP '(?<=tbl_historico_t)\d(?=_)')
-        year_val=$(echo    "$tbl" | grep -oP '\d{4}$')
+        quarter_num=$(echo "$tbl" | grep -oP '(?<=tbl_historico_t)\d(?=_)') || true
+        year_val=$(echo    "$tbl" | grep -oP '\d{4}$') || true
 
         if [[ -z "$quarter_num" || -z "$year_val" ]]; then
             log_warn "  No se pudo parsear quarter/year de: ${tbl} — omitido"
@@ -291,17 +296,21 @@ _run_etl_backfill() {
 
         log_info "  ETL: Q${quarter_num}/${year_val} (tabla: ${tbl})"
 
-        local result
+        # Fix set-e-cmd-sub: el patrón VAR=$(cmd) / local rc=$? tiene un bug
+        # crítico con set -e. Si cmd falla, set -e mata el script en la línea
+        # result=$(cmd) — el 'local rc=$?' y el 'if [[ $rc -eq 0 ]]' son dead code.
+        # Patrón correcto: && rc=0 || rc=$? previene que set -e actúe porque
+        # el || convierte el error en "expresión evaluada", no en "fallo de comando".
+        local result rc
         result=$(sql_exec_query \
             "CALL sp_etl_historico(${year_val}, ${quarter_num});" \
-            "${DB}" 2>&1)
+            "${DB}" 2>&1) && rc=0 || rc=$?
 
-        local rc=$?
         if [[ $rc -eq 0 ]]; then
             log_success "  Q${quarter_num}/${year_val}: OK — ${result}"
             (( ++backfill_ok )) || true
         else
-            log_error "  Q${quarter_num}/${year_val}: FALLO"
+            log_error "  Q${quarter_num}/${year_val}: FALLO (rc=${rc})"
             log_error "  ${result}"
             (( ++backfill_err )) || true
         fi
