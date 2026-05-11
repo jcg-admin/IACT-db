@@ -33,6 +33,42 @@ ENV_FILE="${PROJECT_ROOT}/.env"
 [[ -f "$ENV_FILE" ]] && { set -a; source "$ENV_FILE"; set +a; }
 
 # ---------------------------------------------------------------------------
+# _secure_postgres
+#
+# Hardening del motor recién instalado: establece el password del
+# superusuario 'postgres' del sistema (creado por apt install postgresql).
+#
+# T-1.7 (H-INST-003, H-INST-007):
+#   set_postgres_password() vivía en install.sh — capa INSTALL, no CONFIG.
+#   Se mueve aquí porque actúa sobre un usuario del motor del sistema,
+#   no sobre paquetes apt.
+#
+#   H-INST-007: debe ejecutarse ANTES de _configure_pg_hba().
+#   pg_hba.conf con scram-sha-256 requiere que el usuario 'postgres'
+#   tenga password configurado. Si se configura pg_hba primero y luego
+#   se intenta conectar antes de tener password, la autenticación falla.
+#
+# Idempotente: ALTER USER no falla si el password ya es el mismo.
+# Variable requerida: POSTGRES_PASSWORD (superusuario del sistema postgres,
+#   distinto de DB_POSTGRES_PASSWORD que es el password de django_user).
+# ---------------------------------------------------------------------------
+_secure_postgres() {
+    log_info "  Configurando password del superusuario postgres del sistema..."
+
+    if sudo -u postgres psql \
+        -c "ALTER USER postgres WITH PASSWORD '${POSTGRES_PASSWORD}';" \
+        2>/dev/null; then
+        log_success "  Password del superusuario postgres configurado"
+    else
+        log_error "  No se pudo configurar el password de postgres"
+        log_error "  Verificar: POSTGRES_PASSWORD en .env"
+        return 1
+    fi
+
+    return 0
+}
+
+# ---------------------------------------------------------------------------
 # _configure_pg_hba
 #
 # Agrega las reglas de autenticación necesarias en pg_hba.conf:
@@ -53,6 +89,15 @@ _configure_pg_hba() {
     fi
 
     log_info "  pg_hba.conf: ${pg_hba}"
+
+    # T-1.5 (H-DEAD-001): crear backup antes de editar.
+    # configure_postgresql() en install.sh hacía backup_file(pg_hba.conf) —
+    # se omitió al crear config.sh.
+    if ! backup_file "$pg_hba"; then
+        log_warn "  No se pudo crear backup de ${pg_hba} — continuando"
+    else
+        log_info "  Backup creado antes de editar pg_hba.conf"
+    fi
 
     # Regla socket Unix para django_user (scram-sha-256)
     local socket_rule="local   all             ${socket_user}                          scram-sha-256"
@@ -100,11 +145,31 @@ _configure_postgresql_conf() {
         return 1
     fi
 
+    # T-1.5 (H-DEAD-001): crear backup antes de editar.
+    # configure_postgresql() en install.sh hacía backup_file(postgresql.conf) —
+    # se omitió al crear config.sh.
+    if ! backup_file "$pg_conf"; then
+        log_warn "  No se pudo crear backup de ${pg_conf} — continuando"
+    else
+        log_info "  Backup creado antes de editar postgresql.conf"
+    fi
+
     # Habilitar listen_addresses para acceso remoto
     if grep -q "^#listen_addresses\|^listen_addresses" "$pg_conf"; then
         sed -i "s/^#*listen_addresses\s*=.*/listen_addresses = '*'/" "$pg_conf"
         log_info "  listen_addresses = '*' configurado"
     fi
+
+    # T-1.6 (H-DEAD-004): verificar que el cambio quedó aplicado.
+    # configure_postgresql() en install.sh verificaba listen_addresses tras editar —
+    # se omitió al crear config.sh. Sin verificación, un fallo silencioso del sed
+    # deja PostgreSQL escuchando solo en localhost sin mensaje de error.
+    if ! grep -q "^listen_addresses = '\*'" "$pg_conf"; then
+        log_error "  listen_addresses no quedó configurado correctamente"
+        log_error "  Verificar manualmente: grep listen_addresses ${pg_conf}"
+        return 1
+    fi
+    log_success "  listen_addresses = '*' verificado en postgresql.conf"
 
     return 0
 }
@@ -167,7 +232,9 @@ main() {
         log_fatal "Este script debe ejecutarse como root (sudo)"
     fi
 
-    require_vars POSTGRES_VERSION DB_POSTGRES_USER
+    # T-1.7 (H-INST-006): agregar POSTGRES_PASSWORD a require_vars.
+    # _secure_postgres() lo necesita para ALTER USER postgres.
+    require_vars POSTGRES_VERSION DB_POSTGRES_USER POSTGRES_PASSWORD
 
     local pg_version="${POSTGRES_VERSION:-16}"
     log_info "Versión objetivo: PostgreSQL ${pg_version}"
@@ -178,20 +245,28 @@ main() {
         log_fatal "PostgreSQL ${pg_version} no está instalado. Ejecutar primero: bash install.sh"
     fi
 
-    log_step 1 3 "pg_hba.conf — autenticación"
+    # T-1.7 (H-INST-003, H-INST-007): PASO 0 — hardening del motor.
+    # Se ejecuta ANTES de _configure_pg_hba porque scram-sha-256 en
+    # pg_hba.conf requiere que el usuario 'postgres' tenga password.
+    log_step 1 4 "Hardening del motor (password superusuario postgres)"
+    if ! _secure_postgres; then
+        log_fatal "No se pudo securizar PostgreSQL"
+    fi
+
+    log_step 2 4 "pg_hba.conf — autenticación"
     if ! _configure_pg_hba; then
         log_fatal "No se pudo configurar pg_hba.conf"
     fi
     log_success "pg_hba.conf configurado"
 
-    log_step 2 3 "postgresql.conf — acceso remoto"
+    log_step 3 4 "postgresql.conf — acceso remoto"
     if ! _configure_postgresql_conf; then
         log_warn "postgresql.conf no pudo configurarse — continuando"
     else
         log_success "postgresql.conf configurado"
     fi
 
-    log_step 3 3 "Config IACT (symlink 99-iact.conf)"
+    log_step 4 4 "Config IACT (symlink 99-iact.conf)"
     if ! _apply_iact_postgres_config; then
         log_warn "99-iact.conf no vinculado — continuando"
     fi
