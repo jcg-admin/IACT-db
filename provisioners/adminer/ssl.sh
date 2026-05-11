@@ -333,16 +333,26 @@ configure_ssl_vhost() {
         return 1
     fi
 
-    # Copy template to sites-available
-    log_info "Creating SSL VirtualHost configuration"
-    if ! cp "$ssl_template" "$ssl_vhost_config"; then
-        log_error "Failed to copy SSL VirtualHost configuration"
+    # H-F3-001 (T-3.2): vhost_ssl.conf ahora contiene el placeholder %%ADMINER_IP%%.
+    # Antes se hacía cp directo — eso copiaría el placeholder sin resolver.
+    # Ahora se usa sed para reemplazar %%ADMINER_IP%% con el valor real del .env.
+    # ADMINER_IP ya está en require_vars de ssl.sh main().
+    log_info "Creating SSL VirtualHost configuration (IP: ${ADMINER_IP})"
+    if ! sed "s|%%ADMINER_IP%%|${ADMINER_IP}|g" \
+            "$ssl_template" > "$ssl_vhost_config"; then
+        log_error "Failed to generate SSL VirtualHost configuration"
         return 1
     fi
 
-    # Verify the copied file exists and is readable
+    # Verificar que el placeholder fue reemplazado
+    if grep -q "%%ADMINER_IP%%" "$ssl_vhost_config" 2>/dev/null; then
+        log_error "El placeholder %%ADMINER_IP%% no fue reemplazado en ${ssl_vhost_config}"
+        return 1
+    fi
+
+    # Verify the generated file exists and is readable
     if ! validate_file_exists "$ssl_vhost_config"; then
-        log_error "SSL VirtualHost config not found after copy"
+        log_error "SSL VirtualHost config not found after generation"
         return 1
     fi
 

@@ -287,6 +287,12 @@ Thumbs.db
 *.backup
 
 /config/certs/ca/
+# T-3.3 (H-ADM-003): certificados generados por ssl.sh — específicos de cada servidor.
+# config/certs/ca/ ya estaba ignorada (CA generada localmente).
+# adminer.crt y adminer.key se generan con la IP del servidor — no son portables.
+# Cada instalación genera sus propios certificados con ssl.sh.
+config/certs/adminer.key
+config/certs/adminer.crt
 # Credenciales locales
 .env
 logs/

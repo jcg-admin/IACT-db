@@ -26,7 +26,10 @@ main() {
     fi
 
     # Validate required variables
-    require_vars ADMINER_VERSION ADMINER_IP
+    # T-3.6 (H-ADM-005): ADMINER_IP eliminada de require_vars.
+    # install.sh solo necesita ADMINER_VERSION para descargar el binario.
+    # ADMINER_IP la requiere config.sh — que corre en el paso adminer_config.
+    require_vars ADMINER_VERSION
 
     # Ensure log directory
     if ! ensure_dir "${PROJECT_ROOT}/logs"; then
@@ -58,11 +61,9 @@ main() {
         return 1
     fi
 
-    # Configure Apache for Adminer
-    if ! configure_apache; then
-        log_error "Failed to configure Apache"
-        return 1
-    fi
+    # Nota: la configuración del VirtualHost HTTP se realiza en config.sh
+    # (paso adminer_config). La configuración SSL se realiza en ssl.sh
+    # (paso adminer_ssl).
 
     log_success "Adminer installation completed"
     return 0
@@ -215,82 +216,6 @@ install_adminer() {
     return 0
 }
 
-# Configure Apache for Adminer
-configure_apache() {
-    log_info "Configuring Apache for Adminer"
-
-    local vhost_config="/etc/apache2/sites-available/adminer.conf"
-    local vhost_template="${PROJECT_ROOT}/config/vhost.conf"
-
-    # Check if configuration template exists
-    if [[ ! -f "$vhost_template" ]]; then
-        log_error "VirtualHost template not found: $vhost_template"
-        return 1
-    fi
-
-    # Copy template to sites-available
-    log_info "Creating VirtualHost configuration"
-    if ! cp "$vhost_template" "$vhost_config"; then
-        log_error "Failed to copy VirtualHost configuration"
-        return 1
-    fi
-
-    # Test configuration before applying
-    log_info "Testing Apache configuration"
-    if ! apachectl configtest 2>&1 | tee /tmp/apache_test.log; then
-        log_error "Apache configuration test failed"
-        log_error "Configuration errors:"
-        cat /tmp/apache_test.log
-        return 1
-    fi
-
-    # Disable default site
-    log_info "Disabling default Apache site"
-    a2dissite 000-default.conf >/dev/null 2>&1 || true
-
-    # Enable Adminer site
-    log_info "Enabling Adminer site"
-    if ! a2ensite adminer.conf >/dev/null 2>&1; then
-        log_error "Failed to enable Adminer site"
-        return 1
-    fi
-
-    # Test again after enabling site
-    log_info "Testing Apache configuration after enabling site"
-    if ! apachectl configtest >/dev/null 2>&1; then
-        log_error "Apache configuration test failed after enabling site"
-        apachectl configtest 2>&1
-        return 1
-    fi
-
-    # Reload Apache
-    log_info "Reloading Apache to apply configuration"
-    if ! systemctl reload apache2 2>&1; then
-        log_warn "Failed to reload Apache, attempting restart"
-        if ! systemctl restart apache2 2>&1; then
-            log_error "Failed to restart Apache"
-            log_error "Apache status:"
-            systemctl status apache2 --no-pager || true
-            log_error "Apache error log:"
-            tail -20 /var/log/apache2/error.log || true
-            return 1
-        fi
-    fi
-
-    # Wait for HTTP to be ready
-    log_info "Waiting for HTTP service to be ready"
-    sleep 2
-
-    if ! wait_for_url "http://localhost" 30 200; then
-        log_warn "HTTP service did not respond within 30 seconds"
-        log_info "Checking if port 80 is listening"
-        netstat -tlnp | grep ":80" || true
-    else
-        log_success "HTTP service is ready"
-    fi
-
-    log_success "Apache configured for Adminer"
-    return 0
-}
-
-# Note: main() is called by bootstrap.sh, not auto-executed
+# Nota: main() es llamado por bootstrap.sh, no se auto-ejecuta.
+# La configuración del VirtualHost HTTP se realiza en config.sh (capa CONFIG).
+# La configuración SSL/TLS se realiza en ssl.sh (capa CONFIG-TLS).

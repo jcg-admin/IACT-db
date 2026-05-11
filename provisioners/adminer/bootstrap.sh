@@ -38,6 +38,16 @@ adminer_install() {
     main
 }
 
+# T-3.5 (H-ADM-004): agregar paso adminer_config para separación de capas.
+# install.sh = instalar paquetes (Apache, PHP, Adminer binario)
+# config.sh  = configurar el servicio (VirtualHost HTTP, reload)
+# ssl.sh     = configurar TLS (CA, cert, VirtualHost HTTPS)
+adminer_config() {
+    init_log "adminer_config"
+    source "${PROJECT_ROOT}/provisioners/adminer/config.sh"
+    main
+}
+
 adminer_ssl() {
     init_log "adminer_ssl"
     source "${PROJECT_ROOT}/provisioners/adminer/ssl.sh"
@@ -59,6 +69,7 @@ steps=(
     "adminer_system"
     "adminer_swap"
     "adminer_install"
+    "adminer_config"
     "adminer_ssl"
 )
 
