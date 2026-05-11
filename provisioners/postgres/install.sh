@@ -53,6 +53,13 @@ main() {
         return 1
     fi
 
+    # Vincular config/postgres/99-iact.conf al sistema via symlink.
+    # Mismo patrón que MariaDB — ambos en install.sh (capa de servicio del SO).
+    # Idempotente — ln -sf es seguro ejecutar N veces.
+    if ! _apply_iact_postgres_config; then
+        log_warn "IACT config no vinculada — continuar sin 99-iact.conf"
+    fi
+
     # Set PostgreSQL password
     if ! set_postgres_password; then
         log_error "Failed to set postgres password"
@@ -302,6 +309,44 @@ configure_postgresql() {
     fi
 
     log_success "PostgreSQL configured for remote access"
+    return 0
+}
+
+# _apply_iact_postgres_config
+#
+# Crea un symlink de config/postgres/99-iact.conf en conf.d/ del sistema.
+# postgresql.conf ya tiene: include_dir = 'conf.d'
+#
+# Misma capa que configure_postgresql() — ambas configuran el servicio del SO,
+# no la base de datos. Movida desde setup.sh para consistencia con MariaDB
+# (donde _apply_iact_mariadb_config vive en install.sh).
+#
+# Fuente de verdad: el repo. El symlink es transparente para PostgreSQL.
+_apply_iact_postgres_config() {
+    local repo_config="${PROJECT_ROOT}/config/postgres/99-iact.conf"
+    local pg_version="${POSTGRES_VERSION:-16}"
+    local conf_d="/etc/postgresql/${pg_version}/main/conf.d"
+    local system_link="${conf_d}/99-iact.conf"
+
+    if [[ ! -f "$repo_config" ]]; then
+        log_warn "_apply_iact_postgres_config: no encontrado ${repo_config} — omitido"
+        return 0
+    fi
+
+    if [[ ! -d "$conf_d" ]]; then
+        log_warn "conf.d no existe en ${conf_d} — omitido"
+        log_warn "  Verificar que postgresql.conf tiene: include_dir = 'conf.d'"
+        return 0
+    fi
+
+    if ln -sf "$repo_config" "$system_link" 2>/dev/null; then
+        log_success "PostgreSQL config vinculada: ${system_link} → ${repo_config}"
+    else
+        log_error "No se pudo crear symlink: ${system_link}"
+        log_error "  Ejecutar manualmente: sudo ln -sf ${repo_config} ${system_link}"
+        return 1
+    fi
+
     return 0
 }
 
