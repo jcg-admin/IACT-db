@@ -62,7 +62,7 @@ gestor de paquetes del SO.
 
 ## H-PKG-003 — No existe un manifest centralizado de paquetes del sistema
 
-**Estado:** DECISIÓN PENDIENTE — dos opciones
+**Estado:** RESUELTO — FASE 6: Opción A adoptada. Inventario de paquetes documentado en el header de `bootstrap.sh`. Decisión: provisioners autocontenidos. `config/packages/` descartado · commit a4bcf36
 
 Los paquetes del sistema están declarados implícitamente dentro de cada
 provisioner. No hay un archivo que liste todas las dependencias del proyecto
@@ -158,4 +158,4 @@ para la siguiente sesión de planificación.
 |---|---|---|
 | H-PKG-001 | T-1.7 ya estaba implementada — falso positivo en el plan | DOCUMENTADO |
 | H-PKG-002 | `config/` es para archivos del SO, no para paquetes apt | ACLARADO |
-| H-PKG-003 | No existe manifest centralizado de paquetes — decisión pendiente | PENDIENTE DECISIÓN |
+| H-PKG-003 | No existe manifest centralizado de paquetes — decisión pendiente | RESUELTO — FASE 6: Opción A adoptada, inventario en bootstrap.sh · commit a4bcf36 |

@@ -209,7 +209,7 @@ gestionar configuración del SO. Esas son responsabilidades de capas distintas.
 
 ## H-ARCH-003 — `install.sh` mezcla instalación de paquetes con configuración del SO
 
-**Estado:** DOCUMENTADO — requiere decisión de refactoring
+**Estado:** DOCUMENTADO — FASE 6: decisión tomada. Opción A (provisioners autocontenidos) es el patrón correcto para el proyecto actual. Revisar si supera 5 servicios con paquetes compartidos · commit a4bcf36
 
 ### Arquitectura actual (mezcla de responsabilidades)
 
@@ -359,5 +359,5 @@ Este hallazgo no estaba en el plan original. Se agrega como:
 
 | ID | Hallazgo | Severidad | Estado |
 |---|---|---|---|
-| H-ARCH-003 | `install.sh` mezcla instalación con configuración del SO | MEDIA | PENDIENTE DECISIÓN |
+| H-ARCH-003 | `install.sh` mezcla instalación con configuración del SO | MEDIA | DOCUMENTADO — FASE 6: decisión tomada. Opción A (provisioners autocontenidos) es el patrón válido para el proyecto actual · commit a4bcf36 |
 | H-ARCH-004 | `postgresql-contrib` correctamente en `install.sh` | — | CONFIRMADO |

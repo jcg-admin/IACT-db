@@ -126,31 +126,11 @@ _MARIADB_SOCKETS=(
 - La ruta no es sobreescribible desde `.env` ni desde variable de entorno —
   un operador no puede adaptar el script sin modificar el código
 
-### Corrección requerida
+### Corrección implementada
 
-Reemplazar el valor hardcoded por una detección automática de sockets conocidos,
-coherente con el patrón de `_MARIADB_SOCKETS` en `database.sh`:
-
-```bash
-# Detectar socket disponible entre las rutas conocidas
-DB_ROOT_SOCK=""
-for _sock in "/run/mysqld/mysqld.sock" "/var/run/mysqld/mysqld.sock" "/tmp/mysql.sock"; do
-    if [[ -S "$_sock" ]]; then
-        DB_ROOT_SOCK="$_sock"
-        break
-    fi
-done
-unset _sock
-```
-
-O hacer la ruta configurable desde `.env`:
-
-```bash
-# En .env.example:
-# MARIADB_SOCK=/run/mysqld/mysqld.sock
-
-DB_ROOT_SOCK="${MARIADB_SOCK:-/run/mysqld/mysqld.sock}"
-```
+`schema_historico.sh` usa `DB_ROOT_SOCK="${MARIADB_SOCK:-}"` y auto-detecta el socket
+en orden: `/run/mysqld/mysqld.sock` → `/var/run/mysqld/mysqld.sock` → `/tmp/mysql.sock`.
+Configurable via `MARIADB_SOCK` en `.env`. Documentado en `.env.example` (FASE 5 · commit 5a48040).
 
 ---
 
@@ -214,22 +194,15 @@ En un entorno aprovisionado correctamente (con `install.sh` y `secure_mariadb()`
 este estado no ocurre: `secure_mariadb()` establece la password correctamente
 dejando `authentication_string` con un hash válido.
 
-### Corrección requerida
+### Nota sobre entornos no aprovisionados correctamente
 
-Para este entorno específico, restablecer el estado correcto de root:
+En entornos aprovisionados via `provisioners/mariadb/config.sh` (que ejecuta `_secure_mariadb()`),
+este estado no ocurre: `_secure_mariadb()` establece la password correctamente dejando
+`authentication_string` con un hash válido.
 
-```bash
-# Conectar via socket (funciona) y establecer autenticación correcta
-mysql --socket=/run/mysqld/mysqld.sock -u root -e "
-    ALTER USER 'root'@'localhost'
-    IDENTIFIED VIA mysql_native_password
-    USING PASSWORD('rootpass123');
-    FLUSH PRIVILEGES;
-"
-```
-
-Para el provisioner: documentar que `schema_historico.sh` requiere un MariaDB
-aprovisionado con `install.sh` (que ejecuta `secure_mariadb()`). Ver H-SEC-004.
+El estado descrito corresponde a entornos instalados manualmente sin pasar por el
+provisioner. En producción con bootstrap.sh, root@TCP funciona correctamente tras
+`_secure_mariadb()` (FASE 1, commit f4a9e98). Documentado en `install.sh` v2.2.0 (FASE 5).
 
 ---
 
@@ -253,19 +226,13 @@ Si alguna de estas condiciones no se cumple, los errores son:
 - T-1.4 detecta esto, pero el mensaje indica "revisar .env" cuando el problema
   es el estado de auth de MariaDB
 
-### Corrección requerida
+### Corrección implementada
 
-Agregar bloque `PREREQUISITOS` al header del script:
-
-```bash
-# PREREQUISITOS:
-#   · MariaDB instalado y securizado via provisioners/mariadb/install.sh
-#     (install.sh ejecuta secure_mariadb() que establece password root válida)
-#   · DB_MARIADB_ROOT_PASSWORD en .env corresponde al password actual de root
-#   · Socket Unix disponible en /run/mysqld/mysqld.sock
-#     (si no está disponible, se usa TCP — requiere root accesible por TCP)
-#   · Ejecutar como root del sistema operativo (sudo bash ...)
-```
+`schema_historico.sh` L47-56 tiene sección `PREREQUISITOS` completa que documenta:
+- MariaDB instalado y securizado via `provisioners/mariadb/config.sh`
+- `DB_MARIADB_ROOT_PASSWORD` en `.env` corresponde al password actual de root
+- Socket Unix auto-detectado, configurable via `MARIADB_SOCK` en `.env`
+- Ejecutar como root del sistema operativo (FASE 2, commit 8384bab)
 
 ---
 

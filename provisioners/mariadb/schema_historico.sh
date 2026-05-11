@@ -448,7 +448,7 @@ SQL
     # Paso 3: seed
     # ------------------------------------------------------------------
     if [[ "${SKIP_SEED}" == "1" ]]; then
-        log_info "SKIP_SEED=1 — seed omitido."
+        log_info "schema_historico: SKIP_SEED=1 — seed de tbl_historico_* omitido."
     else
         log_step 3 4 "Seed de datos (Nivel 1 — SQL)"
 
@@ -496,7 +496,7 @@ SQL
     log_step 4 4 "Seed de alta fidelidad (Nivel 2 — Python)"
 
     if [[ "${SKIP_SEED}" == "1" ]]; then
-        log_info "SKIP_SEED=1 — poblar_historico.py omitido."
+        log_info "schema_historico: SKIP_SEED=1 — poblar_historico.py omitido."
 
     elif [[ "${FULL_SEED}" != "1" ]]; then
         log_info "FULL_SEED no activo — Nivel 1 (SQL) completado."

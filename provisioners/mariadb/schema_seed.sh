@@ -112,7 +112,7 @@ seed_data() {
         -e "SELECT COUNT(*) FROM \`tbl_temp_prueba_ivr\`;" || echo "0")
 
     if [[ "$current_count" -ge "$TARGET_ROWS" ]]; then
-        log_info "Tabla ya tiene ${current_count} registros — seed omitido (idempotente)"
+        log_info "schema_seed: tbl_temp_prueba_ivr ya tiene ${current_count} registros — seed omitido (idempotente)"
         return 0
     fi
 

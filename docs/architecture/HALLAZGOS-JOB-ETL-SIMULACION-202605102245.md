@@ -295,7 +295,7 @@ WHERE status='RUNNING';
 | H-JOB-002 | etl_runs.status='success' aunque el SP haya hecho SKIP (concurrencia o disabled) | MEDIA | DOCUMENTADO |
 | H-JOB-003 | heartbeat_at=NULL cuando el SP termina antes del primer tick — normal con datos de seed | INFO | DOCUMENTADO |
 | H-JOB-004 | Heartbeat no puede matar el SP en MariaDB — solo marca timeout en etl_runs | MEDIA | DOCUMENTADO |
-| H-JOB-005 | event_scheduler requiere flag explícito en arranque — no persiste sin my.cnf | ALTA | PENDIENTE |
+| H-JOB-005 | event_scheduler requiere flag explícito en arranque — no persiste sin my.cnf | ALTA | RESUELTO — `config/mariadb/99-iact.cnf` tiene `event_scheduler = ON`. Verificado: `SHOW VARIABLES LIKE 'event_scheduler'` → ON |
 
 ---
 

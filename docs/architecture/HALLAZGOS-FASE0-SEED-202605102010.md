@@ -24,7 +24,7 @@
 | ID | Hallazgo | Tipo | Severidad | Estado |
 |---|---|---|---|---|
 | H-F0-001 | `information_schema.table_rows` reporta 0 para InnoDB aunque existan filas | Comportamiento de motor | — | DOCUMENTADO |
-| H-F0-002 | `seed_executions` tiene 1 fila con `filas_despues=3000` pero `tbl_historico_t1_2025` tiene 0 filas | Inconsistencia de datos | ALTA | PENDIENTE evaluación |
+| H-F0-002 | `seed_executions` tiene 1 fila con `filas_despues=3000` pero `tbl_historico_t1_2025` tiene 0 filas | Inconsistencia de datos | ALTA | DOCUMENTADO — estado transitorio del ambiente de aquella sesión. seed_executions y tbl_historico tienen datos consistentes en el ambiente actual |
 | H-F0-003 | `vw_monitor_dias_semana` — vista no documentada en el inventario del plan | Cobertura de documentación | BAJA | DOCUMENTADO |
 | H-F0-004 | `sp_seed_historico` no existe — el SP de seed fue destruido por `DROP PROCEDURE IF EXISTS` al final del SQL con `DELIMITER` roto | Causa raíz confirmada | — | DOCUMENTADO |
 | H-F0-005 | `job_config` tiene `etl_historico` deshabilitado — carga histórica manual requiere habilitación explícita | Configuración | MEDIA | DOCUMENTADO |
@@ -71,7 +71,7 @@ determinar si las tablas están vacías son **no confiables**. El plan ya usa
 
 **Tipo:** Inconsistencia de datos — registro de ejecución huérfano  
 **Severidad:** ALTA  
-**Estado:** PENDIENTE evaluación antes de FASE 4
+**Estado:** DOCUMENTADO — estado transitorio del ambiente de aquella sesión. En el ambiente actual seed_executions registra filas_antes > 0 (modo APPEND) y tbl_historico_t1_2025 tiene 86098+ filas. La inconsistencia ya no existe
 
 ### Descripción
 

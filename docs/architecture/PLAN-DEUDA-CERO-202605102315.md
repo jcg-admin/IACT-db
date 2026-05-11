@@ -3,7 +3,10 @@
 **Versión:** 1.0.0  
 **Fecha:** 2026-05-10  
 **Repositorio:** IACT-db (rama `develop`)  
-**Fuente:** Consolidación de todos los hallazgos PENDIENTE en docs/architecture/
+**Fuente:** Consolidación de todos los hallazgos PENDIENTE en docs/architecture/  
+**Cierre:** Las tareas T-1.x..T-4.x fueron absorbidas por el plan Alternativa E  
+(PLAN-ALTERNATIVA-E-CONSOLIDADO-202605120030.md). Las tareas T-6.x (cierre  
+documental) se ejecutaron en FASE 7 del plan Alternativa E.
 
 ---
 

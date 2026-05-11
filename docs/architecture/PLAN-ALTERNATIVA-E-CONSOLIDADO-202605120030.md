@@ -775,15 +775,15 @@ Documentos a actualizar:
 
 ## Resumen ejecutivo
 
-| FASE | Tareas | Hallazgos que cierra | Archivos afectados | Prerequisito |
-|---|---|---|---|---|
-| FASE 1 — Enriquecer config.sh | T-1.1..T-1.8 | H-DEAD-001..004, H-INST-001..003, H-INST-006..008 | postgres/config.sh, mariadb/config.sh | Ninguno |
-| FASE 2 — Eliminar código muerto | T-2.1..T-2.7 | H-INST-002 (220L) | postgres/install.sh, mariadb/install.sh | FASE 1 completa |
-| FASE 3 — Adminer | T-3.1..T-3.7 | H-ADM-001..005 | adminer/config.sh (nuevo), install.sh, bootstrap.sh, config/vhost*.conf, .gitignore | Ninguno |
-| FASE 4 — Pipeline ETL + verify | T-4.1..T-4.5 | H-ETL-001..003, H-VFY-001 | provision-mariadb.sh, verify.sh, utils/logging.sh | Ninguno |
-| FASE 5 — Seguridad + archivado | T-5.1..T-5.4 | H-SEC-001..003, H-ARCH-001..002 | .env.example, install.sh (doc), seed_historico_real.sql, FLUJO-ETL-V2.1.md | Ninguno |
-| FASE 6 — H-PKG-003 decisión | T-6.1 | H-PKG-003 | config/packages/ (si Opción B) | Ninguno |
-| FASE 7 — Cierre documental | T-7.1..T-7.4 | Todos | docs/architecture/ | Todas las fases anteriores |
+| FASE | Tareas | Hallazgos que cierra | Archivos afectados | Prerequisito | Estado |
+|---|---|---|---|---|---|
+| FASE 1 — Enriquecer config.sh | T-1.1..T-1.8 | H-DEAD-001..004, H-INST-001..003, H-INST-006..008 | postgres/config.sh, mariadb/config.sh | Ninguno | COMPLETO · f4a9e98 |
+| FASE 2 — Eliminar código muerto | T-2.1..T-2.7 | H-INST-002 (220L) | postgres/install.sh, mariadb/install.sh | FASE 1 completa | COMPLETO · 8384bab |
+| FASE 3 — Adminer | T-3.1..T-3.7 | H-ADM-001..005 | adminer/config.sh (nuevo), install.sh, bootstrap.sh, config/vhost*.conf, .gitignore | Ninguno | COMPLETO · bb44944 |
+| FASE 4 — Pipeline ETL + verify | T-4.1..T-4.5 | H-ETL-001..003, H-VFY-001 | provision-mariadb.sh, verify.sh, utils/logging.sh | Ninguno | COMPLETO · 4ded8ab + cb5c04a |
+| FASE 5 — Seguridad + archivado | T-5.1..T-5.4 | H-SEC-001..003, H-ARCH-001..002 | .env.example, install.sh (doc), seed_historico_real.sql, FLUJO-ETL-V2.1.md | Ninguno | COMPLETO · 5a48040 |
+| FASE 6 — H-PKG-003 decisión | T-6.1 | H-PKG-003 | bootstrap.sh (inventario) | Ninguno | COMPLETO · a4bcf36 |
+| FASE 7 — Cierre documental | T-7.1..T-7.4 | Todos | docs/architecture/ | Todas las fases anteriores | COMPLETO · este commit |
 
 **Total tareas atómicas: 28** (+ sub-tareas opcionales de Opción B)  
 **Archivos nuevos a crear: 2** (adminer/config.sh, docs/referencias/README.md)  

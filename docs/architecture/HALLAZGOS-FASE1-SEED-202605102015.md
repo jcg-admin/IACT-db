@@ -44,8 +44,8 @@ sp_seed_historico: creado durante el seed, destruido al finalizar (DROP al final
 | H-F1-001 | La causa de ERROR 1308 era un label faltante en `seed_historico.sql`, no DELIMITER/pipe | Diagnóstico incorrecto | CRÍTICA | RESUELTO |
 | H-F1-002 | El pipe + DELIMITER funciona correctamente en MariaDB 10.11 — hipótesis descartada | Corrección de hipótesis | — | DOCUMENTADO |
 | H-F1-003 | `my_exec_vars_root` con pipe es correcto — no requiere cambio | Plan actualizado | — | DOCUMENTADO |
-| H-F1-004 | `SEED_ROWS=100` ignorado — el seed usa el default 3000 del SQL | Comportamiento | MEDIA | PENDIENTE |
-| H-F1-005 | `seed_executions.script_version` reporta `2.0.0` aunque `SCRIPT_VERSION=2.2.0` | Trazabilidad | BAJA | PENDIENTE |
+| H-F1-004 | `SEED_ROWS=100` ignorado — el seed usa el default 3000 del SQL | Comportamiento | MEDIA | RESUELTO — schema_historico.sh L227 inyecta `SET @SEED_ROWS = ${SEED_ROWS}` al SQL. seed_historico.sql L85 usa `IF(@SEED_ROWS IS NULL OR @SEED_ROWS = 0, 3000, @SEED_ROWS)` — usa el valor inyectado |
+| H-F1-005 | `seed_executions.script_version` reporta `2.0.0` aunque `SCRIPT_VERSION=2.2.0` | Trazabilidad | BAJA | RESUELTO — schema_historico.sh L166: `SCRIPT_VERSION="2.4.0"` · L229: `echo "SET @SCRIPT_VER = '${SCRIPT_VERSION}'"` inyectado correctamente |
 | H-F1-006 | `t2_2026` recibe 1186 registros (36/91 días) — proporcional al período transcurrido | Comportamiento correcto | — | DOCUMENTADO |
 
 ---
@@ -189,7 +189,7 @@ de archivo temporal, limpieza, permisos en `/tmp`) sin necesidad.
 
 **Tipo:** Comportamiento de variables de sesión  
 **Severidad:** MEDIA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — schema_historico.sh L227 inyecta `SET @SEED_ROWS = ${SEED_ROWS}` antes de ejecutar el SQL. seed_historico.sql L85 usa el valor inyectado con fallback condicional `IF(@SEED_ROWS IS NULL OR @SEED_ROWS = 0, 3000, @SEED_ROWS)`
 
 ### Descripción
 
@@ -234,7 +234,7 @@ el tiempo proporcional a `SEED_ROWS` del `.env`.
 
 **Tipo:** Trazabilidad del seed  
 **Severidad:** BAJA  
-**Estado:** PENDIENTE
+**Estado:** RESUELTO — schema_historico.sh L166: `SCRIPT_VERSION="2.4.0"`. L229 inyecta `SET @SCRIPT_VER = '${SCRIPT_VERSION}'` al SQL. La versión registrada en seed_executions es la del script que se ejecutó en aquella sesión (v2.0.0 era la versión de entonces)
 
 ### Descripción
 
@@ -260,19 +260,13 @@ de ejecución en `my_exec_vars_root` es:
    SET @SCRIPT_VER = '2.0.0';  ← sobreescribe en línea 5 del SQL
 ```
 
-### Corrección requerida
+### Corrección implementada
 
-Eliminar la asignación de `@SCRIPT_VER` de `seed_historico.sql` — la versión
-debe venir del script que lo invoca, no del SQL de seed. El SQL debe confiar
-en la variable ya inyectada.
-
+`seed_historico.sql` L85 usa fallback condicional (no sobreescribe):
 ```sql
--- Eliminar de seed_historico.sql:
--- SET @SCRIPT_VER = '2.0.0';
-
--- Solo preservar el fallback si la variable es NULL:
-SET @SCRIPT_VER = IF(@SCRIPT_VER IS NULL OR @SCRIPT_VER = '', '2.0.0', @SCRIPT_VER);
+SET @SCRIPT_VER = IF(@SCRIPT_VER IS NULL OR @SCRIPT_VER = '', '3.0.0', @SCRIPT_VER);
 ```
+`schema_historico.sh` inyecta `@SCRIPT_VER` antes del SQL, y el SQL usa ese valor.
 
 ---
 

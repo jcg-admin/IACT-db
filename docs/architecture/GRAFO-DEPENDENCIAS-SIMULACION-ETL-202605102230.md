@@ -298,8 +298,8 @@ hábiles desde 2025-03-31, lo que supera cualquier umbral de seguimiento).
 | H-SIM-002 | Grain de base_ivr_detalle correcto — 33K filas → 1,200 agregadas | Resultado positivo | — |
 | H-SIM-003 | sp_rpt_menu_redirigidos muestra __CMENU_ERROR__ en top — números de teléfono como menú | Bug real IVR | DOCUMENTADO |
 | H-SIM-004 | clasificacion_sla = FUERA_SLA para datos históricos — comportamiento esperado | Comportamiento esperado | DOCUMENTADO |
-| H-SIM-005 | event_scheduler=ON requiere flag al arrancar mariadbd — no persiste por defecto | MEDIA | PENDIENTE |
-| H-SIM-006 | Django DRF (Nivel 7) — único nivel pendiente de despliegue | ALTA | PENDIENTE |
+| H-SIM-005 | event_scheduler=ON requiere flag al arrancar mariadbd — no persiste por defecto | MEDIA | RESUELTO — `config/mariadb/99-iact.cnf` tiene `event_scheduler = ON`. Verificado: BD activa con event_scheduler ON |
+| H-SIM-006 | Django DRF (Nivel 7) — único nivel pendiente de despliegue | ALTA | DOCUMENTADO — fuera del scope de IACT-db. IACT-api es el repositorio responsable |
 
 ---
 

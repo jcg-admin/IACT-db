@@ -31,7 +31,7 @@
 |---|---|---|---|---|
 | H-PROV-001 | `service mariadb` no mantiene el proceso vivo en contenedor sin init system | Infraestructura | ALTA | DOCUMENTADO |
 | H-PROV-002 | PostgreSQL no tiene extensiones opcionales instaladas | Infraestructura | BAJA | DOCUMENTADO |
-| H-PROV-003 | H-F3-003 confirmado en provisionamiento real (ERROR 1308) | Bug pre-existente | CRÍTICA | PENDIENTE |
+| H-PROV-003 | H-F3-003 confirmado en provisionamiento real (ERROR 1308) | Bug pre-existente | CRÍTICA | RESUELTO — H-F3-003 resuelto en seed_historico.sql v3.0.0. El ERROR 1308 ya no ocurre |
 
 ---
 
@@ -99,23 +99,11 @@ independientemente del shell que lo inició.
 (nivel 1) tiene éxito en el exit code pero no produce un proceso estable en este
 entorno. `start.sh` devuelve 0 sin saber que el proceso morirá momentos después.
 
-### Corrección requerida en `start.sh`
+### Corrección implementada
 
-Detectar que el proceso iniciado por `service` no persiste y escalar al nivel
-de arranque directo. Una forma es verificar el proceso tras un breve delay:
-
-```bash
-if service mariadb start 2>/dev/null; then
-    sleep 2
-    if mariadb_is_running; then
-        log_info "start_mariadb: iniciado via service (estable)"
-        started=true
-    else
-        log_warn "start_mariadb: service reportó OK pero el proceso no persiste"
-        log_warn "start_mariadb: escalando a arranque directo"
-    fi
-fi
-```
+`start.sh` L61-67: tras arrancar via `service mariadb start`, espera 2 segundos y verifica
+con `mariadb_is_running`. Si el proceso no persiste, escala al siguiente nivel de arranque.
+Implementado en PLAN-DEUDA-CERO T-1.2.
 
 ---
 
@@ -168,7 +156,7 @@ CREATE EXTENSION IF NOT EXISTS citext;
 
 **Tipo:** Confirmación de bug pre-existente documentado  
 **Severidad:** CRÍTICA  
-**Estado:** PENDIENTE — requiere plan de corrección activo
+**Estado:** RESUELTO — H-F3-003 resuelto en seed_historico.sql v3.0.0. El SP usa label `sp_seed_historico: BEGIN ... END sp_seed_historico` sin LEAVE/LOOP internos. Verificado en BD: ejecución exitosa sin ERROR 1308
 
 ### Descripción
 
@@ -195,12 +183,12 @@ tbl_historico_t2_2026: 0 registros
 verify.sh reporta las tablas como presentes (estructura OK) pero no verifica
 contenido (H-F5-003: pendiente de evaluación de alcance).
 
-### Corrección requerida
+### Corrección implementada
 
-Ver `HALLAZGOS-FASE3-202605101800.md` — H-F3-003 tiene tres opciones
-documentadas. La más directa: reemplazar el pipe en `my_exec_vars_root` por
-escritura a archivo temporal y ejecución directa, preservando el procesamiento
-de `DELIMITER` por el cliente mysql.
+H-F3-003 resuelto en seed_historico.sql v3.0.0. El SP usa el patrón de label externo
+`sp_seed_historico: BEGIN ... END sp_seed_historico` sin LEAVE/LOOP/ITERATE internos.
+No fue necesario reemplazar el pipe en `my_exec_vars_root` — la reescritura del SP
+eliminó el patrón que producía ERROR 1308.
 
 ---
 
@@ -210,14 +198,15 @@ de `DELIMITER` por el cliente mysql.
 MariaDB  10.11.14  ivr_legacy     — 13 tablas, 19 routines
 PostgreSQL 16      iact_analytics — BD lista para migrate
 
-verify.sh: 26 OK, 0 WARN, 0 ERR, EXIT 0
+verify.sh: 27 OK, 0 WARN, 0 ERR, EXIT 0
 ```
 
 El entorno está listo para:
 - `python manage.py migrate` en IACT-api
 - Pruebas de conectividad desde el backend Django
 - Desarrollo de los endpoints que leen `ivr_legacy` (tablas analíticas y de prueba)
+- Endpoints que requieran datos en `tbl_historico_*` (H-F3-003 resuelto)
 
-No está listo para:
-- Endpoints que requieran datos en `tbl_historico_*` (H-F3-003 pendiente)
+Pendiente fuera de scope de IACT-db:
+- Endpoints que requieran Django DRF (Nivel 7 — H-SIM-006)
 - Uso de extensiones PostgreSQL opcionales (H-PROV-002)

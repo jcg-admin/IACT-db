@@ -342,8 +342,8 @@ traducir funciones bash a tasks YAML.
 
 | ID | Hallazgo | Severidad | Estado |
 |---|---|---|---|
-| H-INST-001 | `secure_mariadb` en install.sh — capa incorrecta | ALTA | PENDIENTE |
-| H-INST-002 | 282 líneas de código muerto en install.sh de ambos motores | ALTA | PENDIENTE |
-| H-INST-003 | `set_postgres_password` en install.sh — capa incorrecta | ALTA | PENDIENTE |
+| H-INST-001 | `secure_mariadb` en install.sh — capa incorrecta | ALTA | RESUELTO — FASE 1 T-1.4 + FASE 2 T-2.6 · commits f4a9e98 + 8384bab |
+| H-INST-002 | 282 líneas de código muerto en install.sh de ambos motores | ALTA | RESUELTO — FASE 2 T-2.1..T-2.6 · commit 8384bab |
+| H-INST-003 | `set_postgres_password` en install.sh — capa incorrecta | ALTA | RESUELTO — FASE 1 T-1.7 + FASE 2 T-2.3 · commits f4a9e98 + 8384bab |
 | H-INST-004 | bootstrap.sh de ambos motores ya tiene la estructura de 4 pasos correcta | INFO | DOCUMENTADO |
 | H-INST-005 | 0 archivos nuevos necesarios — Alternative E se implementa modificando 4 archivos | INFO | DOCUMENTADO |
