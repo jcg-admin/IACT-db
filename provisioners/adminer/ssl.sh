@@ -26,6 +26,34 @@ readonly ADMINER_KEY="${CONFIG_CERTS_DIR}/adminer.key"
 readonly APACHE_CERT="/etc/ssl/certs/adminer-selfsigned.crt"
 readonly APACHE_KEY="/etc/ssl/private/adminer-selfsigned.key"
 
+# ---------------------------------------------------------------------------
+# Gestión centralizada de archivos temporales (BUG-009)
+#
+# Los archivos en /tmp con rutas fijas presentan dos problemas:
+#   1. Race condition: dos instancias simultáneas se sobreescriben
+#   2. Sin trap: SIGINT/SIGTERM deja archivos huérfanos en /tmp,
+#      incluyendo el CSR que contiene material criptográfico
+#
+# Solución:
+#   - mktemp genera nombres únicos por instancia (elimina problema 1)
+#   - _SSL_TMPFILES registra los archivos creados en el proceso actual
+#   - trap EXIT INT TERM llama _cleanup_ssl_tmpfiles en cualquier salida
+#     (éxito, error controlado, set -e, o señal) — elimina problema 2
+#   - El cleanup explícito en cada función libera los archivos de esa
+#     función antes de que el proceso termine, sin esperar al EXIT
+# ---------------------------------------------------------------------------
+_SSL_TMPFILES=()
+
+_cleanup_ssl_tmpfiles() {
+    local f
+    for f in "${_SSL_TMPFILES[@]:-}"; do
+        [[ -n "$f" ]] && rm -f "$f" 2>/dev/null || true
+    done
+    _SSL_TMPFILES=()
+}
+
+trap '_cleanup_ssl_tmpfiles' EXIT INT TERM
+
 # Main function
 main() {
     log_header "SSL/HTTPS Configuration (CA-based)"
@@ -176,11 +204,16 @@ generate_adminer_certificate() {
     fi
 
     # Create Certificate Signing Request (CSR)
-    local csr_file="/tmp/adminer.csr"
+    # mktemp genera nombre único → sin race condition entre instancias paralelas.
+    # Registro en _SSL_TMPFILES garantiza limpieza aunque llegue SIGINT/SIGTERM.
+    local csr_file san_config ext_file
+    csr_file=$(mktemp /tmp/adminer_XXXXXX.csr)
+    _SSL_TMPFILES+=("$csr_file")
     log_info "Creating Certificate Signing Request"
 
     # Create CSR with Subject Alternative Names (SAN) for better compatibility
-    local san_config="/tmp/adminer_san.cnf"
+    san_config=$(mktemp /tmp/adminer_san_XXXXXX.cnf)
+    _SSL_TMPFILES+=("$san_config")
     cat > "$san_config" <<EOF
 [req]
 distinguished_name = req_distinguished_name
@@ -212,7 +245,7 @@ EOF
         -config "$san_config" \
         >/dev/null 2>&1; then
         log_error "Failed to create CSR"
-        rm -f "$san_config"
+        _cleanup_ssl_tmpfiles
         return 1
     fi
 
@@ -220,7 +253,8 @@ EOF
     log_info "Signing certificate with CA (valid for ${SSL_DAYS} days)"
 
     # Create extensions file for signing
-    local ext_file="/tmp/adminer_ext.cnf"
+    ext_file=$(mktemp /tmp/adminer_ext_XXXXXX.cnf)
+    _SSL_TMPFILES+=("$ext_file")
     cat > "$ext_file" <<EOF
 keyUsage = keyEncipherment, dataEncipherment
 extendedKeyUsage = serverAuth
@@ -243,12 +277,13 @@ EOF
         -extfile "$ext_file" \
         >/dev/null 2>&1; then
         log_error "Failed to sign certificate with CA"
-        rm -f "$san_config" "$ext_file" "$csr_file"
+        _cleanup_ssl_tmpfiles
         return 1
     fi
 
-    # Clean up temporary files
-    rm -f "$san_config" "$ext_file" "$csr_file"
+    # Cleanup explícito: libera los archivos temporales de esta función
+    # antes de continuar. El trap EXIT es el último recurso ante señales.
+    _cleanup_ssl_tmpfiles
 
     # Set permissions
     chmod 644 "$ADMINER_CERT"
@@ -358,12 +393,17 @@ configure_ssl_vhost() {
 
     # Test configuration syntax BEFORE enabling
     log_info "Testing Apache configuration syntax"
-    if ! apachectl configtest 2>&1 | tee /tmp/apache_ssl_test.log; then
+    local ssl_test_log
+    ssl_test_log=$(mktemp /tmp/adminer_apache_test_XXXXXX.log)
+    _SSL_TMPFILES+=("$ssl_test_log")
+    if ! apachectl configtest 2>&1 | tee "$ssl_test_log"; then
         log_error "Apache configuration syntax test failed"
         log_error "Configuration errors:"
-        cat /tmp/apache_ssl_test.log
+        cat "$ssl_test_log"
+        _cleanup_ssl_tmpfiles
         return 1
     fi
+    _cleanup_ssl_tmpfiles
 
     log_success "SSL VirtualHost configured and syntax validated"
     return 0
@@ -390,14 +430,19 @@ enable_ssl_site() {
 
     # Test configuration again after enabling
     log_info "Testing Apache configuration after enabling SSL site"
-    if ! apachectl configtest 2>&1 | tee /tmp/apache_ssl_final_test.log; then
+    local ssl_final_test_log
+    ssl_final_test_log=$(mktemp /tmp/adminer_apache_final_XXXXXX.log)
+    _SSL_TMPFILES+=("$ssl_final_test_log")
+    if ! apachectl configtest 2>&1 | tee "$ssl_final_test_log"; then
         log_error "Apache configuration test failed after enabling SSL site"
         log_error "Configuration errors:"
-        cat /tmp/apache_ssl_final_test.log
+        cat "$ssl_final_test_log"
         log_error "Disabling SSL site to prevent Apache from failing"
         a2dissite adminer-ssl.conf >/dev/null 2>&1 || true
+        _cleanup_ssl_tmpfiles
         return 1
     fi
+    _cleanup_ssl_tmpfiles
 
     # Reload Apache to apply changes
     log_info "Reloading Apache to apply SSL configuration"
