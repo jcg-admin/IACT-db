@@ -1,0 +1,130 @@
+-- =============================================================================
+-- sp_etl_base_detalle.sql
+-- Schema: ivr_legacy (MariaDB 10.11)
+-- Version: 2.0.0
+-- DEFINER: root@localhost (SQL SECURITY DEFINER)
+--
+-- Prerequisito: funciones_utilidad.sql, schema_base_ivr.sql
+-- Archivo fuente original: sp_etl_pipeline.sql
+-- Despliegue:
+--   mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_base_detalle.sql
+-- NOTA: Despues del despliegue ejecutar provision-mariadb.sh
+--       para restaurar GRANT EXECUTE (DROP PROCEDURE los elimina).
+-- =============================================================================
+
+DELIMITER $$
+
+-- =============================================================================
+DROP PROCEDURE IF EXISTS sp_etl_base_detalle$$
+CREATE PROCEDURE sp_etl_base_detalle(
+    IN p_quarter  VARCHAR(10),
+    IN p_inicio   DATE,
+    IN p_fin      DATE,
+    IN p_table    VARCHAR(100),
+    IN p_log_id   INT
+)
+etl_detalle: BEGIN
+    DECLARE v_mes_ini    DATE;
+    DECLARE v_mes_fin    DATE;
+    DECLARE v_total_ins  INT DEFAULT 0;
+    DECLARE v_mes_ins    INT DEFAULT 0;
+    DECLARE v_mes_num    INT DEFAULT 0;
+
+    -- Validación básica
+    IF p_table IS NULL OR p_table = '' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'sp_etl_base_detalle: p_table no puede ser NULL/vacío';
+    END IF;
+
+    -- Iterar mes a mes dentro del quarter (chunks ~4M filas c/u)
+    SET v_mes_ini = p_inicio;
+
+    WHILE v_mes_ini <= p_fin DO
+        SET v_mes_fin = LAST_DAY(v_mes_ini);
+        -- Si el último mes del quarter termina antes del fin del mes calendario
+        IF v_mes_fin > p_fin THEN
+            SET v_mes_fin = p_fin;
+        END IF;
+
+        SET v_mes_num = v_mes_num + 1;
+
+        -- DELETE idempotente solo para este mes
+        DELETE FROM base_ivr_detalle
+        WHERE trimestre = p_quarter
+          AND fecha = DATE_FORMAT(v_mes_ini, '%Y%m');
+
+        -- INSERT con normalización usando las funciones de utilidad
+        -- PREPARE/EXECUTE necesario por nombre de tabla dinámico (CNST-ETL-008)
+        SET @etl_sql = CONCAT('
+            INSERT INTO base_ivr_detalle
+                (trimestre, fecha, segmento, centro_transferencia,
+                 menu, opcion,
+                 total_llamadas, misma_linea, linea_diferente, no_digito_telefono,
+                 llamadas_entre_semana, llamadas_fines_semana)
+            SELECT
+                ?,                                           -- trimestre
+                DATE_FORMAT(dFecha, ''%Y%m''),               -- fecha (YYYYMM)
+                fn_did_segmento(cDID_800Transfer),           -- segmento
+                fn_normalizar_centro(cDID_Centro_Transferencia), -- centro normalizado
+                fn_normalizar_menu(cMenu),                   -- menu (VACIO si vacío)
+                COALESCE(NULLIF(TRIM(cOpcion), ''''), ''SIN_OPCION''), -- opcion
+                COUNT(*),                                    -- total_llamadas
+                SUM(cTelefono_Origen = cTelefono_Digitado
+                    AND cTelefono_Digitado IS NOT NULL),     -- misma_linea
+                SUM(cTelefono_Origen != cTelefono_Digitado
+                    AND cTelefono_Digitado IS NOT NULL),     -- linea_diferente
+                SUM(cTelefono_Digitado IS NULL),             -- no_digito_telefono
+                SUM(ivr_es_dia_semana(dFecha)),               -- llamadas_entre_semana
+                SUM(NOT ivr_es_dia_semana(dFecha))            -- llamadas_fines_semana
+            FROM ', p_table, '
+            WHERE dFecha BETWEEN ? AND ?
+              AND cDID_800Transfer IN (''19020084'', ''19028031'', ''19020001'')
+            GROUP BY
+                DATE_FORMAT(dFecha, ''%Y%m''),
+                fn_did_segmento(cDID_800Transfer),
+                fn_normalizar_centro(cDID_Centro_Transferencia),
+                fn_normalizar_menu(cMenu),
+                COALESCE(NULLIF(TRIM(cOpcion), ''''), ''SIN_OPCION'')
+            ON DUPLICATE KEY UPDATE
+                total_llamadas        = VALUES(total_llamadas),
+                misma_linea           = VALUES(misma_linea),
+                linea_diferente       = VALUES(linea_diferente),
+                no_digito_telefono    = VALUES(no_digito_telefono),
+                llamadas_entre_semana = VALUES(llamadas_entre_semana),
+                llamadas_fines_semana = VALUES(llamadas_fines_semana),
+                cargado_en         = CURRENT_TIMESTAMP
+        ');
+
+        PREPARE etl_stmt FROM @etl_sql;
+        SET @etl_q = p_quarter, @etl_i = v_mes_ini, @etl_f = v_mes_fin;
+        EXECUTE etl_stmt USING @etl_q, @etl_i, @etl_f;
+        SET v_mes_ins = ROW_COUNT();
+        DEALLOCATE PREPARE etl_stmt;
+
+        SET v_total_ins = v_total_ins + v_mes_ins;
+
+        -- Avanzar al siguiente mes
+        SET v_mes_ini = DATE_ADD(LAST_DAY(v_mes_ini), INTERVAL 1 DAY);
+    END WHILE;
+
+    -- Actualizar progreso en el log
+    IF p_log_id IS NOT NULL AND p_log_id > 0 THEN
+        UPDATE job_execution_log
+        SET records_procesados = v_total_ins,
+            status             = 'SUCCESS',
+            end_time           = NOW()
+        WHERE id = p_log_id;
+    END IF;
+
+END etl_detalle$$
+
+DELIMITER ;
+
+-- =============================================================================
+-- Verificacion
+-- =============================================================================
+-- Verificacion post-despliegue (requiere datos en tbl_historico_*):
+-- CALL sp_etl_base_detalle('Q02_26','2026-04-01','2026-06-30','tbl_historico_t2_2026', NULL);
+-- SELECT COUNT(*) FROM base_ivr_detalle WHERE trimestre='Q02_26';
+SELECT ROUTINE_NAME, ROUTINE_TYPE FROM information_schema.ROUTINES
+WHERE ROUTINE_SCHEMA='ivr_legacy' AND ROUTINE_NAME='sp_etl_base_detalle';

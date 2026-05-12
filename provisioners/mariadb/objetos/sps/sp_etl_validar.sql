@@ -1,0 +1,81 @@
+-- =============================================================================
+-- sp_etl_validar.sql
+-- Schema: ivr_legacy (MariaDB 10.11)
+-- Version: 2.0.0
+-- DEFINER: root@localhost (SQL SECURITY DEFINER)
+--
+-- Prerequisito: schema_base_ivr.sql
+-- Archivo fuente original: sp_etl_pipeline.sql
+-- Despliegue:
+--   mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_validar.sql
+-- NOTA: Despues del despliegue ejecutar provision-mariadb.sh
+--       para restaurar GRANT EXECUTE (DROP PROCEDURE los elimina).
+-- =============================================================================
+
+DELIMITER $$
+
+-- =============================================================================
+DROP PROCEDURE IF EXISTS sp_etl_validar$$
+CREATE PROCEDURE sp_etl_validar(
+    IN  p_quarter   VARCHAR(10),
+    OUT p_ok        BOOLEAN,
+    OUT p_mensaje   TEXT
+)
+BEGIN
+    DECLARE v_count_det   INT DEFAULT 0;
+    DECLARE v_count_cli   INT DEFAULT 0;
+    DECLARE v_sum_llamadas BIGINT DEFAULT 0;
+    DECLARE v_msg         TEXT DEFAULT '';
+
+    SELECT COUNT(*), SUM(total_llamadas)
+    INTO v_count_det, v_sum_llamadas
+    FROM base_ivr_detalle
+    WHERE trimestre = p_quarter;
+
+    SELECT COUNT(*)
+    INTO v_count_cli
+    FROM base_ivr_clientes
+    WHERE trimestre = p_quarter;
+
+    -- Check 1: base_ivr_detalle tiene datos
+    IF v_count_det = 0 THEN
+        SET v_msg = CONCAT(v_msg, 'ERROR: base_ivr_detalle vacía para ', p_quarter, '. ');
+    END IF;
+
+    -- Check 2: base_ivr_clientes tiene exactamente 3 filas (una por segmento)
+    IF v_count_cli != 3 THEN
+        SET v_msg = CONCAT(v_msg, 'ERROR: base_ivr_clientes tiene ',
+                           v_count_cli, ' filas (esperado: 3) para ', p_quarter, '. ');
+    END IF;
+
+    -- Check 3: total_llamadas > 0 (detecta INSERT exitoso pero sin datos útiles)
+    IF v_sum_llamadas = 0 THEN
+        SET v_msg = CONCAT(v_msg, 'ADVERTENCIA: total_llamadas = 0 en base_ivr_detalle. ');
+    END IF;
+
+    -- Resultado
+    SET p_ok = (v_count_det > 0 AND v_count_cli = 3 AND v_sum_llamadas > 0);
+    SET p_mensaje = IF(p_ok, CONCAT('OK — ', v_count_det, ' filas detalle, ',
+                                    v_count_cli, ' filas clientes, ',
+                                    FORMAT(v_sum_llamadas, 0), ' llamadas totales.'),
+                            v_msg);
+
+    -- Emitir result set para consulta directa
+    SELECT
+        p_quarter                        AS quarter,
+        v_count_det                      AS filas_detalle,
+        v_count_cli                      AS filas_clientes,
+        FORMAT(v_sum_llamadas, 0)        AS total_llamadas,
+        p_ok                             AS validacion_ok,
+        p_mensaje                        AS mensaje;
+END$$
+
+DELIMITER ;
+
+-- =============================================================================
+-- Verificacion
+-- =============================================================================
+-- CALL sp_etl_validar('Q02_26', @ok, @msg);
+-- SELECT @ok, @msg;
+SELECT ROUTINE_NAME FROM information_schema.ROUTINES
+WHERE ROUTINE_SCHEMA='ivr_legacy' AND ROUTINE_NAME='sp_etl_validar';
