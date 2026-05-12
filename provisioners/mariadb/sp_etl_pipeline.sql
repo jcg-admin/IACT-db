@@ -390,6 +390,17 @@ BEGIN
             UPDATE job_execution_log
             SET status='FAILED', end_time=NOW(), error_message=v_err_msg
             WHERE id = v_step_id;
+            UPDATE job_execution_log
+            SET status='FAILED', end_time=NOW(),
+                error_message=CONCAT('Falló etl_base_clientes: ', v_err_msg)
+            WHERE id = v_maestro_id;
+            -- Mismo patrón que el handler del PASO 4 (sp_etl_base_detalle).
+            -- Si sp_etl_validar o cualquier sentencia posterior también falla
+            -- y la excepción propaga fuera de sp_etl_maestro, el PASO 7 no
+            -- se ejecutará y v_maestro_id quedaría RUNNING indefinidamente.
+            -- Con este UPDATE el maestro queda FAILED de inmediato — el check
+            -- de concurrencia del PASO 1 solo bloquea en status='RUNNING',
+            -- no en 'FAILED', por lo que la siguiente ejecución puede proceder.
         END;
         CALL sp_etl_base_clientes(v_quarter, v_inicio, v_fin, v_table, v_step_id);
     END;
