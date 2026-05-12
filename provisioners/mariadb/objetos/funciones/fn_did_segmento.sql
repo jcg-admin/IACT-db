@@ -1,13 +1,20 @@
--- =============================================================================
--- fn_did_segmento.sql
--- Schema: ivr_legacy (MariaDB 10.11)
--- Version: 2.0.0
---
--- Prerequisito: Ninguno
--- Archivo fuente original: funciones_utilidad.sql
--- Despliegue:
---   mysql --socket=/run/mysqld/mysqld.sock ivr_legacy < fn_did_segmento.sql
--- =============================================================================
+SELECT 
+    'PROCESO INICIO' as evento,
+    NOW() as timestamp_inicio
+FROM DUAL;
+
+/*********************************************************************************************
+    Script          : fn_did_segmento.sql
+    Version         : 2.0.0
+    Create          : MAYO/2026
+    Engine          : MariaDB 10.11
+    Schema          : ivr_legacy
+    Prerequisito    : Ninguno — funcion de mapeo puro sin dependencias externas
+    Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < fn_did_segmento.sql
+    Notas           : DID 19028031=nacional_A / 19020001=nacional_B / 19020084=puebla
+*********************************************************************************************/
+
+-- DEFINICIÓN
 
 DELIMITER $$
 
@@ -34,10 +41,18 @@ END$$
 
 DELIMITER ;
 
--- =============================================================================
--- Verificacion
--- =============================================================================
-SELECT fn_did_segmento('19028031') AS esperado_nacional_A
-     , fn_did_segmento('19020001') AS esperado_nacional_B
-     , fn_did_segmento('19020084') AS esperado_puebla
-     , fn_did_segmento('99999999') AS esperado_desconocido;
+-- VERIFICACIÓN
+
+SELECT 
+    fn_did_segmento('19028031') as esperado_nacional_A
+    , fn_did_segmento('19020001') as esperado_nacional_B
+    , fn_did_segmento('19020084') as esperado_puebla
+    , fn_did_segmento('99999999') as esperado_desconocido
+FROM DUAL;
+
+-- FINALIZACIÓN
+
+SELECT 
+    'PROCESO COMPLETADO' as evento,
+    NOW() as timestamp_fin
+FROM DUAL;

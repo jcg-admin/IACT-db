@@ -1,16 +1,20 @@
--- =============================================================================
--- sp_etl_historico.sql
--- Schema: ivr_legacy (MariaDB 10.11)
--- Version: 2.0.0
--- DEFINER: root@localhost (SQL SECURITY DEFINER)
---
--- Prerequisito: sp_etl_base_detalle, sp_etl_base_clientes, sp_etl_validar
--- Archivo fuente original: sp_etl_pipeline.sql
--- Despliegue:
---   mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_historico.sql
--- NOTA: Despues del despliegue ejecutar provision-mariadb.sh
---       para restaurar GRANT EXECUTE (DROP PROCEDURE los elimina).
--- =============================================================================
+SELECT 
+    'PROCESO INICIO' as evento,
+    NOW() as timestamp_inicio
+FROM DUAL;
+
+/*********************************************************************************************
+    Script          : sp_etl_historico.sql
+    Version         : 2.0.0
+    Create          : MAYO/2026
+    Engine          : MariaDB 10.11
+    Schema          : ivr_legacy
+    Prerequisito    : sp_etl_base_detalle — sp_etl_base_clientes — sp_etl_validar
+    Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_historico.sql
+    Notas           : Backfill manual. Sin check de concurrencia. SLEEP(5) entre detalle y clientes. Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
+*********************************************************************************************/
+
+-- DEFINICIÓN
 
 DELIMITER $$
 
@@ -74,10 +78,20 @@ END$$
 
 DELIMITER ;
 
--- =============================================================================
--- Verificacion
--- =============================================================================
+-- VERIFICACIÓN
+
+-- Ejemplo de uso:
 -- CALL sp_etl_historico(2025, 1);
--- SELECT quarter_procesado, ok, resultado FROM (CALL sp_etl_historico(2025,1)) t;
-SELECT ROUTINE_NAME FROM information_schema.ROUTINES
-WHERE ROUTINE_SCHEMA='ivr_legacy' AND ROUTINE_NAME='sp_etl_historico';
+SELECT 
+    ROUTINE_NAME as nombre
+    , ROUTINE_TYPE as tipo
+FROM information_schema.ROUTINES
+WHERE ROUTINE_SCHEMA = 'ivr_legacy'
+    AND ROUTINE_NAME = 'sp_etl_historico';
+
+-- FINALIZACIÓN
+
+SELECT 
+    'PROCESO COMPLETADO' as evento,
+    NOW() as timestamp_fin
+FROM DUAL;

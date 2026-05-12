@@ -1,13 +1,20 @@
--- =============================================================================
--- fn_duracion_seg.sql
--- Schema: ivr_legacy (MariaDB 10.11)
--- Version: 2.0.0
---
--- Prerequisito: Ninguno
--- Archivo fuente original: funciones_utilidad.sql
--- Despliegue:
---   mysql --socket=/run/mysqld/mysqld.sock ivr_legacy < fn_duracion_seg.sql
--- =============================================================================
+SELECT 
+    'PROCESO INICIO' as evento,
+    NOW() as timestamp_inicio
+FROM DUAL;
+
+/*********************************************************************************************
+    Script          : fn_duracion_seg.sql
+    Version         : 2.0.0
+    Create          : MAYO/2026
+    Engine          : MariaDB 10.11
+    Schema          : ivr_legacy
+    Prerequisito    : Ninguno — calculo de duracion sin dependencias
+    Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < fn_duracion_seg.sql
+    Notas           : Usa ABS para orden no garantizado. NULL en cualquier parametro retorna 0. Max precision: < 24h.
+*********************************************************************************************/
+
+-- DEFINICIÓN
 
 DELIMITER $$
 
@@ -43,8 +50,16 @@ END$$
 
 DELIMITER ;
 
--- =============================================================================
--- Verificacion
--- =============================================================================
-SELECT fn_duracion_seg('2025-01-01 08:00:00', '2025-01-01 08:02:30') AS esperado_150
-     , fn_duracion_seg(NULL, '2025-01-01 08:00:00')                   AS esperado_0;
+-- VERIFICACIÓN
+
+SELECT 
+    fn_duracion_seg('2025-01-01 08:00:00', '2025-01-01 08:02:30') as esperado_150
+    , fn_duracion_seg(NULL, '2025-01-01 08:00:00')                as esperado_0
+FROM DUAL;
+
+-- FINALIZACIÓN
+
+SELECT 
+    'PROCESO COMPLETADO' as evento,
+    NOW() as timestamp_fin
+FROM DUAL;

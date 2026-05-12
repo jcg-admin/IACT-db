@@ -1,16 +1,20 @@
--- =============================================================================
--- sp_etl_base_detalle.sql
--- Schema: ivr_legacy (MariaDB 10.11)
--- Version: 2.0.0
--- DEFINER: root@localhost (SQL SECURITY DEFINER)
---
--- Prerequisito: funciones_utilidad.sql, schema_base_ivr.sql
--- Archivo fuente original: sp_etl_pipeline.sql
--- Despliegue:
---   mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_base_detalle.sql
--- NOTA: Despues del despliegue ejecutar provision-mariadb.sh
---       para restaurar GRANT EXECUTE (DROP PROCEDURE los elimina).
--- =============================================================================
+SELECT 
+    'PROCESO INICIO' as evento,
+    NOW() as timestamp_inicio
+FROM DUAL;
+
+/*********************************************************************************************
+    Script          : sp_etl_base_detalle.sql
+    Version         : 2.0.0
+    Create          : MAYO/2026
+    Engine          : MariaDB 10.11
+    Schema          : ivr_legacy
+    Prerequisito    : funciones_utilidad.sql — schema_base_ivr.sql
+    Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_base_detalle.sql
+    Notas           : ETL principal. Procesa mes a mes. Idempotente: DELETE antes de INSERT. Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
+*********************************************************************************************/
+
+-- DEFINICIÓN
 
 DELIMITER $$
 
@@ -120,11 +124,20 @@ END etl_detalle$$
 
 DELIMITER ;
 
--- =============================================================================
--- Verificacion
--- =============================================================================
--- Verificacion post-despliegue (requiere datos en tbl_historico_*):
--- CALL sp_etl_base_detalle('Q02_26','2026-04-01','2026-06-30','tbl_historico_t2_2026', NULL);
--- SELECT COUNT(*) FROM base_ivr_detalle WHERE trimestre='Q02_26';
-SELECT ROUTINE_NAME, ROUTINE_TYPE FROM information_schema.ROUTINES
-WHERE ROUTINE_SCHEMA='ivr_legacy' AND ROUTINE_NAME='sp_etl_base_detalle';
+-- VERIFICACIÓN
+
+-- Verificar que el SP existe en el schema:
+SELECT 
+    ROUTINE_NAME as nombre
+    , ROUTINE_TYPE as tipo
+    , DEFINER as definer
+FROM information_schema.ROUTINES
+WHERE ROUTINE_SCHEMA = 'ivr_legacy'
+    AND ROUTINE_NAME = 'sp_etl_base_detalle';
+
+-- FINALIZACIÓN
+
+SELECT 
+    'PROCESO COMPLETADO' as evento,
+    NOW() as timestamp_fin
+FROM DUAL;

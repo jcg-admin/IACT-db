@@ -1,16 +1,20 @@
--- =============================================================================
--- sp_etl_maestro.sql
--- Schema: ivr_legacy (MariaDB 10.11)
--- Version: 2.0.0
--- DEFINER: root@localhost (SQL SECURITY DEFINER)
---
--- Prerequisito: sp_etl_base_detalle, sp_etl_base_clientes, sp_etl_validar, schema_base_ivr.sql
--- Archivo fuente original: sp_etl_pipeline.sql
--- Despliegue:
---   mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_maestro.sql
--- NOTA: Despues del despliegue ejecutar provision-mariadb.sh
---       para restaurar GRANT EXECUTE (DROP PROCEDURE los elimina).
--- =============================================================================
+SELECT 
+    'PROCESO INICIO' as evento,
+    NOW() as timestamp_inicio
+FROM DUAL;
+
+/*********************************************************************************************
+    Script          : sp_etl_maestro.sql
+    Version         : 2.0.0
+    Create          : MAYO/2026
+    Engine          : MariaDB 10.11
+    Schema          : ivr_legacy
+    Prerequisito    : sp_etl_base_detalle — sp_etl_base_clientes — sp_etl_validar — schema_base_ivr.sql
+    Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_maestro.sql
+    Notas           : Orquestador principal. 7 pasos con checkpoints. Calcula quarter automaticamente. Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
+*********************************************************************************************/
+
+-- DEFINICIÓN
 
 DELIMITER $$
 
@@ -175,10 +179,23 @@ END$$
 
 DELIMITER ;
 
--- =============================================================================
--- Verificacion
--- =============================================================================
--- CALL sp_etl_maestro();
--- SELECT step_name, status FROM job_execution_log WHERE job_name='etl_diario' ORDER BY id DESC LIMIT 4;
-SELECT ROUTINE_NAME FROM information_schema.ROUTINES
-WHERE ROUTINE_SCHEMA='ivr_legacy' AND ROUTINE_NAME='sp_etl_maestro';
+-- VERIFICACIÓN
+
+-- Verificar ultimas ejecuciones:
+SELECT 
+    step_name as paso
+    , status
+    , start_time
+    , records_procesados
+    , LEFT(error_message, 60) AS error
+FROM job_execution_log
+WHERE job_name = 'etl_diario'
+ORDER BY id DESC
+LIMIT 5;
+
+-- FINALIZACIÓN
+
+SELECT 
+    'PROCESO COMPLETADO' as evento,
+    NOW() as timestamp_fin
+FROM DUAL;

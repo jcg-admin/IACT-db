@@ -1,13 +1,20 @@
--- =============================================================================
--- ivr_es_dia_semana.sql
--- Schema: ivr_legacy (MariaDB 10.11)
--- Version: 2.0.0
---
--- Prerequisito: Ninguno
--- Archivo fuente original: funciones_utilidad.sql
--- Despliegue:
---   mysql --socket=/run/mysqld/mysqld.sock ivr_legacy < ivr_es_dia_semana.sql
--- =============================================================================
+SELECT 
+    'PROCESO INICIO' as evento,
+    NOW() as timestamp_inicio
+FROM DUAL;
+
+/*********************************************************************************************
+    Script          : ivr_es_dia_semana.sql
+    Version         : 2.0.0
+    Create          : MAYO/2026
+    Engine          : MariaDB 10.11
+    Schema          : ivr_legacy
+    Prerequisito    : Ninguno — predicado puro sin dependencias
+    Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < ivr_es_dia_semana.sql
+    Notas           : DAYOFWEEK NOT IN (1,7). Festivos NO excluidos — IVR opera 7 dias (H-F1-002).
+*********************************************************************************************/
+
+-- DEFINICIÓN
 
 DELIMITER $$
 
@@ -35,9 +42,17 @@ END$$
 
 DELIMITER ;
 
--- =============================================================================
--- Verificacion
--- =============================================================================
-SELECT ivr_es_dia_semana('2025-01-06') AS lunes_esperado_1
-     , ivr_es_dia_semana('2025-01-04') AS sabado_esperado_0
-     , ivr_es_dia_semana('2025-01-05') AS domingo_esperado_0;
+-- VERIFICACIÓN
+
+SELECT 
+    ivr_es_dia_semana('2025-01-06') as lunes_esperado_1
+    , ivr_es_dia_semana('2025-01-04') as sabado_esperado_0
+    , ivr_es_dia_semana('2025-01-05') as domingo_esperado_0
+FROM DUAL;
+
+-- FINALIZACIÓN
+
+SELECT 
+    'PROCESO COMPLETADO' as evento,
+    NOW() as timestamp_fin
+FROM DUAL;

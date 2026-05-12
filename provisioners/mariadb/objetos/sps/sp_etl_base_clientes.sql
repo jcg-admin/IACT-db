@@ -1,16 +1,20 @@
--- =============================================================================
--- sp_etl_base_clientes.sql
--- Schema: ivr_legacy (MariaDB 10.11)
--- Version: 2.0.0
--- DEFINER: root@localhost (SQL SECURITY DEFINER)
---
--- Prerequisito: funciones_utilidad.sql, schema_base_ivr.sql
--- Archivo fuente original: sp_etl_pipeline.sql
--- Despliegue:
---   mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_base_clientes.sql
--- NOTA: Despues del despliegue ejecutar provision-mariadb.sh
---       para restaurar GRANT EXECUTE (DROP PROCEDURE los elimina).
--- =============================================================================
+SELECT 
+    'PROCESO INICIO' as evento,
+    NOW() as timestamp_inicio
+FROM DUAL;
+
+/*********************************************************************************************
+    Script          : sp_etl_base_clientes.sql
+    Version         : 2.0.0
+    Create          : MAYO/2026
+    Engine          : MariaDB 10.11
+    Schema          : ivr_legacy
+    Prerequisito    : funciones_utilidad.sql — schema_base_ivr.sql
+    Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_base_clientes.sql
+    Notas           : COUNT DISTINCT no aditivo — scan completo del quarter. Resultado esperado: 3 filas. Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
+*********************************************************************************************/
+
+-- DEFINICIÓN
 
 DELIMITER $$
 
@@ -70,9 +74,19 @@ END etl_clientes$$
 
 DELIMITER ;
 
--- =============================================================================
--- Verificacion
--- =============================================================================
--- SELECT ROUTINE_NAME FROM information_schema.ROUTINES
--- WHERE ROUTINE_SCHEMA='ivr_legacy' AND ROUTINE_NAME='sp_etl_base_clientes';
-SELECT 'sp_etl_base_clientes desplegado' AS resultado;
+-- VERIFICACIÓN
+
+SELECT 
+    ROUTINE_NAME as nombre
+    , ROUTINE_TYPE as tipo
+    , DEFINER as definer
+FROM information_schema.ROUTINES
+WHERE ROUTINE_SCHEMA = 'ivr_legacy'
+    AND ROUTINE_NAME = 'sp_etl_base_clientes';
+
+-- FINALIZACIÓN
+
+SELECT 
+    'PROCESO COMPLETADO' as evento,
+    NOW() as timestamp_fin
+FROM DUAL;

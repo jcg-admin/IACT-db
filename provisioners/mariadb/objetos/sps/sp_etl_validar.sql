@@ -1,16 +1,20 @@
--- =============================================================================
--- sp_etl_validar.sql
--- Schema: ivr_legacy (MariaDB 10.11)
--- Version: 2.0.0
--- DEFINER: root@localhost (SQL SECURITY DEFINER)
---
--- Prerequisito: schema_base_ivr.sql
--- Archivo fuente original: sp_etl_pipeline.sql
--- Despliegue:
---   mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_validar.sql
--- NOTA: Despues del despliegue ejecutar provision-mariadb.sh
---       para restaurar GRANT EXECUTE (DROP PROCEDURE los elimina).
--- =============================================================================
+SELECT 
+    'PROCESO INICIO' as evento,
+    NOW() as timestamp_inicio
+FROM DUAL;
+
+/*********************************************************************************************
+    Script          : sp_etl_validar.sql
+    Version         : 2.0.0
+    Create          : MAYO/2026
+    Engine          : MariaDB 10.11
+    Schema          : ivr_legacy
+    Prerequisito    : schema_base_ivr.sql — base_ivr_detalle y base_ivr_clientes deben existir
+    Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_validar.sql
+    Notas           : 3 checks: detalle > 0 filas / clientes = 3 filas / total_llamadas > 0. Solo lectura. Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
+*********************************************************************************************/
+
+-- DEFINICIÓN
 
 DELIMITER $$
 
@@ -72,10 +76,21 @@ END$$
 
 DELIMITER ;
 
--- =============================================================================
--- Verificacion
--- =============================================================================
+-- VERIFICACIÓN
+
+-- Invocar directamente para diagnostico:
 -- CALL sp_etl_validar('Q02_26', @ok, @msg);
--- SELECT @ok, @msg;
-SELECT ROUTINE_NAME FROM information_schema.ROUTINES
-WHERE ROUTINE_SCHEMA='ivr_legacy' AND ROUTINE_NAME='sp_etl_validar';
+-- SELECT @ok AS validacion_ok, @msg AS mensaje;
+SELECT 
+    ROUTINE_NAME as nombre
+    , ROUTINE_TYPE as tipo
+FROM information_schema.ROUTINES
+WHERE ROUTINE_SCHEMA = 'ivr_legacy'
+    AND ROUTINE_NAME = 'sp_etl_validar';
+
+-- FINALIZACIÓN
+
+SELECT 
+    'PROCESO COMPLETADO' as evento,
+    NOW() as timestamp_fin
+FROM DUAL;

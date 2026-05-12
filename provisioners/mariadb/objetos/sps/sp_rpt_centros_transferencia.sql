@@ -1,16 +1,20 @@
--- =============================================================================
--- sp_rpt_centros_transferencia.sql
--- Schema: ivr_legacy (MariaDB 10.11)
--- Version: 2.0.0
--- DEFINER: root@localhost (SQL SECURITY DEFINER)
---
--- Prerequisito: funciones_utilidad.sql, schema_base_ivr.sql, sp_etl_pipeline.sql (base_ivr_* con datos)
--- Archivo fuente original: sp_rpt_reportes.sql
--- Despliegue:
---   mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_rpt_centros_transferencia.sql
--- NOTA: Despues del despliegue ejecutar provision-mariadb.sh
---       para restaurar GRANT EXECUTE (DROP PROCEDURE los elimina).
--- =============================================================================
+SELECT 
+    'PROCESO INICIO' as evento,
+    NOW() as timestamp_inicio
+FROM DUAL;
+
+/*********************************************************************************************
+    Script          : sp_rpt_centros_transferencia.sql
+    Version         : 2.0.0
+    Create          : MAYO/2026
+    Engine          : MariaDB 10.11
+    Schema          : ivr_legacy
+    Prerequisito    : funciones_utilidad.sql — schema_base_ivr.sql — sp_etl_pipeline.sql (base_ivr_* con datos)
+    Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_rpt_centros_transferencia.sql
+    Notas           : UC_RPT_15 — Mayor granularidad: quarter x fecha x segmento x centro x menu x opcion. NULLIF en porcentaje. Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
+*********************************************************************************************/
+
+-- DEFINICIÓN
 
 DELIMITER $$
 
@@ -60,8 +64,20 @@ END$$
 
 DELIMITER ;
 
--- =============================================================================
--- Verificacion
--- =============================================================================
-SELECT ROUTINE_NAME, ROUTINE_TYPE FROM information_schema.ROUTINES
-WHERE ROUTINE_SCHEMA='ivr_legacy' AND ROUTINE_NAME='sp_rpt_centros_transferencia';
+-- VERIFICACIÓN
+
+-- Ejemplo:
+-- CALL sp_rpt_centros_transferencia('Q02_26', 'todas');
+SELECT 
+    ROUTINE_NAME as nombre
+    , ROUTINE_TYPE as tipo
+FROM information_schema.ROUTINES
+WHERE ROUTINE_SCHEMA = 'ivr_legacy'
+    AND ROUTINE_NAME = 'sp_rpt_centros_transferencia';
+
+-- FINALIZACIÓN
+
+SELECT 
+    'PROCESO COMPLETADO' as evento,
+    NOW() as timestamp_fin
+FROM DUAL;

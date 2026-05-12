@@ -1,13 +1,20 @@
--- =============================================================================
--- ivr_contar_dias_semana.sql
--- Schema: ivr_legacy (MariaDB 10.11)
--- Version: 2.0.0
---
--- Prerequisito: ivr_es_dia_semana
--- Archivo fuente original: funciones_utilidad.sql
--- Despliegue:
---   mysql --socket=/run/mysqld/mysqld.sock ivr_legacy < ivr_contar_dias_semana.sql
--- =============================================================================
+SELECT 
+    'PROCESO INICIO' as evento,
+    NOW() as timestamp_inicio
+FROM DUAL;
+
+/*********************************************************************************************
+    Script          : ivr_contar_dias_semana.sql
+    Version         : 2.0.0
+    Create          : MAYO/2026
+    Engine          : MariaDB 10.11
+    Schema          : ivr_legacy
+    Prerequisito    : ivr_es_dia_semana — debe existir antes de crear esta funcion
+    Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < ivr_contar_dias_semana.sql
+    Notas           : Iteracion dia a dia O(n). Para quarters de <= 92 dias el rendimiento es aceptable.
+*********************************************************************************************/
+
+-- DEFINICIÓN
 
 DELIMITER $$
 
@@ -46,9 +53,17 @@ END$$
 
 DELIMITER ;
 
--- =============================================================================
--- Verificacion
--- =============================================================================
-SELECT ivr_contar_dias_semana('2025-01-01', '2025-01-31') AS esperado_23
-     , ivr_contar_dias_semana('2025-04-01', '2025-06-30') AS esperado_65
-     , ivr_contar_dias_semana('2025-07-01', '2025-09-30') AS esperado_66;
+-- VERIFICACIÓN
+
+SELECT 
+    ivr_contar_dias_semana('2025-01-01', '2025-01-31') as esperado_23
+    , ivr_contar_dias_semana('2025-04-01', '2025-06-30') as esperado_65
+    , ivr_contar_dias_semana('2025-07-01', '2025-09-30') as esperado_66
+FROM DUAL;
+
+-- FINALIZACIÓN
+
+SELECT 
+    'PROCESO COMPLETADO' as evento,
+    NOW() as timestamp_fin
+FROM DUAL;

@@ -1,13 +1,20 @@
--- =============================================================================
--- fn_normalizar_centro.sql
--- Schema: ivr_legacy (MariaDB 10.11)
--- Version: 2.0.0
---
--- Prerequisito: Ninguno
--- Archivo fuente original: funciones_utilidad.sql
--- Despliegue:
---   mysql --socket=/run/mysqld/mysqld.sock ivr_legacy < fn_normalizar_centro.sql
--- =============================================================================
+SELECT 
+    'PROCESO INICIO' as evento,
+    NOW() as timestamp_inicio
+FROM DUAL;
+
+/*********************************************************************************************
+    Script          : fn_normalizar_centro.sql
+    Version         : 2.0.0
+    Create          : MAYO/2026
+    Engine          : MariaDB 10.11
+    Schema          : ivr_legacy
+    Prerequisito    : Ninguno — normalizacion de cDID_Centro_Transferencia sin dependencias
+    Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < fn_normalizar_centro.sql
+    Notas           : Sentinels: CASO_NULL / CLIENTE_COLGO / CASO_ERROR_CEROS / ERROR_CARACTER_INICIAL. Recorta sufijos > 10 chars.
+*********************************************************************************************/
+
+-- DEFINICIÓN
 
 DELIMITER $$
 
@@ -70,11 +77,19 @@ END$$
 
 DELIMITER ;
 
--- =============================================================================
--- Verificacion
--- =============================================================================
-SELECT fn_normalizar_centro(NULL)             AS esperado_CASO_NULL
-     , fn_normalizar_centro('cliente_colgo')  AS esperado_CLIENTE_COLGO
-     , fn_normalizar_centro('0000')           AS esperado_CASO_ERROR_CEROS
-     , fn_normalizar_centro('X12345')         AS esperado_ERROR_CARACTER_INICIAL
-     , fn_normalizar_centro('12345')          AS esperado_12345;
+-- VERIFICACIÓN
+
+SELECT 
+    fn_normalizar_centro(NULL)            as esperado_CASO_NULL
+    , fn_normalizar_centro('cliente_colgo') as esperado_CLIENTE_COLGO
+    , fn_normalizar_centro('0000')        as esperado_CASO_ERROR_CEROS
+    , fn_normalizar_centro('X12345')      as esperado_ERROR_CARACTER_INICIAL
+    , fn_normalizar_centro('12345')       as esperado_12345
+FROM DUAL;
+
+-- FINALIZACIÓN
+
+SELECT 
+    'PROCESO COMPLETADO' as evento,
+    NOW() as timestamp_fin
+FROM DUAL;

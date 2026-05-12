@@ -1,18 +1,25 @@
--- =============================================================================
--- evt_etl_diario.sql
--- Schema: ivr_legacy (MariaDB 10.11)
--- Version: 2.0.0
---
--- Prerequisito: sp_etl_maestro (debe existir antes de crear el event)
--- Archivo fuente original: sp_etl_pipeline.sql
--- Despliegue:
---   mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < evt_etl_diario.sql
--- REQUISITO: event_scheduler = ON en MariaDB
---   SET GLOBAL event_scheduler = ON;
--- =============================================================================
+SELECT 
+    'PROCESO INICIO' as evento,
+    NOW() as timestamp_inicio
+FROM DUAL;
 
--- Verificar que event_scheduler esta activo antes de desplegar:
+/*********************************************************************************************
+    Script          : evt_etl_diario.sql
+    Version         : 2.0.0
+    Create          : MAYO/2026
+    Engine          : MariaDB 10.11
+    Schema          : ivr_legacy
+    Prerequisito    : sp_etl_maestro debe existir. event_scheduler = ON en MariaDB.
+    Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < evt_etl_diario.sql
+    Notas           : Requiere event_scheduler=ON. Control operacional: UPDATE job_config SET is_enabled=FALSE/TRUE.
+*********************************************************************************************/
+
+-- CONFIGURACIÓN
+
+-- Verificar que el scheduler esta activo antes de desplegar:
 -- SHOW VARIABLES LIKE 'event_scheduler';
+
+-- DEFINICIÓN
 
 
 
@@ -29,9 +36,22 @@ CREATE EVENT evt_etl_diario
     COMMENT 'ETL IVR nocturno — ejecuta sp_etl_maestro()'
     DO CALL sp_etl_maestro();
 
--- =============================================================================
--- Verificacion
--- =============================================================================
-SELECT EVENT_NAME, STATUS, EVENT_TYPE, INTERVAL_VALUE, INTERVAL_FIELD, STARTS
+-- VERIFICACIÓN
+
+SELECT 
+    EVENT_NAME as nombre
+    , STATUS as estado
+    , EVENT_TYPE as tipo
+    , INTERVAL_VALUE as intervalo
+    , INTERVAL_FIELD as unidad
+    , STARTS as inicio
 FROM information_schema.EVENTS
-WHERE EVENT_SCHEMA='ivr_legacy' AND EVENT_NAME='evt_etl_diario';
+WHERE EVENT_SCHEMA = 'ivr_legacy'
+    AND EVENT_NAME = 'evt_etl_diario';
+
+-- FINALIZACIÓN
+
+SELECT 
+    'PROCESO COMPLETADO' as evento,
+    NOW() as timestamp_fin
+FROM DUAL;

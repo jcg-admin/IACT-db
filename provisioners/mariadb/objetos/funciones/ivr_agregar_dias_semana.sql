@@ -1,13 +1,20 @@
--- =============================================================================
--- ivr_agregar_dias_semana.sql
--- Schema: ivr_legacy (MariaDB 10.11)
--- Version: 2.0.0
---
--- Prerequisito: ivr_es_dia_semana
--- Archivo fuente original: funciones_utilidad.sql
--- Despliegue:
---   mysql --socket=/run/mysqld/mysqld.sock ivr_legacy < ivr_agregar_dias_semana.sql
--- =============================================================================
+SELECT 
+    'PROCESO INICIO' as evento,
+    NOW() as timestamp_inicio
+FROM DUAL;
+
+/*********************************************************************************************
+    Script          : ivr_agregar_dias_semana.sql
+    Version         : 2.0.0
+    Create          : MAYO/2026
+    Engine          : MariaDB 10.11
+    Schema          : ivr_legacy
+    Prerequisito    : ivr_es_dia_semana — debe existir antes de crear esta funcion
+    Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < ivr_agregar_dias_semana.sql
+    Notas           : p_n <= 0 retorna p_fecha sin cambios. Valores SLA estandar: 1, 3 y 5 dias habiles.
+*********************************************************************************************/
+
+-- DEFINICIÓN
 
 DELIMITER $$
 
@@ -42,9 +49,17 @@ END$$
 
 DELIMITER ;
 
--- =============================================================================
--- Verificacion
--- =============================================================================
-SELECT ivr_agregar_dias_semana('2025-01-31', 1) AS esperado_2025_02_03
-     , ivr_agregar_dias_semana('2025-01-31', 3) AS esperado_2025_02_05
-     , ivr_agregar_dias_semana('2025-01-31', 5) AS esperado_2025_02_07;
+-- VERIFICACIÓN
+
+SELECT 
+    ivr_agregar_dias_semana('2025-01-31', 1) as esperado_2025_02_03
+    , ivr_agregar_dias_semana('2025-01-31', 3) as esperado_2025_02_05
+    , ivr_agregar_dias_semana('2025-01-31', 5) as esperado_2025_02_07
+FROM DUAL;
+
+-- FINALIZACIÓN
+
+SELECT 
+    'PROCESO COMPLETADO' as evento,
+    NOW() as timestamp_fin
+FROM DUAL;
