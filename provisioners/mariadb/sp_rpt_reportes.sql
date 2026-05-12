@@ -49,13 +49,17 @@ BEGIN
         c.trimestre,
         c.segmento,
         c.clientes_unicos,
-        -- Total del quarter para calcular % por segmento
+        -- Total del quarter para calcular % por segmento.
+        -- NULLIF(..., 0): si el ETL falló y clientes_unicos=0 en todas las filas,
+        -- SUM=0 produce NULL silencioso sin NULLIF. Con NULLIF retorna NULL explícito
+        -- en lugar de dividir por cero.
         ROUND(
             c.clientes_unicos
-            / (SELECT SUM(c2.clientes_unicos)
-               FROM base_ivr_clientes c2
-               WHERE c2.trimestre = p_quarter)
-            * 100, 2
+            / NULLIF(
+                (SELECT SUM(c2.clientes_unicos)
+                 FROM base_ivr_clientes c2
+                 WHERE c2.trimestre = p_quarter),
+              0) * 100, 2
         )                       AS pct_del_total,
         c.cargado_en            AS ultima_actualizacion
     FROM base_ivr_clientes c
@@ -84,14 +88,18 @@ BEGIN
         UPPER(TRIM(b.menu))          AS menu,         -- UPPERCASE para presentación
         b.opcion,
         b.total_llamadas,
+        -- NULLIF defensivo: la subconsulta correlacionada (b2.fecha = b.fecha)
+        -- garantiza SUM > 0 mientras 'b' exista, pero se aplica por consistencia
+        -- con el resto de los SPs de reporte.
         ROUND(
             b.total_llamadas
-            / (SELECT SUM(b2.total_llamadas)
-               FROM base_ivr_detalle b2
-               WHERE b2.trimestre = p_quarter
-                 AND b2.fecha     = b.fecha
-                 AND (p_segmento = 'todas' OR b2.segmento = p_segmento)
-              ) * 100, 7
+            / NULLIF(
+                (SELECT SUM(b2.total_llamadas)
+                 FROM base_ivr_detalle b2
+                 WHERE b2.trimestre = p_quarter
+                   AND b2.fecha     = b.fecha
+                   AND (p_segmento = 'todas' OR b2.segmento = p_segmento)),
+              0) * 100, 7
         )                            AS porcentaje,
         b.misma_linea,
         b.linea_diferente,
@@ -121,6 +129,11 @@ CREATE PROCEDURE sp_rpt_llamadas_abandonadas(
 )
 BEGIN
     -- Total del quarter + segmento (denominador para %)
+    -- NULLIF(..., 0): v_total_quarter tiene DEFAULT 0. Si base_ivr_detalle
+    -- no tiene filas para este quarter/segmento, SUM retorna NULL y la
+    -- asignación deja v_total_quarter en 0 (no NULL, por el DEFAULT).
+    -- Dividir por 0 en MariaDB produce NULL silencioso; el CASE usa NULL
+    -- en las comparaciones (UNKNOWN), cayendo al ELSE='CRITICO' incorrectamente.
     DECLARE v_total_quarter BIGINT DEFAULT 0;
 
     SELECT SUM(total_llamadas)
@@ -135,22 +148,25 @@ BEGIN
         UPPER(TRIM(b.menu))                          AS menu,
         SUM(b.total_llamadas)                        AS total_abandonadas,
         -- % respecto al total del quarter/segmento
-        ROUND(SUM(b.total_llamadas) / v_total_quarter * 100, 2)
+        ROUND(SUM(b.total_llamadas) / NULLIF(v_total_quarter, 0) * 100, 2)
                                                      AS pct_del_total,
         -- % respecto a cada segmento individualmente (para comparar A vs B vs Puebla)
+        -- NULLIF defensivo: subconsulta correlacionada (b3.segmento = b.segmento)
+        -- garantiza SUM > 0 mientras 'b' exista.
         ROUND(
             SUM(b.total_llamadas)
-            / (SELECT SUM(b3.total_llamadas)
-               FROM base_ivr_detalle b3
-               WHERE b3.trimestre = p_quarter
-                 AND b3.segmento  = b.segmento
-              ) * 100, 2
+            / NULLIF(
+                (SELECT SUM(b3.total_llamadas)
+                 FROM base_ivr_detalle b3
+                 WHERE b3.trimestre = p_quarter
+                   AND b3.segmento  = b.segmento),
+              0) * 100, 2
         )                                            AS pct_del_segmento,
         -- Clasificación SLA (D-ETL-007 recalibrado)
         CASE
-            WHEN ROUND(SUM(b.total_llamadas) / v_total_quarter * 100, 2) < 20
+            WHEN ROUND(SUM(b.total_llamadas) / NULLIF(v_total_quarter, 0) * 100, 2) < 20
                 THEN 'OPTIMO'
-            WHEN ROUND(SUM(b.total_llamadas) / v_total_quarter * 100, 2) <= 30
+            WHEN ROUND(SUM(b.total_llamadas) / NULLIF(v_total_quarter, 0) * 100, 2) <= 30
                 THEN 'ACEPTABLE'
             ELSE 'CRITICO'
         END                                          AS clasificacion_sla
@@ -182,23 +198,27 @@ BEGIN
         b.centro_transferencia,
         SUM(b.total_llamadas)        AS total_llamadas,
         -- % de ese menú que va a ese centro
+        -- NULLIF defensivo: correlación b2.menu = b.menu garantiza SUM > 0.
         ROUND(
             SUM(b.total_llamadas)
-            / (SELECT SUM(b2.total_llamadas)
-               FROM base_ivr_detalle b2
-               WHERE b2.trimestre = p_quarter
-                 AND b2.menu      = b.menu
-                 AND (p_segmento = 'todas' OR b2.segmento = p_segmento)
-              ) * 100, 2
+            / NULLIF(
+                (SELECT SUM(b2.total_llamadas)
+                 FROM base_ivr_detalle b2
+                 WHERE b2.trimestre = p_quarter
+                   AND b2.menu      = b.menu
+                   AND (p_segmento = 'todas' OR b2.segmento = p_segmento)),
+              0) * 100, 2
         )                            AS pct_del_menu,
         -- % del total del quarter
+        -- NULLIF defensivo: misma tabla y quarter que la consulta exterior.
         ROUND(
             SUM(b.total_llamadas)
-            / (SELECT SUM(b3.total_llamadas)
-               FROM base_ivr_detalle b3
-               WHERE b3.trimestre = p_quarter
-                 AND (p_segmento = 'todas' OR b3.segmento = p_segmento)
-              ) * 100, 4
+            / NULLIF(
+                (SELECT SUM(b3.total_llamadas)
+                 FROM base_ivr_detalle b3
+                 WHERE b3.trimestre = p_quarter
+                   AND (p_segmento = 'todas' OR b3.segmento = p_segmento)),
+              0) * 100, 4
         )                            AS pct_del_total
     FROM base_ivr_detalle b
     WHERE b.trimestre = p_quarter
@@ -230,14 +250,16 @@ BEGIN
         b.opcion,
         SUM(b.total_llamadas)        AS total_llamadas,
         -- % que representa este menu+opcion dentro del centro
+        -- NULLIF defensivo: correlación b2.centro_transferencia = b.centro garantiza SUM > 0.
         ROUND(
             SUM(b.total_llamadas)
-            / (SELECT SUM(b2.total_llamadas)
-               FROM base_ivr_detalle b2
-               WHERE b2.trimestre            = p_quarter
-                 AND b2.centro_transferencia = b.centro_transferencia
-                 AND (p_segmento = 'todas' OR b2.segmento = p_segmento)
-              ) * 100, 2
+            / NULLIF(
+                (SELECT SUM(b2.total_llamadas)
+                 FROM base_ivr_detalle b2
+                 WHERE b2.trimestre            = p_quarter
+                   AND b2.centro_transferencia = b.centro_transferencia
+                   AND (p_segmento = 'todas' OR b2.segmento = p_segmento)),
+              0) * 100, 2
         )                            AS pct_del_centro,
         SUM(b.misma_linea)           AS misma_linea,
         SUM(b.linea_diferente)       AS linea_diferente,
@@ -382,13 +404,15 @@ BEGIN
         END                                          AS clasificacion_sla,
 
         -- % del total del quarter para ese segmento
+        -- NULLIF defensivo: correlación b2.segmento = b.segmento garantiza SUM > 0.
         ROUND(
             SUM(b.total_llamadas)
-            / (SELECT SUM(b2.total_llamadas)
-               FROM base_ivr_detalle b2
-               WHERE b2.trimestre = p_quarter
-                 AND b2.segmento  = b.segmento
-              ) * 100, 4
+            / NULLIF(
+                (SELECT SUM(b2.total_llamadas)
+                 FROM base_ivr_detalle b2
+                 WHERE b2.trimestre = p_quarter
+                   AND b2.segmento  = b.segmento),
+              0) * 100, 4
         )                                            AS pct_del_segmento
 
     FROM base_ivr_detalle b
