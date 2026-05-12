@@ -118,44 +118,51 @@ sql_exec_query() {
 #
 # Separada del loop de SQL (H-GRANT-002): puede ejecutarse en cualquier
 # estado de la BD sin depender del éxito de schema_base_ivr.sql.
+#
+# CNST-003 (del análisis ANALISIS-PERMISOS-CNST003-RUN-ETL):
+#   django_user es READ-ONLY sobre los datos del dominio IVR.
+#   La ÚNICA excepción es etl_runs: run_etl.py (management command) y
+#   scheduler.py (APScheduler) necesitan INSERT y UPDATE para registrar
+#   el ciclo de vida de las ejecuciones del job ETL.
+#   DELETE excluido deliberadamente — ningún archivo .py hace DELETE en etl_runs.
+#   Las otras 4 tablas (base_ivr_*, job_execution_log, job_config) son escritas
+#   por root vía DEFINER de los SPs — django_user solo las lee, y el SELECT
+#   global de setup.sh (GRANT SELECT ON ivr_legacy.*) ya lo cubre.
 # ---------------------------------------------------------------------------
 _apply_dml_grants() {
-    local dml_ok=0 dml_skip=0
+    local dml_ok=0
 
-    log_info "  Tablas analíticas que necesitan DML para ${DB_USER}:"
-    for tbl in base_ivr_detalle base_ivr_clientes \
-               job_execution_log etl_runs job_config; do
-        # Verificar que la tabla existe antes de intentar el grant
-        local exists
-        exists=$(sql_exec_query \
-            "SELECT COUNT(*) FROM information_schema.TABLES
-             WHERE TABLE_SCHEMA='${DB}' AND TABLE_NAME='${tbl}';")
+    log_info "  Tabla operacional de ETL que necesita escritura para ${DB_USER}:"
+    # ÚNICA tabla donde django_user escribe directamente.
+    # run_etl.py y scheduler.py usan INSERT (registrar inicio) y UPDATE
+    # (heartbeat, timeout, estado final). DELETE no tiene caso de uso.
+    # Si en el futuro se necesitan más tablas, documentar aquí la justificación
+    # y restaurar el loop con la lista explícita de tablas.
 
-        if [[ "${exists:-0}" -ne 1 ]]; then
-            log_debug "    SKIP ${tbl} — tabla no existe aún"
-            (( ++dml_skip ))
-            continue
-        fi
+    local tbl_exists
+    tbl_exists=$(sql_exec_query \
+        "SELECT COUNT(*) FROM information_schema.TABLES
+         WHERE TABLE_SCHEMA='${DB}' AND TABLE_NAME='etl_runs';")
 
-        for host in "localhost" "%"; do
-            local stmt
-            stmt="GRANT SELECT, INSERT, UPDATE, DELETE
-                ON \`${DB}\`.\`${tbl}\` TO '${DB_USER}'@'${host}';"
-            sql_exec_query "$stmt" "mysql" \
-                && (( ++dml_ok )) \
-                || log_warn "    WARN: GRANT DML ${tbl} @${host} fallo"
-        done
+    if [[ "${tbl_exists:-0}" -ne 1 ]]; then
+        log_warn "  SKIP etl_runs — tabla no existe aún"
+        log_warn "  Re-ejecutar provision-mariadb.sh cuando schema_base_ivr.sql esté aplicado"
+        return 0
+    fi
+
+    for host in "localhost" "%"; do
+        local stmt
+        stmt="GRANT SELECT, INSERT, UPDATE
+            ON \`${DB}\`.\`etl_runs\` TO '${DB_USER}'@'${host}';"
+        sql_exec_query "$stmt" "mysql" \
+            && (( ++dml_ok )) \
+            || log_warn "    WARN: GRANT DML etl_runs @${host} fallo"
     done
 
     sql_exec_query "FLUSH PRIVILEGES;" "mysql" \
         || log_warn "  FLUSH PRIVILEGES fallo (no crítico)"
 
-    if [[ $dml_skip -gt 0 ]]; then
-        log_warn "  Grants DML: ${dml_ok} OK, ${dml_skip} omitidos (tablas pendientes)"
-        log_warn "  Re-ejecutar provision-mariadb.sh cuando schema_base_ivr.sql esté aplicado"
-    else
-        log_success "  Grants DML aplicados (${dml_ok} grants)"
-    fi
+    log_success "  Grants DML aplicados (${dml_ok} grants — etl_runs: SELECT, INSERT, UPDATE)"
 }
 
 # ---------------------------------------------------------------------------
@@ -176,13 +183,27 @@ _apply_dml_grants() {
 #
 # Sintaxis MariaDB: GRANT EXECUTE ON PROCEDURE|FUNCTION <db>.<name>
 #   GRANT EXECUTE ON <db>.<name> genérico produce ERROR 1144.
+#
+# LISTA EXPLÍCITA (no dinámica):
+#   Solo los SPs que Django invoca directamente están autorizados.
+#   Los SPs internos del ETL (sp_etl_base_detalle, sp_etl_base_clientes,
+#   sp_etl_validar) son llamados por sp_etl_maestro como DEFINER=root;
+#   django_user no los necesita ni debe poder invocarlos directamente.
+#   Un SP nuevo de ETL no recibirá EXECUTE automáticamente — debe ser
+#   una decisión explícita documentada aquí.
+#   Las 7 funciones se conservan todas (solo cálculo/lectura, sin riesgo).
 # ---------------------------------------------------------------------------
 _apply_execute_grants() {
     local exec_ok=0 exec_skip=0
 
-    log_info "  Routines que necesitan EXECUTE para ${DB_USER}:"
+    log_info "  SPs que Django invoca directamente (lista explícita):"
 
-    # Procedures
+    # Procedures — lista explícita de los que Django invoca directamente:
+    #   sp_etl_maestro   — run_etl.py (management command) y scheduler.py
+    #   sp_etl_historico — ETLReintentarView (carga histórica manual)
+    #   sp_rpt_*         — 7 SPs de reporte (UC_RPT_12..17)
+    # Excluidos deliberadamente (invocados por root vía DEFINER de sp_etl_maestro):
+    #   sp_etl_base_detalle, sp_etl_base_clientes, sp_etl_validar
     while IFS= read -r sp_name; do
         [[ -z "$sp_name" ]] && continue
         for host in "localhost" "%"; do
@@ -197,9 +218,23 @@ _apply_execute_grants() {
     done < <(sql_exec_query \
         "SELECT ROUTINE_NAME FROM information_schema.ROUTINES
          WHERE ROUTINE_SCHEMA='${DB}'
-         AND ROUTINE_TYPE='PROCEDURE';" "mysql")
+         AND ROUTINE_TYPE='PROCEDURE'
+         AND ROUTINE_NAME IN (
+             'sp_etl_maestro',
+             'sp_etl_historico',
+             'sp_rpt_clientes',
+             'sp_rpt_centros_transferencia',
+             'sp_rpt_llamadas_abandonadas',
+             'sp_rpt_cMENU_ERROR',
+             'sp_rpt_centros_xsegmento',
+             'sp_rpt_menu_redirigidos',
+             'sp_rpt_menu_centro'
+         );" "mysql")
 
-    # Functions
+    # Functions — todas las funciones del schema.
+    # Son de solo cálculo/lectura (sin escritura), invocadas por los SPs
+    # como DEFINER=root. Django no las llama directamente, pero se conservan
+    # por defensividad y consistencia con el estado previo.
     while IFS= read -r fn_name; do
         [[ -z "$fn_name" ]] && continue
         for host in "localhost" "%"; do
