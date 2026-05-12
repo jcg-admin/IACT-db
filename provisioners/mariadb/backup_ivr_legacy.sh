@@ -276,8 +276,13 @@ else
 fi
 
 # Verificar que el skip_grant_tables NO está activo (BK-003)
+# BUG-005 fix: root_exec puede fallar si la BD no responde.
+# Con set -euo pipefail, el pipe falla y set -e mata el script silenciosamente.
+# Con || SKIP_GRANT='': si no podemos verificar, asumimos que NO está activo
+# (conservador — no marcamos el hallazgo sin evidencia).
 SKIP_GRANT=$(root_exec -e "SHOW VARIABLES LIKE 'skip_grant_tables';" \
-    | awk '/skip_grant_tables/{print $2}')
+    2>/dev/null | awk '/skip_grant_tables/{print $2}') \
+    || { log "WARN: no se pudo verificar skip_grant_tables — BD no respondio"; SKIP_GRANT=""; }
 if [[ "${SKIP_GRANT}" == "ON" ]]; then
     registrar_hallazgo "MEDIA" \
         "skip_grant_tables activo — GRANTS no garantizados" \
@@ -306,10 +311,23 @@ ORDER BY table_name;" 2>/dev/null | tee -a "${LOG_FILE}"
 
 # Conteos exactos COUNT(*)
 log "  Conteos exactos:"
+# BUG-005 fix: root_exec puede fallar si la BD no responde.
+# Con set -euo pipefail, VAR=$(cmd_fallida) activa set -e y mata el script
+# silenciosamente. Con || { ... }: el script continúa con TABLES vacío,
+# el while no itera, y se registra el fallo como hallazgo auditable.
 TABLES=$(root_exec "${DB}" -N -e "
 SELECT table_name FROM information_schema.tables
 WHERE table_schema='${DB}' AND table_type='BASE TABLE'
-ORDER BY table_name;" 2>/dev/null)
+ORDER BY table_name;" 2>/dev/null) \
+    || {
+        log "WARN: no se pudo obtener lista de tablas — BD no respondio al inventario"
+        registrar_hallazgo "MEDIA" \
+            "BD no respondio durante el inventario de tablas" \
+            "root_exec fallo al consultar information_schema.tables.\
+\nEl inventario de conteos (PASO 3) queda vacio.\
+\nEl dump del PASO 4 puede proceder si la BD recupera conectividad."
+        TABLES=""
+    }
 
 TOTAL_ROWS=0
 declare -A CONTEOS
