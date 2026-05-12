@@ -6,7 +6,11 @@ Reutiliza la distribución acumulada Q01+Q02 de 2025.
 Escala reducida por ser un quarter parcial (36 días de 91).
 """
 from datetime import date
-from perfiles.q02_2025 import MENUS, VDN_POR_MENU  # referencia a Q02_2025
+from perfiles.q02_2025 import MENUS, VDN_POR_MENU  # noqa: F401 — re-exportado por perfiles/__init__.py
+
+# Declarar re-exportación explícita (suprime F401 en pyflakes puro y documentar intención).
+# perfiles/__init__.py importa MENUS y VDN_POR_MENU desde este módulo proxy.
+__all__ = ["MENUS", "VDN_POR_MENU"]
 
 CONFIG = {
     'tabla':       'tbl_historico_t2_2026',

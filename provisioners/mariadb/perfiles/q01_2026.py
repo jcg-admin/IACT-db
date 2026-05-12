@@ -7,7 +7,11 @@ El catálogo de menús del IVR puede haber crecido, pero sin datos reales
 se usa Q01_2025 como aproximación conservadora.
 """
 from datetime import date
-from perfiles.q01_2025 import MENUS, VDN_POR_MENU  # referencia al base
+from perfiles.q01_2025 import MENUS, VDN_POR_MENU  # noqa: F401 — re-exportado por perfiles/__init__.py
+
+# Declarar re-exportación explícita (suprime F401 en pyflakes puro y documentar intención).
+# perfiles/__init__.py importa MENUS y VDN_POR_MENU desde este módulo proxy.
+__all__ = ["MENUS", "VDN_POR_MENU"]
 
 CONFIG = {
     'tabla':       'tbl_historico_t1_2026',

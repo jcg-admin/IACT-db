@@ -6,7 +6,11 @@ Usa la distribución acumulada de Q01+Q02+Q03 (el estado más reciente conocido)
 Escala estimada: promedio Q01+Q03 (sin Q02 que es el pico).
 """
 from datetime import date
-from perfiles.q03_2025 import MENUS, VDN_POR_MENU  # herencia directa
+from perfiles.q03_2025 import MENUS, VDN_POR_MENU  # noqa: F401 — re-exportado por perfiles/__init__.py
+
+# Declarar re-exportación explícita (suprime F401 en pyflakes puro y documentar intención).
+# perfiles/__init__.py importa MENUS y VDN_POR_MENU desde este módulo proxy.
+__all__ = ["MENUS", "VDN_POR_MENU"]
 
 CONFIG = {
     'tabla':       'tbl_historico_t4_2025',

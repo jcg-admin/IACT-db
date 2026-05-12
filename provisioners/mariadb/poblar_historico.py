@@ -83,7 +83,7 @@ import subprocess
 import sys
 import tempfile
 import os
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 # Cargar todos los perfiles
 sys.path.insert(0, os.path.dirname(__file__))
@@ -405,14 +405,14 @@ def mostrar_diff(q_from, q_to):
         for m in sorted(resultado['menus_quitados']):
             print(f"    - {m}")
     else:
-        print(f"  Sin menús quitados")
+        print("  Sin menús quitados")
 
     if resultado['vdns_cambiados']:
         print(f"\n  VDNs que CAMBIAN en {q_to}:")
         for menu, (vdn_f, vdn_t) in sorted(resultado['vdns_cambiados'].items()):
             print(f"    ~ {menu:40}  {vdn_f} → {vdn_t}")
     else:
-        print(f"  Sin cambios de VDN")
+        print("  Sin cambios de VDN")
 
 
 def mostrar_catalogo_perfiles():
@@ -501,7 +501,7 @@ def main():
             sys.exit(1)
 
     print("=" * 72)
-    print(f"  poblar_historico.py")
+    print("  poblar_historico.py")
     if not args.status:
         print(f"  rows_base={args.rows:,}  chunk={args.chunk}  truncate={args.truncate}")
     print(f"  G-29={P_HORAS_INVERTIDAS*100:.0f}%  null={P_NULL*100:.0f}%  "
@@ -554,7 +554,7 @@ def main():
 
         if args.truncate:
             run_mysql(conn, stmt=f"TRUNCATE TABLE {tabla};")
-            print(f"    TRUNCATE ejecutado")
+            print("    TRUNCATE ejecutado")
 
         rows = [gen_registro(d_ini, d_fin, menus, vdns, error_ceros)
                 for _ in range(n_objetivo)]
