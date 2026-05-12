@@ -25,7 +25,8 @@ init_env() {
     fi
 
     # Last resort: current directory
-    export PROJECT_ROOT="$(pwd)"
+    PROJECT_ROOT="$(pwd)"
+    export PROJECT_ROOT
 }
 
 # load_config() REMOVED - vars.conf is deprecated

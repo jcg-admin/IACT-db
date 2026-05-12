@@ -72,7 +72,8 @@ backup_file() {
     local file=$1
     [[ ! -f "$file" ]] && return 1
 
-    local backup="${file}.backup.$(date +%Y%m%d_%H%M%S)"
+    local backup
+    backup="${file}.backup.$(date +%Y%m%d_%H%M%S)"
     cp "$file" "$backup" || return 1
 }
 
@@ -323,7 +324,7 @@ _service_action() {
                     elif command -v mysqld     &>/dev/null; then daemon="mysqld"
                     else
                         log_debug "service_action: mariadbd/mysqld no disponibles"
-                        break
+                        return 1
                     fi
 
                     log_debug "service_action: intentando arranque directo via ${daemon}"
