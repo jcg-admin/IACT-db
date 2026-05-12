@@ -160,17 +160,47 @@ main() {
         log_warn "  IACT-api producción requiere el socket para IVR_DB_SOCKET"
     fi
 
-    # Verificar que el usuario NO tiene privilegios de escritura (CNST-003)
-    local write_privs
-    write_privs=$(mysql -h "$host" -P "$port"         -u "$db_user" -p"${db_pass}"         --batch --silent --skip-column-names         -e "SELECT COUNT(*) FROM information_schema.USER_PRIVILEGES
-            WHERE GRANTEE LIKE \\"'${db_user}'%\\"
-            AND PRIVILEGE_TYPE IN ('INSERT','UPDATE','DELETE','DROP','CREATE','ALTER');"         2>/dev/null || echo "0")
+    # Verificar CNST-003: reportar tablas con escritura directa (TABLE_PRIVILEGES).
+    # BUG-003: la versión anterior consultaba USER_PRIVILEGES, que solo ve grants
+    # globales (ON *.*). Los grants de tabla (GRANT INSERT ON ivr_legacy.etl_runs)
+    # son invisibles a USER_PRIVILEGES — la verificación siempre retornaba 0
+    # aunque existieran grants de escritura a nivel de tabla.
+    # TABLE_PRIVILEGES refleja el estado real de privilegios por tabla.
+    #
+    # Nota de visibilidad: un usuario sin privilegios especiales solo puede
+    # consultar sus propios grants en TABLE_PRIVILEGES. Conectando como django_user
+    # vía TCP (autenticado como @'%'), la vista no muestra los grants de @'localhost'.
+    # Por eso se usa my_root_silent (root vía socket) que ve TODOS los GRANTEEs.
+    # GROUP_CONCAT DISTINCT deduplica INSERT/UPDATE que aparecen dos veces
+    # (una por @'%' y otra por @'localhost').
+    #
+    # Esta verificación es de OBSERVABILIDAD, no de ENFORCEMENT.
+    # El enforcement lo garantiza la arquitectura de FASE 6+7 del plan de
+    # corrección: provision-mariadb.sh con lista explícita + REVOKE en BD.
+    #
+    # Estado esperado tras provision-mariadb.sh:
+    #   etl_runs — INSERT, UPDATE  (extensión operacional documentada: run_etl.py)
+    # Cualquier otra tabla con escritura directa es inesperada y debe revisarse.
+    local write_tbls
+    write_tbls=$(my_root_silent \
+        -e "SELECT TABLE_NAME,
+                   GROUP_CONCAT(DISTINCT PRIVILEGE_TYPE ORDER BY PRIVILEGE_TYPE) AS privs
+            FROM information_schema.TABLE_PRIVILEGES
+            WHERE GRANTEE LIKE \"'${db_user}'%\"
+            AND TABLE_SCHEMA = '${db_name}'
+            AND PRIVILEGE_TYPE IN ('INSERT','UPDATE','DELETE')
+            GROUP BY TABLE_NAME
+            ORDER BY TABLE_NAME;" \
+        || echo "")
 
-    if [[ "$write_privs" -eq 0 ]]; then
-        log_success "CNST-003 verificado: ${db_user} es READ-ONLY en ${db_name}"
+    if [[ -z "$write_tbls" ]]; then
+        log_success "CNST-003: ${db_user} es READ-ONLY en ${db_name} (sin escritura directa en ninguna tabla)"
     else
-        log_warn "CNST-003: ${db_user} tiene ${write_privs} privilegio(s) de escritura"
-        log_warn "  Revisa los GRANT aplicados sobre ${db_name}"
+        log_info  "CNST-003: ${db_user} tiene escritura directa en tablas de ${db_name}:"
+        while IFS=$'\t' read -r tbl privs; do
+            log_info  "    ${tbl}: ${privs}"
+        done <<< "$write_tbls"
+        log_info  "  (ver ANALISIS-PERMISOS-CNST003-RUN-ETL para justificacion)"
     fi
 
     log_success "Setup MariaDB completado. Base ${db_name} lista (READ-ONLY para Django)."
