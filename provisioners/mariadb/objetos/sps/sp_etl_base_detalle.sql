@@ -5,13 +5,15 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_etl_base_detalle.sql
-    Version         : 2.1.0
+    Version         : 2.2.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
     Prerequisito    : objetos/funciones/ (7 funciones) — schema_base_ivr.sql
     Despliegue      : mysql --socket=/run/mysqld/mysqld.sock ivr_legacy < sp_etl_base_detalle.sql
-    Notas           : v2.1.0: PREPARE etl_stmt movido fuera del WHILE (H-IACT-006). Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
+    Notas           : v2.2.0: transaccion por mes — DELETE+INSERT atomico con ROLLBACK+RESIGNAL (H-IACT-004).
+                      v2.1.0: PREPARE etl_stmt movido fuera del WHILE (H-IACT-006).
+                      Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
 *********************************************************************************************/
 
 -- DEFINICIÓN
@@ -98,15 +100,34 @@ etl_detalle: BEGIN
 
         SET v_mes_num = v_mes_num + 1;
 
-        -- DELETE idempotente solo para este mes
-        DELETE FROM base_ivr_detalle
-        WHERE trimestre = p_quarter
-          AND fecha = DATE_FORMAT(v_mes_ini, '%Y%m');
+        -- Transacción por mes: DELETE + INSERT son atómicos.
+        -- Si el INSERT falla, el DELETE es revertido — el mes conserva
+        -- los datos de la ejecución anterior sin ventana de inconsistencia.
+        -- El EXIT HANDLER hace ROLLBACK antes de RESIGNAL para que la TX
+        -- quede cerrada cuando el error llegue al SP padre (sp_etl_maestro).
+        -- Sin este ROLLBACK, la TX abierta viajaría al handler del padre
+        -- y los UPDATEs de job_execution_log quedarían dentro de ella.
+        START TRANSACTION;
 
-        -- INSERT con normalización usando las funciones de utilidad
-        SET @etl_q = p_quarter, @etl_i = v_mes_ini, @etl_f = v_mes_fin;
-        EXECUTE etl_stmt USING @etl_q, @etl_i, @etl_f;
-        SET v_mes_ins = ROW_COUNT();
+        BEGIN
+            DECLARE EXIT HANDLER FOR SQLEXCEPTION
+            BEGIN
+                ROLLBACK;
+                RESIGNAL;
+            END;
+
+            -- DELETE idempotente solo para este mes
+            DELETE FROM base_ivr_detalle
+            WHERE trimestre = p_quarter
+              AND fecha = DATE_FORMAT(v_mes_ini, '%Y%m');
+
+            -- INSERT con normalización usando las funciones de utilidad
+            SET @etl_q = p_quarter, @etl_i = v_mes_ini, @etl_f = v_mes_fin;
+            EXECUTE etl_stmt USING @etl_q, @etl_i, @etl_f;
+            SET v_mes_ins = ROW_COUNT();
+        END;
+
+        COMMIT;
 
         SET v_total_ins = v_total_ins + v_mes_ins;
 
