@@ -5,13 +5,17 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_rpt_centros_xsegmento.sql
-    Version         : 2.1.0
+    Version         : 2.2.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
     Prerequisito    : objetos/funciones/ (7 funciones) — schema_base_ivr.sql — objetos/sps/sp_etl_*.sql (base_ivr_* con datos)
     Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_rpt_centros_xsegmento.sql
-    Notas           : v2.1.0: 3 CTEs eliminan evaluaciones redundantes de agregados y funciones WHILE (H-IACT-002).
+    Notas           : v2.2.0: DENSE_RANK() por volumen dentro de cada segmento (Modulo 13).
+                      DENSE_RANK elegido sobre RANK porque existen empates en volúmenes bajos
+                      (verificado: 2 centros con 20 llamadas y 2 con 18 en Q01_25).
+                      RANK produce brechas (24,24,26,26,28); DENSE_RANK produce secuencia continua (24,24,25,25,26).
+                      v2.1.0: 3 CTEs eliminan evaluaciones redundantes de agregados y funciones WHILE (H-IACT-002).
                       UC_RPT_01 / UC_RPT_15. Despues del despliegue ejecutar provision-mariadb.sh.
 *********************************************************************************************/
 
@@ -146,6 +150,17 @@ BEGIN
             cc.total_llamadas
             / NULLIF(ts.total_seg, 0) * 100, 4
           )                                AS pct_del_segmento
+
+        -- Posición del centro por volumen dentro de su segmento.
+        -- DENSE_RANK elegido sobre RANK: existen empates en volúmenes bajos
+        -- (Q01_25: 2 centros con 20 llamadas, 2 con 18). RANK produce brechas
+        -- en la secuencia (24,24,26,26,28); DENSE_RANK mantiene continuidad
+        -- (24,24,25,25,26) y su máximo coincide con el número de niveles de
+        -- volumen distintos — interpretación más directa para priorización.
+        , DENSE_RANK() OVER (
+            PARTITION BY cc.segmento
+            ORDER BY cc.total_llamadas DESC
+          )                                AS rango_en_segmento
 
     FROM centros_calendario cc
     INNER JOIN totales_segmento ts
