@@ -5,13 +5,15 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_etl_maestro.sql
-    Version         : 2.1.0
+    Version         : 2.2.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
     Prerequisito    : sp_etl_base_detalle — sp_etl_base_clientes — sp_etl_validar — schema_base_ivr.sql
     Despliegue      : mysql --socket=/run/mysqld/mysqld.sock ivr_legacy < sp_etl_maestro.sql
-    Notas           : v2.1.0: v_paso4_failed (H-IACT-005) — PASO 5 no ejecuta si PASO 4 falla. PASO 7 preserva status FAILED en lugar de sobreescribir con PARTIAL. Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
+    Notas           : v2.2.0: renombrar v_paso4_failed → v_detalle_cargado (clean code).
+                      v2.1.0: guardar PASO 5 y PASO 7 cuando base_ivr_detalle no se carga.
+                      Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
 *********************************************************************************************/
 
 -- DEFINICIÓN
@@ -38,11 +40,11 @@ BEGIN
     DECLARE v_ok         BOOLEAN;
     DECLARE v_msg        TEXT;
     DECLARE v_err_msg    TEXT;
-    DECLARE v_abort        BOOLEAN DEFAULT FALSE;
-    -- Flag de control: TRUE cuando PASO 4 falla.
-    -- Impide que PASO 5 ejecute con base_ivr_detalle inválida y
-    -- preserva el status FAILED del maestro en PASO 7 (H-IACT-005).
-    DECLARE v_paso4_failed BOOLEAN DEFAULT FALSE;
+    DECLARE v_abort          BOOLEAN DEFAULT FALSE;
+    -- TRUE mientras base_ivr_detalle se cargó correctamente.
+    -- FALSE si el ETL de detalle falló — impide cargar base_ivr_clientes
+    -- con datos inconsistentes y preserva el status FAILED del maestro.
+    DECLARE v_detalle_cargado BOOLEAN DEFAULT TRUE;
 
     -- -----------------------------------------------------------------------
     -- PASO 0: Verificar que el job está habilitado
@@ -124,20 +126,18 @@ BEGIN
             SET status='FAILED', end_time=NOW(),
                 error_message=CONCAT('Falló etl_base_detalle: ', v_err_msg)
             WHERE id = v_maestro_id;
-            -- Señalizar que PASO 4 falló para que PASO 5 no ejecute
-            -- y PASO 7 preserve el status FAILED (H-IACT-005).
-            SET v_paso4_failed = TRUE;
+            -- base_ivr_detalle no se cargó — base_ivr_clientes no debe cargarse.
+            SET v_detalle_cargado = FALSE;
         END;
         CALL sp_etl_base_detalle(v_quarter, v_inicio, v_fin, v_table, v_step_id);
     END;
 
     -- -----------------------------------------------------------------------
     -- PASO 5: ETL base_ivr_clientes
-    -- Solo ejecuta si PASO 4 completó correctamente.
-    -- Si PASO 4 falló, base_ivr_detalle es inválida: cargar base_ivr_clientes
-    -- produciría datos inconsistentes (clientes sin detalle de llamadas).
+    -- Solo ejecuta si base_ivr_detalle se cargó correctamente.
+    -- Sin detalle válido, los clientes quedarían sin contexto de llamadas.
     -- -----------------------------------------------------------------------
-    IF NOT v_paso4_failed THEN
+    IF v_detalle_cargado THEN
 
     INSERT INTO job_execution_log
         (job_name, quarter_name, step_name, tabla_origen,
@@ -169,7 +169,7 @@ BEGIN
         CALL sp_etl_base_clientes(v_quarter, v_inicio, v_fin, v_table, v_step_id);
     END;
 
-    END IF; -- END IF NOT v_paso4_failed (PASO 5)
+    END IF; -- END IF v_detalle_cargado (PASO 5)
 
     -- -----------------------------------------------------------------------
     -- PASO 6: Validación post-load
@@ -178,12 +178,12 @@ BEGIN
 
     -- -----------------------------------------------------------------------
     -- PASO 7: Estado final del maestro
-    -- Si PASO 4 falló, el handler ya marcó el maestro como FAILED.
-    -- No sobreescribir con PARTIAL — preservar el status más grave (H-IACT-005).
+    -- Si base_ivr_detalle no se cargó, el handler ya marcó el maestro como
+    -- FAILED. No sobreescribir con PARTIAL — el dato de dominio manda.
     -- -----------------------------------------------------------------------
-    IF v_paso4_failed THEN
-        -- El handler de PASO 4 ya fijó status=FAILED y error_message.
-        -- Solo garantizar que end_time quede seteado si por alguna razón no lo está.
+    IF NOT v_detalle_cargado THEN
+        -- El handler ya fijó status=FAILED y error_message.
+        -- Garantizar que end_time quede seteado.
         UPDATE job_execution_log
         SET end_time = COALESCE(end_time, NOW())
         WHERE id = v_maestro_id;
