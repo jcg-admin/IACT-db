@@ -1,8 +1,0 @@
-# MkDocs - Generador de documentación estática
-mkdocs>=1.5.3
-
-# Plugin Kroki - Renderiza PlantUML, Mermaid, C4, etc usando servicio Kroki
-mkdocs-kroki-plugin>=0.6.0
-
-# PyMdown Extensions - Extensiones de Markdown avanzadas
-pymdown-extensions>=10.3

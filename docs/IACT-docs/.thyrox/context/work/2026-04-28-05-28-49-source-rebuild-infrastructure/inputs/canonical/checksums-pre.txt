@@ -1,2 +1,0 @@
-59af3a3e4828e4167ed3937a8cb9ff2a  /home/user/IACT/docs/infraestructura/spec_infra_001_cpython_precompilado.md
-cbf49a67a98a1801096cc08e334dbbc6  /home/user/IACT/docs/infraestructura/index.md

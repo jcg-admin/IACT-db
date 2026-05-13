@@ -1,4 +1,0 @@
-| **v2.0.7** | **DESCONGELADO: evidencia/trazabilidad/ para documentar RTM** |
-| **v2.0.7** | **ACTUALIZADO: FND_03 v1.2.0 (49 UC, Agrupadores RBAC)** |
-| **v2.0.7** | **RECREADO: FND_04 v1.0.0 (documento de Trazabilidad)** |
-| **v2.0.7** | **ACTUALIZADO: FND_05 v1.1.0 (BReq documentados)** |
