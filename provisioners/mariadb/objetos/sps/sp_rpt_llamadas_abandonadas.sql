@@ -5,7 +5,7 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_rpt_llamadas_abandonadas.sql
-    Version         : 2.2.1
+    Version         : 2.2.2
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
@@ -49,10 +49,30 @@ BEGIN
     -- SIGNAL: validación de parámetros (Modulo 17 — equivalente a THROW/RAISERROR).
     -- SQLSTATE '22023' = Invalid parameter value (estandar SQL).
     IF p_quarter NOT REGEXP '^Q0[1-4]_[0-9]{2}$' THEN
+    BEGIN
+        DECLARE CONTINUE HANDLER FOR SQLEXCEPTION BEGIN END;
+        INSERT INTO pipeline_event_log
+            (error_type, severity, sp_nombre, sql_state, mysql_errno,
+             p_quarter, error_message, ejecutado_por)
+        VALUES ('PARAM_INVALIDO', 'MEDIA', 'sp_rpt_llamadas_abandonadas', '22023', 1644,
+                p_quarter,
+                CONCAT('p_quarter invalido: ', p_quarter),
+                'django_api');
+    END;
         SIGNAL SQLSTATE '22023'
             SET MESSAGE_TEXT = 'p_quarter: formato invalido. Esperado: Q01_25, Q02_25, Q03_25 o Q04_YY';
     END IF;
     IF p_segmento NOT IN ('todas', 'nacional_A', 'nacional_B', 'puebla') THEN
+    BEGIN
+        DECLARE CONTINUE HANDLER FOR SQLEXCEPTION BEGIN END;
+        INSERT INTO pipeline_event_log
+            (error_type, severity, sp_nombre, sql_state, mysql_errno,
+             p_quarter, p_segmento, error_message, ejecutado_por)
+        VALUES ('PARAM_INVALIDO', 'MEDIA', 'sp_rpt_llamadas_abandonadas', '22023', 1644,
+                p_quarter, p_segmento,
+                CONCAT('p_segmento invalido: ', p_segmento),
+                'django_api');
+    END;
         SIGNAL SQLSTATE '22023'
             SET MESSAGE_TEXT = 'p_segmento: valor no reconocido. Esperado: todas | nacional_A | nacional_B | puebla';
     END IF;
