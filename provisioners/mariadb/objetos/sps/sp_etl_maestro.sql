@@ -5,13 +5,13 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_etl_maestro.sql
-    Version         : 2.0.0
+    Version         : 2.1.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
     Prerequisito    : sp_etl_base_detalle — sp_etl_base_clientes — sp_etl_validar — schema_base_ivr.sql
-    Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_maestro.sql
-    Notas           : Orquestador principal. 7 pasos con checkpoints. Calcula quarter automaticamente. Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
+    Despliegue      : mysql --socket=/run/mysqld/mysqld.sock ivr_legacy < sp_etl_maestro.sql
+    Notas           : v2.1.0: v_paso4_failed (H-IACT-005) — PASO 5 no ejecuta si PASO 4 falla. PASO 7 preserva status FAILED en lugar de sobreescribir con PARTIAL. Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
 *********************************************************************************************/
 
 -- DEFINICIÓN
@@ -38,7 +38,11 @@ BEGIN
     DECLARE v_ok         BOOLEAN;
     DECLARE v_msg        TEXT;
     DECLARE v_err_msg    TEXT;
-    DECLARE v_abort      BOOLEAN DEFAULT FALSE;
+    DECLARE v_abort        BOOLEAN DEFAULT FALSE;
+    -- Flag de control: TRUE cuando PASO 4 falla.
+    -- Impide que PASO 5 ejecute con base_ivr_detalle inválida y
+    -- preserva el status FAILED del maestro en PASO 7 (H-IACT-005).
+    DECLARE v_paso4_failed BOOLEAN DEFAULT FALSE;
 
     -- -----------------------------------------------------------------------
     -- PASO 0: Verificar que el job está habilitado
@@ -120,15 +124,21 @@ BEGIN
             SET status='FAILED', end_time=NOW(),
                 error_message=CONCAT('Falló etl_base_detalle: ', v_err_msg)
             WHERE id = v_maestro_id;
-            -- No LEAVE: el handler termina y el bloque externo continua
-            -- v_ok quedara NULL, el UPDATE final marcara PARTIAL
+            -- Señalizar que PASO 4 falló para que PASO 5 no ejecute
+            -- y PASO 7 preserve el status FAILED (H-IACT-005).
+            SET v_paso4_failed = TRUE;
         END;
         CALL sp_etl_base_detalle(v_quarter, v_inicio, v_fin, v_table, v_step_id);
     END;
 
     -- -----------------------------------------------------------------------
     -- PASO 5: ETL base_ivr_clientes
+    -- Solo ejecuta si PASO 4 completó correctamente.
+    -- Si PASO 4 falló, base_ivr_detalle es inválida: cargar base_ivr_clientes
+    -- produciría datos inconsistentes (clientes sin detalle de llamadas).
     -- -----------------------------------------------------------------------
+    IF NOT v_paso4_failed THEN
+
     INSERT INTO job_execution_log
         (job_name, quarter_name, step_name, tabla_origen,
          status, start_time, ejecutado_por)
@@ -159,6 +169,8 @@ BEGIN
         CALL sp_etl_base_clientes(v_quarter, v_inicio, v_fin, v_table, v_step_id);
     END;
 
+    END IF; -- END IF NOT v_paso4_failed (PASO 5)
+
     -- -----------------------------------------------------------------------
     -- PASO 6: Validación post-load
     -- -----------------------------------------------------------------------
@@ -166,12 +178,22 @@ BEGIN
 
     -- -----------------------------------------------------------------------
     -- PASO 7: Estado final del maestro
+    -- Si PASO 4 falló, el handler ya marcó el maestro como FAILED.
+    -- No sobreescribir con PARTIAL — preservar el status más grave (H-IACT-005).
     -- -----------------------------------------------------------------------
-    UPDATE job_execution_log
-    SET status     = IF(COALESCE(v_ok, FALSE), 'SUCCESS', 'PARTIAL'),
-        end_time   = NOW(),
-        error_message = IF(COALESCE(v_ok, FALSE), NULL, v_msg)
-    WHERE id = v_maestro_id;
+    IF v_paso4_failed THEN
+        -- El handler de PASO 4 ya fijó status=FAILED y error_message.
+        -- Solo garantizar que end_time quede seteado si por alguna razón no lo está.
+        UPDATE job_execution_log
+        SET end_time = COALESCE(end_time, NOW())
+        WHERE id = v_maestro_id;
+    ELSE
+        UPDATE job_execution_log
+        SET status        = IF(COALESCE(v_ok, FALSE), 'SUCCESS', 'PARTIAL'),
+            end_time      = NOW(),
+            error_message = IF(COALESCE(v_ok, FALSE), NULL, v_msg)
+        WHERE id = v_maestro_id;
+    END IF;
 
     END IF; -- END IF NOT v_abort
 
@@ -187,7 +209,7 @@ SELECT
     , status
     , start_time
     , records_procesados
-    , LEFT(error_message, 60) AS error
+    , LEFT(COALESCE(error_message,''), 60) AS error
 FROM job_execution_log
 WHERE job_name = 'etl_diario'
 ORDER BY id DESC

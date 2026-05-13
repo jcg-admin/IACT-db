@@ -53,23 +53,12 @@ etl_detalle: BEGIN
     -- Iterar mes a mes dentro del quarter (chunks ~4M filas c/u)
     SET v_mes_ini = p_inicio;
 
-    WHILE v_mes_ini <= p_fin DO
-        SET v_mes_fin = LAST_DAY(v_mes_ini);
-        -- Si el último mes del quarter termina antes del fin del mes calendario
-        IF v_mes_fin > p_fin THEN
-            SET v_mes_fin = p_fin;
-        END IF;
-
-        SET v_mes_num = v_mes_num + 1;
-
-        -- DELETE idempotente solo para este mes
-        DELETE FROM base_ivr_detalle
-        WHERE trimestre = p_quarter
-          AND fecha = DATE_FORMAT(v_mes_ini, '%Y%m');
-
-        -- INSERT con normalización usando las funciones de utilidad
-        -- PREPARE/EXECUTE necesario por nombre de tabla dinámico (CNST-ETL-008)
-        SET @etl_sql = CONCAT('
+    -- PREPARE/EXECUTE necesario por nombre de tabla dinámico (CNST-ETL-008).
+    -- p_table es un parámetro IN — no cambia entre iteraciones del WHILE.
+    -- Los valores que cambian por mes (v_mes_ini, v_mes_fin) se pasan
+    -- vía USING como @etl_i y @etl_f — no forman parte del SQL estático.
+    -- PREPARE fuera del WHILE: el statement se compila una sola vez (H-IACT-006).
+    SET @etl_sql = CONCAT('
             INSERT INTO base_ivr_detalle
                 (trimestre, fecha, segmento, centro_transferencia,
                  menu, opcion,
@@ -108,18 +97,34 @@ etl_detalle: BEGIN
                 llamadas_fines_semana = VALUES(llamadas_fines_semana),
                 cargado_en         = CURRENT_TIMESTAMP
         ');
+    PREPARE etl_stmt FROM @etl_sql;
 
-        PREPARE etl_stmt FROM @etl_sql;
+    WHILE v_mes_ini <= p_fin DO
+        SET v_mes_fin = LAST_DAY(v_mes_ini);
+        -- Si el último mes del quarter termina antes del fin del mes calendario
+        IF v_mes_fin > p_fin THEN
+            SET v_mes_fin = p_fin;
+        END IF;
+
+        SET v_mes_num = v_mes_num + 1;
+
+        -- DELETE idempotente solo para este mes
+        DELETE FROM base_ivr_detalle
+        WHERE trimestre = p_quarter
+          AND fecha = DATE_FORMAT(v_mes_ini, '%Y%m');
+
+        -- INSERT con normalización usando las funciones de utilidad
         SET @etl_q = p_quarter, @etl_i = v_mes_ini, @etl_f = v_mes_fin;
         EXECUTE etl_stmt USING @etl_q, @etl_i, @etl_f;
         SET v_mes_ins = ROW_COUNT();
-        DEALLOCATE PREPARE etl_stmt;
 
         SET v_total_ins = v_total_ins + v_mes_ins;
 
         -- Avanzar al siguiente mes
         SET v_mes_ini = DATE_ADD(LAST_DAY(v_mes_ini), INTERVAL 1 DAY);
     END WHILE;
+
+    DEALLOCATE PREPARE etl_stmt;
 
     -- Actualizar progreso en el log
     IF p_log_id IS NOT NULL AND p_log_id > 0 THEN
@@ -284,7 +289,11 @@ BEGIN
     DECLARE v_ok         BOOLEAN;
     DECLARE v_msg        TEXT;
     DECLARE v_err_msg    TEXT;
-    DECLARE v_abort      BOOLEAN DEFAULT FALSE;
+    DECLARE v_abort        BOOLEAN DEFAULT FALSE;
+    -- Flag de control: TRUE cuando PASO 4 falla.
+    -- Impide que PASO 5 ejecute con base_ivr_detalle inválida y
+    -- preserva el status FAILED del maestro en PASO 7 (H-IACT-005).
+    DECLARE v_paso4_failed BOOLEAN DEFAULT FALSE;
 
     -- -----------------------------------------------------------------------
     -- PASO 0: Verificar que el job está habilitado
@@ -366,15 +375,21 @@ BEGIN
             SET status='FAILED', end_time=NOW(),
                 error_message=CONCAT('Falló etl_base_detalle: ', v_err_msg)
             WHERE id = v_maestro_id;
-            -- No LEAVE: el handler termina y el bloque externo continua
-            -- v_ok quedara NULL, el UPDATE final marcara PARTIAL
+            -- Señalizar que PASO 4 falló para que PASO 5 no ejecute
+            -- y PASO 7 preserve el status FAILED (H-IACT-005).
+            SET v_paso4_failed = TRUE;
         END;
         CALL sp_etl_base_detalle(v_quarter, v_inicio, v_fin, v_table, v_step_id);
     END;
 
     -- -----------------------------------------------------------------------
     -- PASO 5: ETL base_ivr_clientes
+    -- Solo ejecuta si PASO 4 completó correctamente.
+    -- Si PASO 4 falló, base_ivr_detalle es inválida: cargar base_ivr_clientes
+    -- produciría datos inconsistentes (clientes sin detalle de llamadas).
     -- -----------------------------------------------------------------------
+    IF NOT v_paso4_failed THEN
+
     INSERT INTO job_execution_log
         (job_name, quarter_name, step_name, tabla_origen,
          status, start_time, ejecutado_por)
@@ -405,6 +420,8 @@ BEGIN
         CALL sp_etl_base_clientes(v_quarter, v_inicio, v_fin, v_table, v_step_id);
     END;
 
+    END IF; -- END IF NOT v_paso4_failed (PASO 5)
+
     -- -----------------------------------------------------------------------
     -- PASO 6: Validación post-load
     -- -----------------------------------------------------------------------
@@ -412,12 +429,22 @@ BEGIN
 
     -- -----------------------------------------------------------------------
     -- PASO 7: Estado final del maestro
+    -- Si PASO 4 falló, el handler ya marcó el maestro como FAILED.
+    -- No sobreescribir con PARTIAL — preservar el status más grave (H-IACT-005).
     -- -----------------------------------------------------------------------
-    UPDATE job_execution_log
-    SET status     = IF(COALESCE(v_ok, FALSE), 'SUCCESS', 'PARTIAL'),
-        end_time   = NOW(),
-        error_message = IF(COALESCE(v_ok, FALSE), NULL, v_msg)
-    WHERE id = v_maestro_id;
+    IF v_paso4_failed THEN
+        -- El handler de PASO 4 ya fijó status=FAILED y error_message.
+        -- Solo garantizar que end_time quede seteado si por alguna razón no lo está.
+        UPDATE job_execution_log
+        SET end_time = COALESCE(end_time, NOW())
+        WHERE id = v_maestro_id;
+    ELSE
+        UPDATE job_execution_log
+        SET status        = IF(COALESCE(v_ok, FALSE), 'SUCCESS', 'PARTIAL'),
+            end_time      = NOW(),
+            error_message = IF(COALESCE(v_ok, FALSE), NULL, v_msg)
+        WHERE id = v_maestro_id;
+    END IF;
 
     END IF; -- END IF NOT v_abort
 

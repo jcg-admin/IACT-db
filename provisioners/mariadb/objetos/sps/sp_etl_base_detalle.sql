@@ -5,13 +5,13 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_etl_base_detalle.sql
-    Version         : 2.0.0
+    Version         : 2.1.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
     Prerequisito    : funciones_utilidad.sql — schema_base_ivr.sql
-    Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_base_detalle.sql
-    Notas           : ETL principal. Procesa mes a mes. Idempotente: DELETE antes de INSERT. Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
+    Despliegue      : mysql --socket=/run/mysqld/mysqld.sock ivr_legacy < sp_etl_base_detalle.sql
+    Notas           : v2.1.0: PREPARE etl_stmt movido fuera del WHILE (H-IACT-006). Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
 *********************************************************************************************/
 
 -- DEFINICIÓN
@@ -43,23 +43,12 @@ etl_detalle: BEGIN
     -- Iterar mes a mes dentro del quarter (chunks ~4M filas c/u)
     SET v_mes_ini = p_inicio;
 
-    WHILE v_mes_ini <= p_fin DO
-        SET v_mes_fin = LAST_DAY(v_mes_ini);
-        -- Si el último mes del quarter termina antes del fin del mes calendario
-        IF v_mes_fin > p_fin THEN
-            SET v_mes_fin = p_fin;
-        END IF;
-
-        SET v_mes_num = v_mes_num + 1;
-
-        -- DELETE idempotente solo para este mes
-        DELETE FROM base_ivr_detalle
-        WHERE trimestre = p_quarter
-          AND fecha = DATE_FORMAT(v_mes_ini, '%Y%m');
-
-        -- INSERT con normalización usando las funciones de utilidad
-        -- PREPARE/EXECUTE necesario por nombre de tabla dinámico (CNST-ETL-008)
-        SET @etl_sql = CONCAT('
+    -- PREPARE/EXECUTE necesario por nombre de tabla dinámico (CNST-ETL-008).
+    -- p_table es un parámetro IN — no cambia entre iteraciones del WHILE.
+    -- Los valores que cambian por mes (v_mes_ini, v_mes_fin) se pasan
+    -- vía USING como @etl_i y @etl_f — no forman parte del SQL estático.
+    -- PREPARE fuera del WHILE: el statement se compila una sola vez (H-IACT-006).
+    SET @etl_sql = CONCAT('
             INSERT INTO base_ivr_detalle
                 (trimestre, fecha, segmento, centro_transferencia,
                  menu, opcion,
@@ -98,18 +87,34 @@ etl_detalle: BEGIN
                 llamadas_fines_semana = VALUES(llamadas_fines_semana),
                 cargado_en         = CURRENT_TIMESTAMP
         ');
+    PREPARE etl_stmt FROM @etl_sql;
 
-        PREPARE etl_stmt FROM @etl_sql;
+    WHILE v_mes_ini <= p_fin DO
+        SET v_mes_fin = LAST_DAY(v_mes_ini);
+        -- Si el último mes del quarter termina antes del fin del mes calendario
+        IF v_mes_fin > p_fin THEN
+            SET v_mes_fin = p_fin;
+        END IF;
+
+        SET v_mes_num = v_mes_num + 1;
+
+        -- DELETE idempotente solo para este mes
+        DELETE FROM base_ivr_detalle
+        WHERE trimestre = p_quarter
+          AND fecha = DATE_FORMAT(v_mes_ini, '%Y%m');
+
+        -- INSERT con normalización usando las funciones de utilidad
         SET @etl_q = p_quarter, @etl_i = v_mes_ini, @etl_f = v_mes_fin;
         EXECUTE etl_stmt USING @etl_q, @etl_i, @etl_f;
         SET v_mes_ins = ROW_COUNT();
-        DEALLOCATE PREPARE etl_stmt;
 
         SET v_total_ins = v_total_ins + v_mes_ins;
 
         -- Avanzar al siguiente mes
         SET v_mes_ini = DATE_ADD(LAST_DAY(v_mes_ini), INTERVAL 1 DAY);
     END WHILE;
+
+    DEALLOCATE PREPARE etl_stmt;
 
     -- Actualizar progreso en el log
     IF p_log_id IS NOT NULL AND p_log_id > 0 THEN
@@ -126,7 +131,7 @@ DELIMITER ;
 
 -- VERIFICACIÓN
 
--- Verificar que el SP existe en el schema:
+-- Verificar que el SP existe:
 SELECT 
     ROUTINE_NAME as nombre
     , ROUTINE_TYPE as tipo
