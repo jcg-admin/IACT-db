@@ -1,4 +1,10 @@
-# Análisis — Cobertura de `ivr_error_log`: SPs, ENUM y diseño de tabla
+> **Estado:** TODOS LOS GAPS RESUELTOS — 2026-05-13
+> GAP 1 resuelto en T1.2 (sp_etl_maestro v2.5.0, commit `768a7b2`).
+> GAP 2 resuelto en T1.4 (sp_etl_historico v2.1.0, commit `d45a440`).
+> La tabla se renombró a `pipeline_event_log` (commit `6e92ca4`).
+> Este documento es el registro del análisis de cobertura que identificó los gaps.
+
+# Análisis — Cobertura de `pipeline_event_log` (antes `ivr_error_log`): SPs, ENUM y diseño de tabla
 
 **Versión:** 1.0.0  
 **Fecha:** 2026-05-13  
@@ -14,12 +20,12 @@
 | `sp_etl_maestro` | PASO 4 falla (`etl_base_detalle` lanza RESIGNAL) | `ETL_FALLO` | Planeado T1.2 |
 | `sp_etl_maestro` | PASO 5 falla (`etl_base_clientes` lanza RESIGNAL) | `ETL_FALLO` | Planeado T1.2 |
 | `sp_etl_maestro` | PASO 6 falla (`sp_etl_validar` lanza excepción) | `ETL_PARTIAL` | Planeado T1.2 |
-| `sp_etl_maestro` | **PASO 7: `v_ok=FALSE` (validación de negocio)** | **`VALIDACION`** | **GAP** |
+| `sp_etl_maestro` | PASO 7: `v_ok=FALSE` (validación de negocio) | `VALIDACION` | **RESUELTO** T1.2 commit 768a7b2 |
 | `sp_etl_validar` | EXIT HANDLER (fallo de infraestructura) | delegado al caller | Delegado ✓ |
 | `sp_etl_validar` | **`v_ok=FALSE` (checks 1-5 fallan, sin excepción)** | **`VALIDACION`** | **GAP vía PASO 7** |
-| `sp_etl_historico` | **SIGNAL: `p_quarter_num NOT IN (1,2,3,4)`** | **`PARAM_INVALIDO`** | **GAP** |
-| `sp_etl_historico` | **`sp_etl_base_detalle` falla → RESIGNAL sin handler** | **`ETL_FALLO`** | **GAP** |
-| `sp_etl_historico` | **`sp_etl_validar` retorna `v_ok=FALSE`** | **`VALIDACION`** | **GAP** |
+| `sp_etl_historico` | SIGNAL: `p_quarter_num NOT IN (1,2,3,4)` | `PARAM_INVALIDO` | **RESUELTO** T1.4 commit d45a440 |
+| `sp_etl_historico` | `sp_etl_base_detalle` falla → EXIT HANDLER ahora presente | `ETL_FALLO` | **RESUELTO** T1.4 commit d45a440 |
+| `sp_etl_historico` | `sp_etl_validar` retorna `v_ok=FALSE` | `VALIDACION` | **RESUELTO** T1.4 commit d45a440 |
 | `sp_etl_base_detalle` | EXIT HANDLER → ROLLBACK + RESIGNAL | delegado al caller | Delegado ✓ |
 | `sp_etl_base_clientes` | SIGNAL: `p_table` NULL/vacío | delegado al caller | Delegado ✓ |
 | 7 SPs de reporte | SIGNAL: `p_quarter` o `p_segmento` inválido | `PARAM_INVALIDO` | Planeado T1.3 |
@@ -45,7 +51,7 @@ La delegación es el diseño correcto.
 
 ---
 
-## GAP 1 — PASO 7 de `sp_etl_maestro`: `VALIDACION` nunca llega a `ivr_error_log`
+## GAP 1 — PASO 7 de `sp_etl_maestro`: `VALIDACION` ~~nunca llega~~ → **RESUELTO en T1.2**
 
 ### Qué ocurre hoy
 
@@ -72,7 +78,7 @@ con `status='PARTIAL'`. `ivr_error_log` no sería el lugar correcto para buscarl
 
 ### Por qué es importante
 
-`ivr_error_log` es la tabla de auditoría centralizada. Un operador que consulta
+`pipeline_event_log` es la tabla de auditoría centralizada. Un operador que consulta
 `SELECT * FROM v_errores_recientes` no vería los fallos de validación de datos,
 solo los fallos técnicos. Los fallos de validación son los más informativos para
 diagnosticar problemas de calidad del ETL.
@@ -87,7 +93,7 @@ ELSE
     IF NOT COALESCE(v_ok, FALSE) THEN
         BEGIN
             DECLARE CONTINUE HANDLER FOR SQLEXCEPTION BEGIN END;
-            INSERT INTO ivr_error_log
+            INSERT INTO pipeline_event_log
                 (error_type, severity, sp_nombre,
                  p_quarter, error_message, job_log_id, ejecutado_por)
             VALUES
@@ -109,7 +115,7 @@ este es parte de la misma tarea.
 
 ---
 
-## GAP 2 — `sp_etl_historico` sin cobertura de errores
+## GAP 2 — `sp_etl_historico` sin cobertura de errores → **RESUELTO en T1.4**
 
 `sp_etl_historico` es el SP de carga histórica manual. A diferencia de
 `sp_etl_maestro` (que es orquestador con 3 EXIT HANDLERs), `sp_etl_historico`
@@ -245,9 +251,9 @@ como valor disponible si se quiere una distinción más fina en el futuro.
 
 ## Conclusión — Correcciones al plan
 
-El plan necesita dos adiciones para no tener deuda técnica:
+Las dos adiciones necesarias fueron implementadas:
 
-### Corrección a T1.2
+### Corrección a T1.2 — IMPLEMENTADA
 
 `sp_etl_maestro` v2.5.0 debe incluir el INSERT a `ivr_error_log` también en PASO 7
 (cuando `v_ok=FALSE`). Es parte de la misma tarea — mismo archivo, mismo commit.
@@ -259,7 +265,7 @@ ELSE  -- v_detalle_cargado=TRUE, PASO 6 ejecutó sp_etl_validar
     IF NOT COALESCE(v_ok, FALSE) THEN
         BEGIN
             DECLARE CONTINUE HANDLER FOR SQLEXCEPTION BEGIN END;
-            INSERT INTO ivr_error_log
+            INSERT INTO pipeline_event_log
                 (error_type, severity, sp_nombre,
                  p_quarter, error_message, job_log_id, ejecutado_por)
             VALUES
@@ -270,7 +276,7 @@ ELSE  -- v_detalle_cargado=TRUE, PASO 6 ejecutó sp_etl_validar
     UPDATE job_execution_log SET status = IF(...), ...
 ```
 
-### Nueva tarea T1.4 — `sp_etl_historico` v2.1.0
+### Nueva tarea T1.4 — `sp_etl_historico` v2.1.0 — IMPLEMENTADA
 
 `sp_etl_historico` necesita:
 
@@ -279,7 +285,7 @@ ELSE  -- v_detalle_cargado=TRUE, PASO 6 ejecutó sp_etl_validar
    IF p_quarter_num NOT IN (1, 2, 3, 4) THEN
        BEGIN
            DECLARE CONTINUE HANDLER FOR SQLEXCEPTION BEGIN END;
-           INSERT INTO ivr_error_log
+           INSERT INTO pipeline_event_log
                (error_type, severity, sp_nombre, sql_state, mysql_errno,
                 error_message, ejecutado_por)
            VALUES
@@ -298,7 +304,7 @@ ELSE  -- v_detalle_cargado=TRUE, PASO 6 ejecutó sp_etl_validar
            GET DIAGNOSTICS CONDITION 1 v_err_msg = MESSAGE_TEXT;
            BEGIN
                DECLARE CONTINUE HANDLER FOR SQLEXCEPTION BEGIN END;
-               INSERT INTO ivr_error_log
+               INSERT INTO pipeline_event_log
                    (error_type, severity, sp_nombre, sql_state,
                     p_quarter, error_message, job_log_id, ejecutado_por)
                VALUES
@@ -323,7 +329,7 @@ ELSE  -- v_detalle_cargado=TRUE, PASO 6 ejecutó sp_etl_validar
    IF NOT COALESCE(v_ok, FALSE) THEN
        BEGIN
            DECLARE CONTINUE HANDLER FOR SQLEXCEPTION BEGIN END;
-           INSERT INTO ivr_error_log
+           INSERT INTO pipeline_event_log
                (error_type, severity, sp_nombre,
                 p_quarter, error_message, ejecutado_por)
            VALUES
@@ -341,10 +347,10 @@ ELSE  -- v_detalle_cargado=TRUE, PASO 6 ejecutó sp_etl_validar
 | Cambio | Objeto | Tarea |
 |---|---|---|
 | INSERT `ivr_error_log` en PASO 4/5/6 EXIT HANDLERs | `sp_etl_maestro` v2.5.0 | T1.2 (sin cambio) |
-| INSERT `ivr_error_log` en PASO 7 cuando `v_ok=FALSE` | `sp_etl_maestro` v2.5.0 | **T1.2 — EXTENDER** |
-| INSERT `ivr_error_log` antes de SIGNAL param inválido | 7 SPs reporte | T1.3 (sin cambio) |
-| INSERT `ivr_error_log` antes de SIGNAL + EXIT HANDLERs + VALIDACION | `sp_etl_historico` v2.1.0 | **T1.4 — NUEVA** |
-| Tabla adicional para errores ETL | — | No necesario |
-| Tabla adicional para errores de reporte | — | No necesario |
+| INSERT `pipeline_event_log` en PASO 7 cuando `v_ok=FALSE` | `sp_etl_maestro` v2.5.0 | IMPLEMENTADO commit 768a7b2 |
+| INSERT `pipeline_event_log` antes de SIGNAL param inválido | 7 SPs reporte | IMPLEMENTADO commit cecbba9 |
+| INSERT `pipeline_event_log` antes de SIGNAL + EXIT HANDLERs + VALIDACION | `sp_etl_historico` v2.1.0 | IMPLEMENTADO commit d45a440 |
+| Tabla adicional para errores ETL | — | Confirmado: no necesario |
+| Tabla adicional para errores de reporte | — | Confirmado: no necesario |
 | Cambio en estructura del ENUM | — | No necesario |
 | Implementar REPORTE_VACIO | — | Diferido |

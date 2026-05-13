@@ -1,6 +1,6 @@
 # Plan de Implementación — IACT-db Módulos 11-17
 
-**Versión:** 2.0.0
+**Versión:** 2.1.0
 **Fecha:** 2026-05-13
 **Baseline:** verify.sh 27 OK, 0 WARN, 0 ERR
 **Principio:** cada tarea es atómica, desplegable y verificable de forma independiente.
@@ -450,7 +450,7 @@ bash verify.sh  # → OK: 28, WARN: 0, ERR: 0
 
 ---
 
-### T2.4 — `sp_rpt_menu_redirigidos` v2.1.0 — `OVER(PARTITION BY menu)` + `OVER()`
+### T2.4 — `sp_rpt_menu_redirigidos` v2.1.0 — `OVER(PARTITION BY menu)` + variable `v_total_scope`
 
 **Fecha estimada:** 2026-05-20
 **Archivo:** `provisioners/mariadb/objetos/sps/sp_rpt_menu_redirigidos.sql`
@@ -466,9 +466,18 @@ ROUND(SUM(b.total_llamadas) / NULLIF(
   0) * 100, 2) AS pct_del_menu
 
 -- subq2 — pct_del_total:
-ROUND(SUM(b.total_llamadas) / NULLIF(
-    SUM(SUM(b.total_llamadas)) OVER (),
-  0) * 100, 4) AS pct_del_total
+-- CORRECCIÓN H-T2.4-001: OVER() NO puede reemplazar subq2.
+-- El WHERE del SP excluye VACIO y centros centinela; subq2 original los incluye.
+-- Diferencia de denominador: 119205 vs 109639 (9566 filas) → KPI distinto.
+-- Solución: variable v_total_scope pre-calculada ANTES del SELECT principal.
+DECLARE v_total_scope BIGINT DEFAULT 0;
+SELECT SUM(total_llamadas) INTO v_total_scope
+FROM base_ivr_detalle
+WHERE trimestre = p_quarter
+  AND (p_segmento = 'todas' OR segmento = p_segmento);
+
+-- Uso en el SELECT:
+ROUND(SUM(b.total_llamadas) / NULLIF(v_total_scope, 0) * 100, 4) AS pct_del_total
 ```
 
 **Verificación — OBLIGATORIO probar ambos escenarios:**
@@ -703,8 +712,10 @@ GROUP BY segmento;
 
 ```
 verify.sh:
-  OK: 28, WARN: 0, ERR: 0
-  (pipeline_event_log agregado al check /6 desde T1.1)
+  OK: 27, WARN: 0, ERR: 0
+  (H-T1.1-001: el bloque de tablas emite UN ok() para el grupo — agregar
+  pipeline_event_log al bucle expande el criterio, no añade un check nuevo.
+  El 6/6 en el mensaje 'Tablas analíticas completas' confirma su presencia.)
 
 provision-mariadb.sh:
   "25 objetos aplicados"
@@ -719,3 +730,34 @@ Objetos SQL:
                      v_eventos_recientes — en schema_pipeline_event_log.sql)
   Schemas:      2  (schema_base_ivr.sql + schema_pipeline_event_log.sql)
 ```
+
+
+---
+
+## Cierre — Estado de implementación al 2026-05-13
+
+**Todas las fases completadas.** El plan fue ejecutado íntegramente en la sesión
+del 2026-05-13. No quedaron tareas pendientes ni deuda técnica.
+
+| Fase | Tareas | Estado | Commits principales |
+|---|---|---|---|
+| FASE 1 — Provision + Infraestructura | T1.1, T1.2, T1.3, T1.4 | COMPLETA | 377b01d, 768a7b2, cecbba9, d45a440 |
+| FASE 2 — Window functions | T2.1, T2.2, T2.3, T2.4 | COMPLETA | 8918bba |
+| FASE 3 — Observabilidad | T3.1, T3.2 | COMPLETA | f1639d0 |
+| FASE 4 — Mejoras opcionales | T4.1, T4.2, T4.3 | COMPLETA | 14ac02e |
+
+**Hallazgos que modificaron la implementación respecto a este plan:**
+
+- H-T1.1-001: verify.sh OK sigue en 27 (no 28). El bloque de tablas emite un
+  solo `ok()` para el grupo — el 6/6 confirma `pipeline_event_log`.
+- H-T2.4-001: subq2 de `sp_rpt_menu_redirigidos` NO se reemplazó con `OVER()`.
+  El denominador difiere en 9,566 filas. Se usó variable `v_total_scope`.
+- H-T4.2-001: NTILE con SUM OVER anidado no compila en MariaDB 10.11. Se usó
+  LEFT JOIN con subquery agrupada por centro.
+
+**Documentos de hallazgos generados:**
+
+- `HALLAZGOS-FASE1-IMPL-PIPELINE-EVENT-LOG-20260513142619.md`
+- `HALLAZGOS-FASE2-IMPL-WINDOW-FUNCTIONS-20260513175024.md`
+- `HALLAZGOS-FASE3-IMPL-OBSERVABILIDAD-20260513175744.md`
+- `HALLAZGOS-FASE4-IMPL-MEJORAS-OPCIONALES-20260513180611.md`

@@ -1,3 +1,7 @@
+> **Estado:** EJECUTADO — 2026-05-13, commit `6e92ca4`
+> La decisión adoptó `pipeline_event_log`. Se renombraron la tabla, el schema y la vista.
+> Este documento es el registro del análisis que justificó la decisión.
+
 # Análisis — Nomenclatura de `ivr_error_log`
 
 **Versión:** 1.0.0  
@@ -172,7 +176,8 @@ actual — los 7 SPs de reporte registran `PARAM_INVALIDO`), entonces
 
 ## Impacto del renombre en el proyecto
 
-Si se decide renombrar, los cambios son localizados y aplicables antes de T1.1
+El renombre fue ejecutado en commit `6e92ca4` (2026-05-13) antes de T1.1.
+Los cambios resultaron localizados y aplicables
 (que es precisamente la tarea donde se registra la tabla en provision):
 
 | Artefacto | Cambio |
