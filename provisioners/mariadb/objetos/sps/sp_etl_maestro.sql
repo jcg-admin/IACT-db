@@ -5,7 +5,7 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_etl_maestro.sql
-    Version         : 2.4.0
+    Version         : 2.5.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
@@ -121,6 +121,18 @@ etl_maestro: BEGIN
         DECLARE EXIT HANDLER FOR SQLEXCEPTION
         BEGIN
             GET DIAGNOSTICS CONDITION 1 v_err_msg = MESSAGE_TEXT;
+            -- Registrar en pipeline_event_log antes de actualizar job_execution_log.
+            -- CONTINUE HANDLER interno: si el INSERT al log falla, no enmascara el error.
+            BEGIN
+                DECLARE CONTINUE HANDLER FOR SQLEXCEPTION BEGIN END;
+                INSERT INTO pipeline_event_log
+                    (error_type, severity, sp_nombre, sql_state,
+                     p_quarter, error_message, job_log_id, ejecutado_por)
+                VALUES ('ETL_FALLO', 'CRITICA', 'sp_etl_maestro', '45000',
+                        v_quarter,
+                        CONCAT('Falló etl_base_detalle: ', v_err_msg),
+                        v_maestro_id, 'evt_etl_diario');
+            END;
             UPDATE job_execution_log
             SET status='FAILED', end_time=NOW(), error_message=v_err_msg
             WHERE id = v_step_id;
@@ -153,6 +165,17 @@ etl_maestro: BEGIN
         DECLARE EXIT HANDLER FOR SQLEXCEPTION
         BEGIN
             GET DIAGNOSTICS CONDITION 1 v_err_msg = MESSAGE_TEXT;
+            -- Registrar en pipeline_event_log antes de actualizar job_execution_log.
+            BEGIN
+                DECLARE CONTINUE HANDLER FOR SQLEXCEPTION BEGIN END;
+                INSERT INTO pipeline_event_log
+                    (error_type, severity, sp_nombre, sql_state,
+                     p_quarter, error_message, job_log_id, ejecutado_por)
+                VALUES ('ETL_FALLO', 'CRITICA', 'sp_etl_maestro', '45000',
+                        v_quarter,
+                        CONCAT('Falló etl_base_clientes: ', v_err_msg),
+                        v_maestro_id, 'evt_etl_diario');
+            END;
             UPDATE job_execution_log
             SET status='FAILED', end_time=NOW(), error_message=v_err_msg
             WHERE id = v_step_id;
@@ -185,6 +208,17 @@ etl_maestro: BEGIN
         DECLARE EXIT HANDLER FOR SQLEXCEPTION
         BEGIN
             GET DIAGNOSTICS CONDITION 1 v_err_msg = MESSAGE_TEXT;
+            -- Registrar en pipeline_event_log antes de actualizar job_execution_log.
+            BEGIN
+                DECLARE CONTINUE HANDLER FOR SQLEXCEPTION BEGIN END;
+                INSERT INTO pipeline_event_log
+                    (error_type, severity, sp_nombre, sql_state,
+                     p_quarter, error_message, job_log_id, ejecutado_por)
+                VALUES ('ETL_PARTIAL', 'ALTA', 'sp_etl_maestro', '45000',
+                        v_quarter,
+                        CONCAT('Error en sp_etl_validar: ', v_err_msg),
+                        v_maestro_id, 'evt_etl_diario');
+            END;
             UPDATE job_execution_log
             SET status='PARTIAL', end_time=NOW(),
                 error_message=CONCAT('Error en sp_etl_validar: ', v_err_msg)
@@ -205,6 +239,18 @@ etl_maestro: BEGIN
         SET end_time = COALESCE(end_time, NOW())
         WHERE id = v_maestro_id;
     ELSE
+        -- Cuando v_ok=FALSE: la validacion de negocio detectó inconsistencias.
+        -- Registrar en pipeline_event_log (error_type VALIDACION) antes del UPDATE.
+        IF NOT COALESCE(v_ok, FALSE) THEN
+            BEGIN
+                DECLARE CONTINUE HANDLER FOR SQLEXCEPTION BEGIN END;
+                INSERT INTO pipeline_event_log
+                    (error_type, severity, sp_nombre,
+                     p_quarter, error_message, job_log_id, ejecutado_por)
+                VALUES ('VALIDACION', 'ALTA', 'sp_etl_validar',
+                        v_quarter, v_msg, v_maestro_id, 'evt_etl_diario');
+            END;
+        END IF;
         UPDATE job_execution_log
         SET status        = IF(COALESCE(v_ok, FALSE), 'SUCCESS', 'PARTIAL'),
             end_time      = NOW(),
