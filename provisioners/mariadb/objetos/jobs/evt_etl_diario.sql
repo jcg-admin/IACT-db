@@ -28,9 +28,7 @@ FROM DUAL;
 -- Ref: T-081, HALLAZGOS-EVENT-SCHEDULER-2026-05-09.md H-081-04
 -- =============================================================================
 
-DROP EVENT IF EXISTS evt_etl_diario;
-
-CREATE EVENT evt_etl_diario
+CREATE OR REPLACE EVENT evt_etl_diario
     ON SCHEDULE EVERY 1 DAY
     STARTS CONCAT(CURDATE() + INTERVAL 1 DAY, ' 02:00:00')
     COMMENT 'ETL IVR nocturno — ejecuta sp_etl_maestro()'

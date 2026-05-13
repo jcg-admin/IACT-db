@@ -25,8 +25,7 @@ DELIMITER $$
 --
 -- USO: fn_did_segmento(cDID_800Transfer)
 -- -----------------------------------------------------------------------------
-DROP FUNCTION IF EXISTS fn_did_segmento$$
-CREATE FUNCTION fn_did_segmento(p_did VARCHAR(20))
+CREATE OR REPLACE FUNCTION fn_did_segmento(p_did VARCHAR(20))
 RETURNS VARCHAR(20)
 DETERMINISTIC
 COMMENT 'Convierte DID numérico a etiqueta de segmento. Ver MAPEO-DID-SEGMENTOS.md'

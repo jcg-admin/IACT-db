@@ -20,8 +20,7 @@ FROM DUAL;
 
 DELIMITER $$
 
-DROP FUNCTION IF EXISTS ivr_agregar_dias_semana$$
-CREATE FUNCTION ivr_agregar_dias_semana(p_fecha DATE, p_n INT)
+CREATE OR REPLACE FUNCTION ivr_agregar_dias_semana(p_fecha DATE, p_n INT)
 RETURNS DATE
 DETERMINISTIC
 COMMENT 'Fecha + N dias hábiles L-V. O(1) — sin WHILE ni ivr_es_dia_semana.'

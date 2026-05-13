@@ -20,8 +20,7 @@ FROM DUAL;
 
 DELIMITER $$
 
-DROP FUNCTION IF EXISTS ivr_contar_dias_semana$$
-CREATE FUNCTION ivr_contar_dias_semana(p_ini DATE, p_fin DATE)
+CREATE OR REPLACE FUNCTION ivr_contar_dias_semana(p_ini DATE, p_fin DATE)
 RETURNS INT
 DETERMINISTIC
 COMMENT 'Cuenta días L-V en [p_ini,p_fin] inclusive. O(1) — sin WHILE ni ivr_es_dia_semana.'

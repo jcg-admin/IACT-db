@@ -22,8 +22,7 @@ DELIMITER $$
 -- USO: ivr_es_dia_semana('2025-03-21')  -- TRUE (viernes, dia de semana)
 --      ivr_es_dia_semana('2025-01-04')  -- FALSE (sabado)
 -- -----------------------------------------------------------------------------
-DROP FUNCTION IF EXISTS ivr_es_dia_semana$$
-CREATE FUNCTION ivr_es_dia_semana(p_fecha DATE)
+CREATE OR REPLACE FUNCTION ivr_es_dia_semana(p_fecha DATE)
 RETURNS BOOLEAN
 DETERMINISTIC
 COMMENT 'TRUE si p_fecha es lunes a viernes. El IVR opera 7 dias — festivos no aplican.'

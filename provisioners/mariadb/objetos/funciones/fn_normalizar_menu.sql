@@ -28,8 +28,7 @@ DELIMITER $$
 --
 -- USO: fn_normalizar_menu(cMenu)
 -- -----------------------------------------------------------------------------
-DROP FUNCTION IF EXISTS fn_normalizar_menu$$
-CREATE FUNCTION fn_normalizar_menu(p_menu VARCHAR(100))
+CREATE OR REPLACE FUNCTION fn_normalizar_menu(p_menu VARCHAR(100))
 RETURNS VARCHAR(100)
 DETERMINISTIC
 COMMENT 'NULL/vacío/sin cMenu → VACIO. Demás valores: pass-through.'

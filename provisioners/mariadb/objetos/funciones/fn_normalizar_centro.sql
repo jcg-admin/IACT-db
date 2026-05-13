@@ -27,8 +27,7 @@ DELIMITER $$
 --
 -- USO: fn_normalizar_centro(cDID_Centro_Transferencia)
 -- -----------------------------------------------------------------------------
-DROP FUNCTION IF EXISTS fn_normalizar_centro$$
-CREATE FUNCTION fn_normalizar_centro(p_centro VARCHAR(50))
+CREATE OR REPLACE FUNCTION fn_normalizar_centro(p_centro VARCHAR(50))
 RETURNS VARCHAR(100)
 DETERMINISTIC
 COMMENT 'Normaliza cDID_Centro_Transferencia: NK90, sentinels, VDN limpio.'

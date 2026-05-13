@@ -23,8 +23,7 @@ DELIMITER $$
 --
 -- USO: fn_duracion_seg(dHoraInicio, dHoraFin)
 -- -----------------------------------------------------------------------------
-DROP FUNCTION IF EXISTS fn_duracion_seg$$
-CREATE FUNCTION fn_duracion_seg(p_ini DATETIME, p_fin DATETIME)
+CREATE OR REPLACE FUNCTION fn_duracion_seg(p_ini DATETIME, p_fin DATETIME)
 RETURNS INT
 DETERMINISTIC
 COMMENT 'Duración en segundos. Maneja G-29 (ini>fin en 38.8% de registros).'
