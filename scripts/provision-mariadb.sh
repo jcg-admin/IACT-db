@@ -434,15 +434,19 @@ main() {
 
     # Orden de aplicación determinado por dependencias explícitas.
     # Cada objeto tiene su propio archivo — no existen bundles.
-    #   1. schema_base_ivr.sql  — tablas analíticas (base_ivr_*, job_*, etl_runs)
-    #   2. funciones/           — 7 funciones (ivr_contar/agregar dependen de ivr_es_dia_semana)
-    #   3. sps/sp_etl_*         — 5 SPs ETL (maestro depende de base_detalle, base_clientes, validar)
-    #   4. sps/sp_rpt_*         — 7 SPs de reporte (leen base_ivr_detalle)
-    #   5. jobs/                — 1 event (evt_etl_diario depende de sp_etl_maestro)
+    #   1. schema_base_ivr.sql            — tablas analíticas (base_ivr_*, job_*, etl_runs)
+    #   2. schema_pipeline_event_log.sql  — tabla pipeline_event_log + vista v_eventos_recientes
+    #                                       depende de job_execution_log (schema_base_ivr)
+    #   3. funciones/           — 7 funciones (ivr_contar/agregar dependen de ivr_es_dia_semana)
+    #   4. sps/sp_etl_*         — 5 SPs ETL (maestro depende de base_detalle, base_clientes, validar)
+    #   5. sps/sp_rpt_*         — 7 SPs de reporte (leen base_ivr_detalle y pipeline_event_log)
+    #   6. vistas/              — vistas operacionales (v_quarter_actual, v_sla_distribucion)
+    #   7. jobs/                — 1 event (evt_etl_diario depende de sp_etl_maestro)
     local sql_deploy_errors=0
     local sql_files=(
-        # Schema analítico (tablas)
+        # Schemas — orden de dependencia estricto
         "${prov}/schema_base_ivr.sql"
+        "${prov}/schema_pipeline_event_log.sql"
 
         # Funciones — sin dependencias primero, luego las dependientes
         "${prov}/objetos/funciones/fn_did_segmento.sql"
@@ -469,6 +473,10 @@ main() {
         "${prov}/objetos/sps/sp_rpt_cMENU_ERROR.sql"
         "${prov}/objetos/sps/sp_rpt_centros_xsegmento.sql"
 
+        # Vistas — alias y consultas operacionales (dependen de tablas y SPs existentes)
+        "${prov}/objetos/vistas/v_quarter_actual.sql"
+        "${prov}/objetos/vistas/v_sla_distribucion.sql"
+
         # Jobs — dependen de sp_etl_maestro
         "${prov}/objetos/jobs/evt_etl_diario.sql"
     )
@@ -490,7 +498,7 @@ main() {
     done
 
     if [[ $sql_deploy_errors -eq 0 ]]; then
-        log_success "Todos los archivos SQL aplicados (20 objetos)"
+        log_success "Todos los archivos SQL aplicados (23 objetos)"
     else
         log_warn "${sql_deploy_errors} archivo(s) SQL con errores — revisar antes de continuar"
     fi

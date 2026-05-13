@@ -202,10 +202,11 @@ check_mariadb_schema() {
             -e "$1" information_schema 2>/dev/null || echo "-1"
     }
 
-    # ── Tablas analíticas (schema_base_ivr.sql) ───────────────────────────────
+    # ── Tablas analíticas (schema_base_ivr.sql + schema_pipeline_event_log.sql) ──
     local tbl_ok=0 tbl_miss=0
     for tbl in base_ivr_detalle base_ivr_clientes \
-               job_execution_log etl_runs job_config; do
+               job_execution_log etl_runs job_config \
+               pipeline_event_log; do
         local exists
         exists=$(_mdb_schema_q \
             "SELECT COUNT(*) FROM tables
@@ -221,9 +222,9 @@ check_mariadb_schema() {
     done
 
     if [[ $tbl_miss -eq 0 ]]; then
-        ok "Tablas analíticas completas (${tbl_ok}/5)"
+        ok "Tablas analíticas completas (${tbl_ok}/6)"
     else
-        fail "Tablas analíticas incompletas: ${tbl_ok}/5 — ejecutar: sudo bash setup.sh mariadb --full"
+        fail "Tablas analíticas incompletas: ${tbl_ok}/6 — ejecutar: sudo bash setup.sh mariadb --full"
     fi
 
     # ── Funciones de utilidad (objetos/funciones/) ────────────────────────
