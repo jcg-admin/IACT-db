@@ -5,7 +5,7 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_rpt_llamadas_abandonadas.sql
-    Version         : 2.2.0
+    Version         : 2.2.1
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
@@ -46,6 +46,17 @@ BEGIN
     -- Dividir por 0 en MariaDB produce NULL silencioso; el CASE usa NULL
     -- en las comparaciones (UNKNOWN), cayendo al ELSE='CRITICO' incorrectamente.
     DECLARE v_total_quarter BIGINT DEFAULT 0;
+    -- SIGNAL: validación de parámetros (Modulo 17 — equivalente a THROW/RAISERROR).
+    -- SQLSTATE '22023' = Invalid parameter value (estandar SQL).
+    IF p_quarter NOT REGEXP '^Q0[1-4]_[0-9]{2}$' THEN
+        SIGNAL SQLSTATE '22023'
+            SET MESSAGE_TEXT = 'p_quarter: formato invalido. Esperado: Q01_25, Q02_25, Q03_25 o Q04_YY';
+    END IF;
+    IF p_segmento NOT IN ('todas', 'nacional_A', 'nacional_B', 'puebla') THEN
+        SIGNAL SQLSTATE '22023'
+            SET MESSAGE_TEXT = 'p_segmento: valor no reconocido. Esperado: todas | nacional_A | nacional_B | puebla';
+    END IF;
+
 
     SELECT SUM(total_llamadas)
     INTO v_total_quarter

@@ -5,7 +5,7 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_rpt_centros_xsegmento.sql
-    Version         : 2.2.0
+    Version         : 2.2.1
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
@@ -27,6 +27,13 @@ CREATE OR REPLACE PROCEDURE sp_rpt_centros_xsegmento(
     IN p_quarter  VARCHAR(10)
 )
 BEGIN
+    -- SIGNAL: validación de parámetros (Modulo 17 — equivalente a THROW/RAISERROR).
+    -- SQLSTATE '22023' = Invalid parameter value (estandar SQL).
+    IF p_quarter NOT REGEXP '^Q0[1-4]_[0-9]{2}$' THEN
+        SIGNAL SQLSTATE '22023'
+            SET MESSAGE_TEXT = 'p_quarter: formato invalido. Esperado: Q01_25, Q02_25, Q03_25 o Q04_YY';
+    END IF;
+
     -- CTE 1: agregar base_ivr_detalle por trimestre × segmento × centro.
     -- primera_act y ultima_act se calculan UNA sola vez en el GROUP BY.
     -- El nivel siguiente recibe escalares — no re-evalúa MAX/MIN ni STR_TO_DATE.

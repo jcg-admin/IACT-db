@@ -5,13 +5,15 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_etl_validar.sql
-    Version         : 2.1.0
+    Version         : 2.2.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
     Prerequisito    : schema_base_ivr.sql — base_ivr_detalle y base_ivr_clientes deben existir
     Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_validar.sql
-    Notas           : v2.1.0: Check 4 con EXCEPT — segmentos en detalle sin par en clientes.
+    Notas           : v2.2.0: EXIT HANDLER — captura errores inesperados y los retorna
+                      via OUT p_ok=FALSE + p_mensaje con el texto del error (Modulo 17).
+                      v2.1.0: Check 4 con EXCEPT — segmentos en detalle sin par en clientes.
                       Check 5 con INTERSECT — los 3 segmentos canónicos están en ambas tablas.
                       v2.0.0: 3 checks de conteo (detalle > 0 / clientes = 3 / llamadas > 0).
                       Solo lectura. Despues del despliegue ejecutar provision-mariadb.sh.
@@ -34,6 +36,17 @@ BEGIN
     DECLARE v_seg_huerfanos  INT DEFAULT 0;
     DECLARE v_seg_comunes    INT DEFAULT 0;
     DECLARE v_msg            TEXT DEFAULT '';
+    DECLARE v_err_msg        TEXT;
+    -- EXIT HANDLER (Modulo 17): captura errores inesperados durante la validación.
+    -- En lugar de propagar el error a sp_etl_maestro (que lo dejaría con status=RUNNING),
+    -- lo retorna ordenadamente via OUT params. sp_etl_maestro puede evaluarlo como PARTIAL.
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 v_err_msg = MESSAGE_TEXT;
+        SET p_ok      = FALSE;
+        SET p_mensaje = CONCAT('ERROR en sp_etl_validar: ', v_err_msg);
+        SELECT p_quarter AS quarter, FALSE AS validacion_ok, p_mensaje AS mensaje;
+    END;
 
     SELECT COUNT(*), SUM(total_llamadas)
     INTO v_count_det, v_sum_llamadas

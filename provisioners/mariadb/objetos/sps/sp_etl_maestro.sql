@@ -5,7 +5,7 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_etl_maestro.sql
-    Version         : 2.3.0
+    Version         : 2.4.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
@@ -175,8 +175,23 @@ etl_maestro: BEGIN
 
     -- -----------------------------------------------------------------------
     -- PASO 6: Validación post-load
+    -- Envuelto en BEGIN...END con EXIT HANDLER (Modulo 17).
+    -- Si sp_etl_validar falla inesperadamente (error de infraestructura),
+    -- el handler marca el maestro como PARTIAL — no lo deja RUNNING.
+    -- sp_etl_validar ya maneja sus propios errores internos via EXIT HANDLER,
+    -- retornando p_ok=FALSE. Este handler captura fallos externos al SP.
     -- -----------------------------------------------------------------------
-    CALL sp_etl_validar(v_quarter, v_ok, v_msg);
+    BEGIN
+        DECLARE EXIT HANDLER FOR SQLEXCEPTION
+        BEGIN
+            GET DIAGNOSTICS CONDITION 1 v_err_msg = MESSAGE_TEXT;
+            UPDATE job_execution_log
+            SET status='PARTIAL', end_time=NOW(),
+                error_message=CONCAT('Error en sp_etl_validar: ', v_err_msg)
+            WHERE id = v_maestro_id;
+        END;
+        CALL sp_etl_validar(v_quarter, v_ok, v_msg);
+    END;
 
     -- -----------------------------------------------------------------------
     -- PASO 7: Estado final del maestro
