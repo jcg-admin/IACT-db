@@ -40,8 +40,8 @@
 #   Paso setup:       BD ivr_legacy + usuario django_user + grants base
 #   Paso historico:   Tablas tbl_historico_tN_YYYY + seed (schema_historico.sh)
 #   Paso seed:        Tabla de prueba tbl_temp_prueba_ivr (schema_seed.sh)
-#   Paso sql:         funciones_utilidad, schema_base_ivr, sp_etl_pipeline,
-#                     sp_rpt_reportes
+#   Paso sql:         schema_base_ivr + objetos individuales en orden de dependencia:
+#                     funciones/ (7) → sps/etl (5) → sps/rpt (7) → jobs/ (1)
 #   Paso grants:      GRANT DML en tablas analíticas + GRANT EXECUTE en routines
 #                     (independiente del paso sql — idempotente y re-ejecutable)
 #   Paso verificar:   Objetos esperados por nombre
@@ -429,34 +429,68 @@ main() {
     bash "${prov}/schema_seed.sh"
     log_success "schema_seed.sh completado"
 
-    # ── Paso SQL: funciones, schema analítico, SPs ────────────────────────────
+    # ── Paso SQL: schema analítico + objetos individuales ─────────────────────
     log_step 5 6 "Stored Procedures y schema analítico"
 
-    # H-MDB-010: orden de aplicación con dependencias explícitas.
-    # No usar números en los nombres de archivo — el orden lo impone esta lista.
-    #   funciones_utilidad.sql  prerequisito de schema_base_ivr y SPs
-    #   schema_base_ivr.sql     crea tablas analíticas (base_ivr_*, job_*, etl_runs)
-    #   sp_etl_pipeline.sql     usa tablas de schema_base_ivr
-    #   sp_rpt_reportes.sql     lee base_ivr_detalle
+    # Orden de aplicación determinado por dependencias explícitas.
+    # Cada objeto tiene su propio archivo — no existen bundles.
+    #   1. schema_base_ivr.sql  — tablas analíticas (base_ivr_*, job_*, etl_runs)
+    #   2. funciones/           — 7 funciones (ivr_contar/agregar dependen de ivr_es_dia_semana)
+    #   3. sps/sp_etl_*         — 5 SPs ETL (maestro depende de base_detalle, base_clientes, validar)
+    #   4. sps/sp_rpt_*         — 7 SPs de reporte (leen base_ivr_detalle)
+    #   5. jobs/                — 1 event (evt_etl_diario depende de sp_etl_maestro)
     local sql_deploy_errors=0
-    for sql in funciones_utilidad.sql schema_base_ivr.sql \
-               sp_etl_pipeline.sql sp_rpt_reportes.sql; do
-        local sql_path="${prov}/${sql}"
+    local sql_files=(
+        # Schema analítico (tablas)
+        "${prov}/schema_base_ivr.sql"
+
+        # Funciones — sin dependencias primero, luego las dependientes
+        "${prov}/objetos/funciones/fn_did_segmento.sql"
+        "${prov}/objetos/funciones/fn_normalizar_menu.sql"
+        "${prov}/objetos/funciones/fn_normalizar_centro.sql"
+        "${prov}/objetos/funciones/fn_duracion_seg.sql"
+        "${prov}/objetos/funciones/ivr_es_dia_semana.sql"
+        "${prov}/objetos/funciones/ivr_contar_dias_semana.sql"
+        "${prov}/objetos/funciones/ivr_agregar_dias_semana.sql"
+
+        # SPs ETL — internos primero, orquestador al final
+        "${prov}/objetos/sps/sp_etl_base_detalle.sql"
+        "${prov}/objetos/sps/sp_etl_base_clientes.sql"
+        "${prov}/objetos/sps/sp_etl_validar.sql"
+        "${prov}/objetos/sps/sp_etl_maestro.sql"
+        "${prov}/objetos/sps/sp_etl_historico.sql"
+
+        # SPs de reporte — leen base_ivr_detalle y funciones de calendario
+        "${prov}/objetos/sps/sp_rpt_clientes.sql"
+        "${prov}/objetos/sps/sp_rpt_centros_transferencia.sql"
+        "${prov}/objetos/sps/sp_rpt_llamadas_abandonadas.sql"
+        "${prov}/objetos/sps/sp_rpt_menu_redirigidos.sql"
+        "${prov}/objetos/sps/sp_rpt_menu_centro.sql"
+        "${prov}/objetos/sps/sp_rpt_cMENU_ERROR.sql"
+        "${prov}/objetos/sps/sp_rpt_centros_xsegmento.sql"
+
+        # Jobs — dependen de sp_etl_maestro
+        "${prov}/objetos/jobs/evt_etl_diario.sql"
+    )
+
+    for sql_path in "${sql_files[@]}"; do
+        local sql_name
+        sql_name="$(basename "$sql_path")"
         if [[ ! -f "$sql_path" ]]; then
-            log_warn "  ${sql} no encontrado en ${prov} — omitido"
+            log_warn "  ${sql_name} no encontrado — omitido"
             continue
         fi
-        log_info "  -> ${sql}"
+        log_info "  -> ${sql_name}"
         if sql_exec_file "$sql_path"; then
-            log_success "  ${sql} aplicado"
+            log_success "  ${sql_name} aplicado"
         else
-            log_error "  ${sql} fallo — revisar log de MariaDB"
+            log_error "  ${sql_name} fallo — revisar log de MariaDB"
             (( ++sql_deploy_errors )) || true
         fi
     done
 
     if [[ $sql_deploy_errors -eq 0 ]]; then
-        log_success "Todos los archivos SQL aplicados"
+        log_success "Todos los archivos SQL aplicados (20 objetos)"
     else
         log_warn "${sql_deploy_errors} archivo(s) SQL con errores — revisar antes de continuar"
     fi
@@ -518,7 +552,7 @@ main() {
 
     # H-F4-001: loop actualizado de 5 a 7 funciones — mismo fix que H-ETL-002
     # en verify.sh. ivr_contar_dias_semana e ivr_agregar_dias_semana son parte
-    # de funciones_utilidad.sql desde v1.0.0 pero no estaban en la verificación.
+    # de objetos/funciones/ desde v1.0.0 pero no estaban en la verificación.
     for fn in fn_did_segmento fn_normalizar_menu fn_normalizar_centro \
               fn_duracion_seg ivr_es_dia_semana \
               ivr_contar_dias_semana ivr_agregar_dias_semana; do
@@ -529,7 +563,7 @@ main() {
         if [[ "${fn_exists:-0}" -eq 1 ]]; then
             log_debug "  función OK: ${fn}"
         else
-            log_error "  función FALTANTE: ${fn} (revisar funciones_utilidad.sql)"
+            log_error "  función FALTANTE: ${fn} (revisar objetos/funciones/${fn}.sql)"
             (( ++verify_errors )) || true
         fi
     done
@@ -546,12 +580,12 @@ main() {
 
     [[ "${sp_etl_count:-0}" -gt 0 ]] \
         && log_debug "  SPs ETL OK: ${sp_etl_count}" \
-        || { log_error "  SPs ETL FALTANTES (revisar sp_etl_pipeline.sql)"
+        || { log_error "  SPs ETL FALTANTES (revisar objetos/sps/sp_etl_*.sql)"
              (( ++verify_errors )) || true; }
 
     [[ "${sp_rpt_count:-0}" -gt 0 ]] \
         && log_debug "  SPs Reporte OK: ${sp_rpt_count}" \
-        || { log_error "  SPs Reporte FALTANTES (revisar sp_rpt_reportes.sql)"
+        || { log_error "  SPs Reporte FALTANTES (revisar objetos/sps/sp_rpt_*.sql)"
              (( ++verify_errors )) || true; }
 
     # Verificar que los grants EXECUTE están aplicados
