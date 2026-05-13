@@ -5,13 +5,15 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_etl_maestro.sql
-    Version         : 2.2.0
+    Version         : 2.3.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
     Prerequisito    : sp_etl_base_detalle — sp_etl_base_clientes — sp_etl_validar — schema_base_ivr.sql
     Despliegue      : mysql --socket=/run/mysqld/mysqld.sock ivr_legacy < sp_etl_maestro.sql
-    Notas           : v2.2.0: renombrar v_paso4_failed → v_detalle_cargado (clean code).
+    Notas           : v2.3.0: LEAVE etl_maestro reemplaza v_abort flag (Modulo 16).
+                      Elimina IF NOT v_abort anidado — flujo secuencial lineal.
+                      Notas           : v2.2.0: renombrar v_paso4_failed → v_detalle_cargado (clean code).
                       v2.1.0: guardar PASO 5 y PASO 7 cuando base_ivr_detalle no se carga.
                       Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
 *********************************************************************************************/
@@ -22,10 +24,11 @@ DELIMITER $$
 
 -- =============================================================================
 CREATE OR REPLACE PROCEDURE sp_etl_maestro()
-BEGIN
-    -- FIX: eliminados labels de bloque y LEAVE en handlers anidados.
-    -- MariaDB 10.11 no permite LEAVE de bloque externo desde EXIT HANDLER.
-    -- Patron reemplazado: variable v_abort como flag de salida temprana.
+-- Label de bloque: permite LEAVE etl_maestro para salida temprana (Modulo 16).
+-- LEAVE es valido desde el body principal del SP.
+-- La restriccion de MariaDB aplica a LEAVE desde EXIT HANDLER — no desde aqui.
+-- Patron: IF condicion THEN LEAVE etl_maestro; END IF; reemplaza v_abort flag.
+etl_maestro: BEGIN
     DECLARE v_year       INT;
     DECLARE v_qnum       INT;
     DECLARE v_quarter    VARCHAR(10);
@@ -39,7 +42,6 @@ BEGIN
     DECLARE v_ok         BOOLEAN;
     DECLARE v_msg        TEXT;
     DECLARE v_err_msg    TEXT;
-    DECLARE v_abort          BOOLEAN DEFAULT FALSE;
     -- TRUE mientras base_ivr_detalle se cargó correctamente.
     -- FALSE si el ETL de detalle falló — impide cargar base_ivr_clientes
     -- con datos inconsistentes y preserva el status FAILED del maestro.
@@ -47,6 +49,8 @@ BEGIN
 
     -- -----------------------------------------------------------------------
     -- PASO 0: Verificar que el job está habilitado
+    -- LEAVE: si el job no está habilitado, registrar SKIP y salir.
+    -- No hay v_maestro_id aún — no hay nada más que actualizar.
     -- -----------------------------------------------------------------------
     SELECT is_enabled, timeout_seconds
     INTO v_enabled, v_timeout
@@ -57,13 +61,14 @@ BEGIN
         INSERT INTO job_execution_log
             (job_name, step_name, status, start_time, end_time, ejecutado_por)
         VALUES ('etl_diario', 'maestro', 'SKIP', NOW(), NOW(), 'evt_etl_diario');
-        SET v_abort = TRUE;
+        LEAVE etl_maestro;
     END IF;
 
     -- -----------------------------------------------------------------------
     -- PASO 1: Verificar concurrencia (ventana mínima de 6 horas)
+    -- LEAVE: si hay un job RUNNING reciente, registrar SKIP y salir.
     -- -----------------------------------------------------------------------
-    IF NOT v_abort AND EXISTS (
+    IF EXISTS (
         SELECT 1 FROM job_execution_log
         WHERE job_name = 'etl_diario'
           AND step_name = 'maestro'
@@ -75,10 +80,8 @@ BEGIN
              error_message)
         VALUES ('etl_diario', 'maestro', 'SKIP', NOW(), NOW(), 'evt_etl_diario',
                 'Otro job etl_diario está RUNNING en las últimas 6 horas.');
-        SET v_abort = TRUE;
+        LEAVE etl_maestro;
     END IF;
-
-    IF NOT v_abort THEN
 
     -- -----------------------------------------------------------------------
     -- PASO 2: Calcular quarter y tabla fuente (dinámico — cualquier año)
@@ -194,9 +197,7 @@ BEGIN
         WHERE id = v_maestro_id;
     END IF;
 
-    END IF; -- END IF NOT v_abort
-
-END$$
+END etl_maestro$$
 
 DELIMITER ;
 
