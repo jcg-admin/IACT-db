@@ -5,13 +5,14 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_rpt_centros_transferencia.sql
-    Version         : 2.0.0
+    Version         : 2.1.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
     Prerequisito    : objetos/funciones/ (7 funciones) — schema_base_ivr.sql — objetos/sps/sp_etl_*.sql (base_ivr_* con datos)
     Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_rpt_centros_transferencia.sql
-    Notas           : UC_RPT_15 — Mayor granularidad: quarter x fecha x segmento x centro x menu x opcion. NULLIF en porcentaje. Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
+    Notas           : v2.1.0: JOIN con totales pre-calculados reemplaza subconsulta correlacionada para porcentaje (H-IACT-003).
+                      UC_RPT_15. Despues del despliegue ejecutar provision-mariadb.sh.
 *********************************************************************************************/
 
 -- DEFINICIÓN
@@ -30,36 +31,44 @@ CREATE PROCEDURE sp_rpt_centros_transferencia(
     IN p_segmento VARCHAR(20)
 )
 BEGIN
+    -- totales pre-calculados por fecha para el porcentaje.
+    -- Un solo scan de base_ivr_detalle en lugar de un scan por fila del resultado.
+    -- La correlación (b2.fecha = b.fecha) del diseño original garantizaba SUM > 0,
+    -- el LEFT JOIN con NULLIF mantiene la misma protección defensiva.
     SELECT
-        b.trimestre,
-        b.fecha,                                     -- YYYYMM
-        b.segmento,
-        b.centro_transferencia,
-        UPPER(TRIM(b.menu))          AS menu,         -- UPPERCASE para presentación
-        b.opcion,
-        b.total_llamadas,
-        -- NULLIF defensivo: la subconsulta correlacionada (b2.fecha = b.fecha)
-        -- garantiza SUM > 0 mientras 'b' exista, pero se aplica por consistencia
-        -- con el resto de los SPs de reporte.
-        ROUND(
+        b.trimestre
+        , b.fecha
+        , b.segmento
+        , b.centro_transferencia
+        , UPPER(TRIM(b.menu))          AS menu
+        , b.opcion
+        , b.total_llamadas
+        , ROUND(
             b.total_llamadas
-            / NULLIF(
-                (SELECT SUM(b2.total_llamadas)
-                 FROM base_ivr_detalle b2
-                 WHERE b2.trimestre = p_quarter
-                   AND b2.fecha     = b.fecha
-                   AND (p_segmento = 'todas' OR b2.segmento = p_segmento)),
-              0) * 100, 7
-        )                            AS porcentaje,
-        b.misma_linea,
-        b.linea_diferente,
-        b.no_digito_telefono,
-        b.llamadas_entre_semana,
-        b.llamadas_fines_semana
+            / NULLIF(totales.total_mes, 0) * 100, 7
+          )                            AS porcentaje
+        , b.misma_linea
+        , b.linea_diferente
+        , b.no_digito_telefono
+        , b.llamadas_entre_semana
+        , b.llamadas_fines_semana
     FROM base_ivr_detalle b
+    LEFT JOIN (
+        SELECT
+            fecha
+            , SUM(total_llamadas) AS total_mes
+        FROM base_ivr_detalle
+        WHERE trimestre = p_quarter
+          AND (p_segmento = 'todas' OR segmento = p_segmento)
+        GROUP BY fecha
+    ) AS totales
+        ON totales.fecha = b.fecha
     WHERE b.trimestre = p_quarter
       AND (p_segmento = 'todas' OR b.segmento = p_segmento)
-    ORDER BY b.fecha, b.segmento, b.total_llamadas DESC;
+    ORDER BY
+        b.fecha
+        , b.segmento
+        , b.total_llamadas DESC;
 END$$
 
 DELIMITER ;
