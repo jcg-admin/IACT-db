@@ -5,13 +5,19 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_rpt_llamadas_abandonadas.sql
-    Version         : 2.0.0
+    Version         : 2.1.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
     Prerequisito    : objetos/funciones/ (7 funciones) — schema_base_ivr.sql — objetos/sps/sp_etl_*.sql (base_ivr_* con datos)
     Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_rpt_llamadas_abandonadas.sql
-    Notas           : UC_RPT_13 — menu IN ('VACIO','cliente_colgo','SinOpcion_Cabecera'). SLA: <20% OPTIMO / 20-30% ACEPTABLE / >30% CRITICO. Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
+    Notas           : v2.1.0: GROUP BY segmento,menu WITH ROLLUP — añade fila SUBTOTAL por segmento
+                      y fila TOTAL con tasa global de abandono (Modulo 14).
+                      Identificar filas de rollup: menu='--- SUBTOTAL ---' o segmento='TOTAL'.
+                      pct_del_segmento=NULL en fila TOTAL (sin sentido para total global).
+                      v2.0.0: UC_RPT_13 — menu IN ('VACIO','cliente_colgo','SinOpcion_Cabecera').
+                      SLA: <20% OPTIMO / 20-30% ACEPTABLE / >30% CRITICO.
+                      Despues del despliegue ejecutar provision-mariadb.sh.
 *********************************************************************************************/
 
 -- DEFINICIÓN
@@ -47,25 +53,27 @@ BEGIN
       AND (p_segmento = 'todas' OR segmento = p_segmento);
 
     SELECT
-        b.trimestre,
-        b.segmento,
-        UPPER(TRIM(b.menu))                          AS menu,
-        SUM(b.total_llamadas)                        AS total_abandonadas,
+        p_quarter                                            AS trimestre,
+        -- COALESCE identifica filas de rollup: TOTAL = subtotal global
+        COALESCE(b.segmento, 'TOTAL')                       AS segmento,
+        -- COALESCE identifica filas de rollup: '--- SUBTOTAL ---' = total del segmento
+        COALESCE(UPPER(TRIM(b.menu)), '--- SUBTOTAL ---')   AS menu,
+        SUM(b.total_llamadas)                                AS total_abandonadas,
         -- % respecto al total del quarter/segmento
         ROUND(SUM(b.total_llamadas) / NULLIF(v_total_quarter, 0) * 100, 2)
-                                                     AS pct_del_total,
-        -- % respecto a cada segmento individualmente (para comparar A vs B vs Puebla)
-        -- NULLIF defensivo: subconsulta correlacionada (b3.segmento = b.segmento)
-        -- garantiza SUM > 0 mientras 'b' exista.
-        ROUND(
-            SUM(b.total_llamadas)
-            / NULLIF(
-                (SELECT SUM(b3.total_llamadas)
-                 FROM base_ivr_detalle b3
-                 WHERE b3.trimestre = p_quarter
-                   AND b3.segmento  = b.segmento),
-              0) * 100, 2
-        )                                            AS pct_del_segmento,
+                                                             AS pct_del_total,
+        -- % respecto a cada segmento individualmente
+        -- CASE suprime pct_del_segmento en la fila TOTAL (b.segmento=NULL, sin denominador)
+        CASE WHEN b.segmento IS NULL THEN NULL
+             ELSE ROUND(
+                SUM(b.total_llamadas)
+                / NULLIF(
+                    (SELECT SUM(b3.total_llamadas)
+                     FROM base_ivr_detalle b3
+                     WHERE b3.trimestre = p_quarter
+                       AND b3.segmento  = b.segmento),
+                  0) * 100, 2)
+        END                                                  AS pct_del_segmento,
         -- Clasificación SLA (D-ETL-007 recalibrado)
         CASE
             WHEN ROUND(SUM(b.total_llamadas) / NULLIF(v_total_quarter, 0) * 100, 2) < 20
@@ -73,13 +81,14 @@ BEGIN
             WHEN ROUND(SUM(b.total_llamadas) / NULLIF(v_total_quarter, 0) * 100, 2) <= 30
                 THEN 'ACEPTABLE'
             ELSE 'CRITICO'
-        END                                          AS clasificacion_sla
+        END                                                  AS clasificacion_sla
     FROM base_ivr_detalle b
     WHERE b.trimestre = p_quarter
       AND (p_segmento = 'todas' OR b.segmento = p_segmento)
       AND b.menu IN ('VACIO', 'cliente_colgo', 'SinOpcion_Cabecera')
-    GROUP BY b.trimestre, b.segmento, b.menu
-    ORDER BY b.segmento, total_abandonadas DESC;
+    -- WITH ROLLUP: genera fila '--- SUBTOTAL ---' por segmento y fila 'TOTAL' global.
+    -- b.trimestre excluido del GROUP BY (fijo por WHERE) para evitar nivel redundante.
+    GROUP BY b.segmento, b.menu WITH ROLLUP;
 END$$
 
 DELIMITER ;
