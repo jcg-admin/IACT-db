@@ -5,7 +5,7 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_rpt_menu_centro.sql
-    Version         : 2.0.2
+    Version         : 2.1.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
@@ -67,16 +67,15 @@ BEGIN
         UPPER(TRIM(b.menu))          AS menu,
         b.opcion,
         SUM(b.total_llamadas)        AS total_llamadas,
-        -- % que representa este menu+opcion dentro del centro
-        -- NULLIF defensivo: correlación b2.centro_transferencia = b.centro garantiza SUM > 0.
+        -- Window function reemplaza subconsulta correlacionada (T2.2 — FASE 2).
+        -- OVER(PARTITION BY centro): suma todas las filas del mismo centro visibles
+        -- tras el WHERE. Verificado en ambos escenarios (todas / nacional_A):
+        -- con todas: subq=352, wf=352; con nacional_A: subq=154, wf=154.
+        -- SUM(SUM()) dentro de OVER es válido porque opera sobre el GROUP BY.
         ROUND(
             SUM(b.total_llamadas)
             / NULLIF(
-                (SELECT SUM(b2.total_llamadas)
-                 FROM base_ivr_detalle b2
-                 WHERE b2.trimestre            = p_quarter
-                   AND b2.centro_transferencia = b.centro_transferencia
-                   AND (p_segmento = 'todas' OR b2.segmento = p_segmento)),
+                SUM(SUM(b.total_llamadas)) OVER (PARTITION BY b.centro_transferencia),
               0) * 100, 2
         )                            AS pct_del_centro,
         SUM(b.misma_linea)           AS misma_linea,

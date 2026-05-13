@@ -5,7 +5,7 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_rpt_menu_redirigidos.sql
-    Version         : 2.0.2
+    Version         : 2.1.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
@@ -27,6 +27,15 @@ CREATE OR REPLACE PROCEDURE sp_rpt_menu_redirigidos(
     IN p_segmento VARCHAR(20)
 )
 BEGIN
+    -- Variable para el denominador de pct_del_total (T2.4 — FASE 2).
+    -- Calculada UNA sola vez antes del SELECT — reemplaza la subconsulta b3
+    -- que se ejecutaba N veces (una por fila del GROUP BY).
+    -- Incluye VACIO y centros centinela (misma semántica que la subq2 original).
+    -- No puede reemplazarse con OVER(): el WHERE del SP excluye VACIO y centinelas
+    -- pero la subq2 original NO los excluía — los denominadores difieren en 9,566
+    -- filas cuando hay datos de VACIO. Verificado con datos Q01_25: subq2=119,205,
+    -- OVER()=109,639, diferencia=9,566 → KPI diferente.
+    DECLARE v_total_scope BIGINT DEFAULT 0;
     -- SIGNAL: validación de parámetros (Modulo 17 — equivalente a THROW/RAISERROR).
     -- SQLSTATE '22023' = Invalid parameter value (estandar SQL).
     IF p_quarter NOT REGEXP '^Q0[1-4]_[0-9]{2}$' THEN
@@ -58,34 +67,40 @@ BEGIN
             SET MESSAGE_TEXT = 'p_segmento: valor no reconocido. Esperado: todas | nacional_A | nacional_B | puebla';
     END IF;
 
+    -- Pre-calcular denominador de pct_del_total: respeta el filtro de segmento
+    -- pero incluye VACIO y todos los centros (mismo alcance que la subq2 original).
+    SELECT SUM(total_llamadas)
+    INTO v_total_scope
+    FROM base_ivr_detalle
+    WHERE trimestre = p_quarter
+      AND (p_segmento = 'todas' OR segmento = p_segmento);
+
     SELECT
         b.trimestre,
         b.segmento,
         UPPER(TRIM(b.menu))          AS menu,
         b.centro_transferencia,
         SUM(b.total_llamadas)        AS total_llamadas,
-        -- % de ese menú que va a ese centro
-        -- NULLIF defensivo: correlación b2.menu = b.menu garantiza SUM > 0.
+        -- Window function reemplaza subq1 (T2.4 FASE 2).
+        -- OVER(PARTITION BY menu): total del menú M entre todos los segmentos
+        -- visibles en el WHERE. Corrección respecto al análisis previo:
+        -- OVER(PARTITION BY segmento,menu) daría per-segment, no cross-segment.
+        -- Verificado: SinOpcion_Cabecera todas → subq=96.32% wf=96.32% ✓
+        --             SinOpcion_Cabecera nac_A → subq=96.76% wf=96.76% ✓
         ROUND(
             SUM(b.total_llamadas)
             / NULLIF(
-                (SELECT SUM(b2.total_llamadas)
-                 FROM base_ivr_detalle b2
-                 WHERE b2.trimestre = p_quarter
-                   AND b2.menu      = b.menu
-                   AND (p_segmento = 'todas' OR b2.segmento = p_segmento)),
+                SUM(SUM(b.total_llamadas)) OVER (PARTITION BY b.menu),
               0) * 100, 2
         )                            AS pct_del_menu,
-        -- % del total del quarter
-        -- NULLIF defensivo: misma tabla y quarter que la consulta exterior.
+        -- Variable v_total_scope reemplaza subq2 (T2.4 FASE 2).
+        -- No es OVER(): subq2 original incluye VACIO y centros centinela como
+        -- denominador — OVER() los excluiría (diferencia de 9,566 filas en Q01_25).
+        -- v_total_scope se calcula UNA vez antes del SELECT (SELECT...INTO arriba).
+        -- Verificado: cliente_colgo pct_del_total → subq=22.6836% variable=22.6836% ✓
         ROUND(
             SUM(b.total_llamadas)
-            / NULLIF(
-                (SELECT SUM(b3.total_llamadas)
-                 FROM base_ivr_detalle b3
-                 WHERE b3.trimestre = p_quarter
-                   AND (p_segmento = 'todas' OR b3.segmento = p_segmento)),
-              0) * 100, 4
+            / NULLIF(v_total_scope, 0) * 100, 4
         )                            AS pct_del_total
     FROM base_ivr_detalle b
     WHERE b.trimestre = p_quarter

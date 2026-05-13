@@ -5,7 +5,7 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_rpt_cMENU_ERROR.sql
-    Version         : 2.0.2
+    Version         : 2.1.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
@@ -68,14 +68,12 @@ BEGIN
         b.menu                       AS valor_cMenu_raw,  -- teléfono real del llamante
         b.centro_transferencia,      -- siempre 19020086 (bucket de abandono)
         SUM(b.total_llamadas)        AS total_llamadas,
-        -- Total de anomalías en el quarter/segmento
-        (SELECT SUM(b2.total_llamadas)
-         FROM base_ivr_detalle b2
-         WHERE b2.trimestre = p_quarter
-           AND (p_segmento = 'todas' OR b2.segmento = p_segmento)
-           AND b2.menu REGEXP '^[0-9]+$'
-           AND LENGTH(b2.menu) >= 7
-        )                            AS total_anomalias_quarter
+        -- Window function reemplaza subconsulta correlacionada (T2.1 — FASE 2).
+        -- OVER() sin PARTITION BY: suma todas las filas visibles tras el WHERE.
+        -- Corrección respecto al análisis previo: OVER(PARTITION BY segmento)
+        -- daría el total POR segmento, no el total del scope completo.
+        -- Verificado: subq=119, OVER(seg)=55, OVER()=119 con p_segmento='todas'.
+        SUM(SUM(b.total_llamadas)) OVER()  AS total_anomalias_quarter
     FROM base_ivr_detalle b
     WHERE b.trimestre = p_quarter
       AND (p_segmento = 'todas' OR b.segmento = p_segmento)

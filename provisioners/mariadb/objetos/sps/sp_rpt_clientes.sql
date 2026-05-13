@@ -5,7 +5,7 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_rpt_clientes.sql
-    Version         : 2.0.2
+    Version         : 2.1.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
@@ -49,17 +49,14 @@ BEGIN
         c.trimestre,
         c.segmento,
         c.clientes_unicos,
-        -- Total del quarter para calcular % por segmento.
-        -- NULLIF(..., 0): si el ETL falló y clientes_unicos=0 en todas las filas,
-        -- SUM=0 produce NULL silencioso sin NULLIF. Con NULLIF retorna NULL explícito
-        -- en lugar de dividir por cero.
+        -- Window function reemplaza subconsulta (T2.3 — FASE 2).
+        -- OVER() sin PARTITION BY: base_ivr_clientes solo tiene 3 filas por quarter
+        -- (una por segmento). SUM() OVER() suma los 3 — idéntico a la subquery original.
+        -- Verificado con Q02_25: pct_subq = pct_wf en los 3 segmentos.
+        -- NULLIF defensivo: si ETL falló, SUM=0 → NULL explícito, no división por cero.
         ROUND(
             c.clientes_unicos
-            / NULLIF(
-                (SELECT SUM(c2.clientes_unicos)
-                 FROM base_ivr_clientes c2
-                 WHERE c2.trimestre = p_quarter),
-              0) * 100, 2
+            / NULLIF(SUM(c.clientes_unicos) OVER(), 0) * 100, 2
         )                       AS pct_del_total,
         c.cargado_en            AS ultima_actualizacion
     FROM base_ivr_clientes c
