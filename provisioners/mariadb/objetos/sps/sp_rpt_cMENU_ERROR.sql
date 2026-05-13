@@ -25,8 +25,7 @@ DELIMITER $$
 -- Ref: REPORTE-C-MENU.md H-6, REPORTE-LLAMADAS-CMENU.md H-5
 -- UC_RPT_16
 -- =============================================================================
-DROP PROCEDURE IF EXISTS sp_rpt_cMENU_ERROR$$
-CREATE PROCEDURE sp_rpt_cMENU_ERROR(
+CREATE OR REPLACE PROCEDURE sp_rpt_cMENU_ERROR(
     IN p_quarter  VARCHAR(10),
     IN p_segmento VARCHAR(20)
 )

@@ -24,8 +24,7 @@ DELIMITER $$
 -- Responde: ¿qué menús terminan en este centro y con qué opciones?
 -- UC_RPT_16
 -- =============================================================================
-DROP PROCEDURE IF EXISTS sp_rpt_menu_centro$$
-CREATE PROCEDURE sp_rpt_menu_centro(
+CREATE OR REPLACE PROCEDURE sp_rpt_menu_centro(
     IN p_quarter  VARCHAR(10),
     IN p_segmento VARCHAR(20)
 )

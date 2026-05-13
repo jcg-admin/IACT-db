@@ -19,8 +19,7 @@ FROM DUAL;
 DELIMITER $$
 
 -- =============================================================================
-DROP PROCEDURE IF EXISTS sp_etl_base_clientes$$
-CREATE PROCEDURE sp_etl_base_clientes(
+CREATE OR REPLACE PROCEDURE sp_etl_base_clientes(
     IN p_quarter  VARCHAR(10),
     IN p_inicio   DATE,
     IN p_fin      DATE,

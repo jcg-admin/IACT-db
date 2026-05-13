@@ -22,8 +22,7 @@ FROM DUAL;
 DELIMITER $$
 
 -- =============================================================================
-DROP PROCEDURE IF EXISTS sp_etl_validar$$
-CREATE PROCEDURE sp_etl_validar(
+CREATE OR REPLACE PROCEDURE sp_etl_validar(
     IN  p_quarter   VARCHAR(10),
     OUT p_ok        BOOLEAN,
     OUT p_mensaje   TEXT

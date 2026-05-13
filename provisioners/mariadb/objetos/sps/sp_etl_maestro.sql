@@ -21,8 +21,7 @@ FROM DUAL;
 DELIMITER $$
 
 -- =============================================================================
-DROP PROCEDURE IF EXISTS sp_etl_maestro$$
-CREATE PROCEDURE sp_etl_maestro()
+CREATE OR REPLACE PROCEDURE sp_etl_maestro()
 BEGIN
     -- FIX: eliminados labels de bloque y LEAVE en handlers anidados.
     -- MariaDB 10.11 no permite LEAVE de bloque externo desde EXIT HANDLER.

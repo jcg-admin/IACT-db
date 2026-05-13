@@ -25,8 +25,7 @@ DELIMITER $$
 -- Incluye métricas de comportamiento del llamante.
 -- UC_RPT_15
 -- =============================================================================
-DROP PROCEDURE IF EXISTS sp_rpt_centros_transferencia$$
-CREATE PROCEDURE sp_rpt_centros_transferencia(
+CREATE OR REPLACE PROCEDURE sp_rpt_centros_transferencia(
     IN p_quarter  VARCHAR(10),
     IN p_segmento VARCHAR(20)
 )

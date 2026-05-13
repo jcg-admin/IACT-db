@@ -32,8 +32,7 @@ DELIMITER $$
 --   < 20% óptimo | 20–30% aceptable | > 30% crítico
 -- UC_RPT_13
 -- =============================================================================
-DROP PROCEDURE IF EXISTS sp_rpt_llamadas_abandonadas$$
-CREATE PROCEDURE sp_rpt_llamadas_abandonadas(
+CREATE OR REPLACE PROCEDURE sp_rpt_llamadas_abandonadas(
     IN p_quarter  VARCHAR(10),
     IN p_segmento VARCHAR(20)
 )

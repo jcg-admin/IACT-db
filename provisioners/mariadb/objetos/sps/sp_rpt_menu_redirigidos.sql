@@ -22,8 +22,7 @@ DELIMITER $$
 -- Responde: ¿a qué centros redirige cada menú y con qué volumen?
 -- UC_RPT_16
 -- =============================================================================
-DROP PROCEDURE IF EXISTS sp_rpt_menu_redirigidos$$
-CREATE PROCEDURE sp_rpt_menu_redirigidos(
+CREATE OR REPLACE PROCEDURE sp_rpt_menu_redirigidos(
     IN p_quarter  VARCHAR(10),
     IN p_segmento VARCHAR(20)
 )

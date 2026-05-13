@@ -19,8 +19,7 @@ FROM DUAL;
 DELIMITER $$
 
 -- =============================================================================
-DROP PROCEDURE IF EXISTS sp_etl_historico$$
-CREATE PROCEDURE sp_etl_historico(
+CREATE OR REPLACE PROCEDURE sp_etl_historico(
     IN p_year        INT,
     IN p_quarter_num INT
 )

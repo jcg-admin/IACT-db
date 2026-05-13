@@ -23,8 +23,7 @@ FROM DUAL;
 
 DELIMITER $$
 
-DROP PROCEDURE IF EXISTS sp_rpt_centros_xsegmento$$
-CREATE PROCEDURE sp_rpt_centros_xsegmento(
+CREATE OR REPLACE PROCEDURE sp_rpt_centros_xsegmento(
     IN p_quarter  VARCHAR(10)
 )
 BEGIN

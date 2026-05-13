@@ -24,8 +24,7 @@ DELIMITER $$
 -- Lee base_ivr_clientes (3 filas por quarter — una por segmento).
 -- UC_RPT_17
 -- =============================================================================
-DROP PROCEDURE IF EXISTS sp_rpt_clientes$$
-CREATE PROCEDURE sp_rpt_clientes(
+CREATE OR REPLACE PROCEDURE sp_rpt_clientes(
     IN p_quarter  VARCHAR(10)
 )
 BEGIN
