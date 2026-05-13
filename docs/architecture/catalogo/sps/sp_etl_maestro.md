@@ -1,10 +1,10 @@
 # `sp_etl_maestro`
 
-**Archivo fuente:** `provisioners/mariadb/sp_etl_pipeline.sql`  
+**Archivo fuente:** `provisioners/mariadb/objetos/sps/sp_etl_maestro.sql`  
 **Schema:** `ivr_legacy`  
 **DEFINER:** `root@localhost` — SQL SECURITY DEFINER  
 **Tipo:** PROCEDURE  
-**Versión:** 2.0.0
+**Versión:** 2.2.0
 
 ---
 

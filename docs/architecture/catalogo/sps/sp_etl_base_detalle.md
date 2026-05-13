@@ -1,6 +1,7 @@
 # `sp_etl_base_detalle`
 
-**Archivo fuente:** `provisioners/mariadb/sp_etl_pipeline.sql`  
+**Versión:** 2.2.0  
+**Archivo fuente:** `provisioners/mariadb/objetos/sps/sp_etl_base_detalle.sql`  
 **Schema:** `ivr_legacy`  
 **DEFINER:** `root@localhost` — SQL SECURITY DEFINER  
 **Tipo:** PROCEDURE  

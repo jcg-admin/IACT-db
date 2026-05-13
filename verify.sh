@@ -226,12 +226,11 @@ check_mariadb_schema() {
         fail "Tablas analíticas incompletas: ${tbl_ok}/5 — ejecutar: sudo bash setup.sh mariadb --full"
     fi
 
-    # ── Funciones de utilidad (funciones_utilidad.sql) ────────────────────────
+    # ── Funciones de utilidad (objetos/funciones/) ────────────────────────
     local fn_ok=0 fn_miss=0
     # T-4.2 (H-ETL-002): agregar ivr_contar_dias_semana e ivr_agregar_dias_semana.
     # Ambas son usadas por sp_rpt_centros_xsegmento — sin ellas el SP falla
-    # en runtime aunque exista. Estaban en funciones_utilidad.sql desde v1.0.0
-    # pero el loop solo verificaba 5 de las 7 funciones del archivo.
+    # en runtime aunque exista. Residen en objetos/funciones/ (un archivo por función).
     for fn in fn_did_segmento fn_normalizar_menu fn_normalizar_centro \
               fn_duracion_seg ivr_es_dia_semana \
               ivr_contar_dias_semana ivr_agregar_dias_semana; do
@@ -255,7 +254,7 @@ check_mariadb_schema() {
         warn "Funciones de utilidad incompletas: ${fn_ok}/7 — ejecutar: sudo bash setup.sh mariadb --full"
     fi
 
-    # ── SPs ETL (sp_etl_pipeline.sql) ─────────────────────────────────────────
+    # ── SPs ETL (objetos/sps/sp_etl_*.sql) ────────────────────────────────────
     local sp_etl
     sp_etl=$(_mdb_schema_q \
         "SELECT COUNT(*) FROM routines
@@ -268,7 +267,7 @@ check_mariadb_schema() {
         warn "SPs ETL no encontrados — ejecutar: sudo bash setup.sh mariadb --full"
     fi
 
-    # ── SPs de reporte (sp_rpt_reportes.sql) ─────────────────────────────────
+    # ── SPs de reporte (objetos/sps/sp_rpt_*.sql) ────────────────────────────
     local sp_rpt
     sp_rpt=$(_mdb_schema_q \
         "SELECT COUNT(*) FROM routines

@@ -1,6 +1,7 @@
 # `ivr_contar_dias_semana`
 
-**Archivo fuente:** `provisioners/mariadb/funciones_utilidad.sql`  
+**Versión:** 3.0.0  
+**Archivo fuente:** `provisioners/mariadb/objetos/funciones/ivr_contar_dias_semana.sql`  
 **Schema:** `ivr_legacy`  
 **DEFINER:** `root@localhost` — SQL SECURITY DEFINER  
 **Tipo:** FUNCTION  

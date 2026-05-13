@@ -1,6 +1,7 @@
 # `sp_rpt_centros_xsegmento`
 
-**Archivo fuente:** `provisioners/mariadb/sp_rpt_reportes.sql`  
+**Versión:** 2.1.0  
+**Archivo fuente:** `provisioners/mariadb/objetos/sps/sp_rpt_centros_xsegmento.sql`  
 **Schema:** `ivr_legacy`  
 **DEFINER:** `root@localhost` — SQL SECURITY DEFINER  
 **Tipo:** PROCEDURE  
