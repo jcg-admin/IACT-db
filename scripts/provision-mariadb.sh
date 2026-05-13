@@ -201,7 +201,7 @@ _apply_execute_grants() {
     # Procedures — lista explícita de los que Django invoca directamente:
     #   sp_etl_maestro   — run_etl.py (management command) y scheduler.py
     #   sp_etl_historico — ETLReintentarView (carga histórica manual)
-    #   sp_rpt_*         — 7 SPs de reporte (UC_RPT_12..17)
+    #   sp_rpt_*         — 8 SPs de reporte (UC_RPT_12..17 + resumen ejecutivo)
     # Excluidos deliberadamente (invocados por root vía DEFINER de sp_etl_maestro):
     #   sp_etl_base_detalle, sp_etl_base_clientes, sp_etl_validar
     while IFS= read -r sp_name; do
@@ -228,7 +228,8 @@ _apply_execute_grants() {
              'sp_rpt_cMENU_ERROR',
              'sp_rpt_centros_xsegmento',
              'sp_rpt_menu_redirigidos',
-             'sp_rpt_menu_centro'
+             'sp_rpt_menu_centro',
+             'sp_rpt_resumen_abandono_rollup'
          );" "mysql")
 
     # Functions — todas las funciones del schema.
@@ -472,10 +473,12 @@ main() {
         "${prov}/objetos/sps/sp_rpt_menu_centro.sql"
         "${prov}/objetos/sps/sp_rpt_cMENU_ERROR.sql"
         "${prov}/objetos/sps/sp_rpt_centros_xsegmento.sql"
+        "${prov}/objetos/sps/sp_rpt_resumen_abandono_rollup.sql"
 
         # Vistas — alias y consultas operacionales (dependen de tablas y SPs existentes)
         "${prov}/objetos/vistas/v_quarter_actual.sql"
         "${prov}/objetos/vistas/v_sla_distribucion.sql"
+        "${prov}/objetos/vistas/v_etl_rendimiento.sql"
 
         # Jobs — dependen de sp_etl_maestro
         "${prov}/objetos/jobs/evt_etl_diario.sql"
@@ -498,7 +501,7 @@ main() {
     done
 
     if [[ $sql_deploy_errors -eq 0 ]]; then
-        log_success "Todos los archivos SQL aplicados (23 objetos)"
+        log_success "Todos los archivos SQL aplicados (25 objetos)"
     else
         log_warn "${sql_deploy_errors} archivo(s) SQL con errores — revisar antes de continuar"
     fi
