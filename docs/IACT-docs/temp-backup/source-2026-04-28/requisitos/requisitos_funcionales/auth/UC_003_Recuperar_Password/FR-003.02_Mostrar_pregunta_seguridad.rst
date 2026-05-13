@@ -1,0 +1,144 @@
+.. meta::
+   :artefacto: FR-003.02
+   :tipo: Requisito Funcional
+   :dominio: requisitos
+   :subdominio: funcionales/auth
+   :estado: Aprobado
+   :version: 1.0.0
+   :fecha: 2026-01-07
+   :autor: Equipo IACT
+
+.. _fr-003-02:
+
+========================================
+FR-003.02: Mostrar pregunta de seguridad
+========================================
+
+
+1. Identificación
+-----------------
+
+.. list-table::
+   :widths: 25 75
+
+   * - **ID**
+     - FR-003.02
+   * - **Nombre**
+     - Mostrar pregunta de seguridad del usuario
+   * - **UC Origen**
+     - UC_003: Recuperar Password
+   * - **Paso UC**
+     - Paso 4 del flujo normal
+   * - **Módulo**
+     - MOD_Auth
+   * - **Prioridad**
+     - Alta
+   * - **Tipo**
+     - Interfaz
+
+----
+
+2. Especificación
+-----------------
+
+**Declaración:**
+
+   El sistema DEBE mostrar la pregunta de seguridad configurada por el
+   usuario CUANDO el username ha sido validado exitosamente.
+
+**Descripción:**
+
+   El sistema muestra la pregunta de seguridad:
+   
+   1. Recupera security_question del registro del usuario
+   2. Presenta la pregunta en pantalla
+   3. Muestra campo para ingresar respuesta
+   4. Muestra contador de intentos restantes (3 máximo)
+   
+   **Preguntas de Seguridad Predefinidas:**
+   
+   El sistema usa preguntas predefinidas para evitar preguntas débiles:
+   
+   - ¿Cuál es el nombre de tu primera mascota?
+   - ¿En qué ciudad naciste?
+   - ¿Cuál es el segundo nombre de tu madre?
+   - ¿Cuál fue tu primer colegio?
+   - ¿Cuál es tu comida favorita?
+
+----
+
+3. Criterio de Aceptación
+-------------------------
+
+::
+
+   DADO un usuario con username validado
+   CUANDO el sistema confirma existencia
+   ENTONCES muestra su pregunta de seguridad
+   
+   Escenario 1: Pregunta mostrada correctamente
+   DADO usuario "juan.perez" con pregunta configurada
+   CUANDO se valida el username
+   ENTONCES se muestra la pregunta exacta del usuario
+   Y se muestra campo para respuesta
+   Y se indica "3 intentos restantes"
+   
+   Escenario 2: Interfaz de respuesta
+   DADO pregunta de seguridad visible
+   CUANDO el usuario ve la pantalla
+   ENTONCES el campo de respuesta está vacío
+   Y hay botón "Verificar respuesta"
+   Y hay opción "Cancelar" para volver
+
+----
+
+4. Reglas y Restricciones
+-------------------------
+
+- **BR aplicables:**
+  - BR_004: Comunicaciones internas (no email externo)
+  
+- **CNST aplicables:** Ninguna específica
+
+**Seguridad:**
+
+- La pregunta nunca se muestra si el username no existe
+- Máximo 3 intentos de respuesta antes de bloqueo temporal
+- Respuestas case-insensitive y sin espacios extremos
+
+----
+
+5. Trazabilidad
+---------------
+
+.. list-table::
+   :widths: 20 80
+
+   * - **BReq**
+     - BReq-004: Cumplimiento de Seguridad
+   * - **UC**
+     - UC_003: Recuperar Password
+   * - **Depende de**
+     - FR-003.01
+   * - **Requerido por**
+     - FR-003.03
+   * - **BR**
+     - BR_004
+   * - **TEST**
+     - TST-FR-003.02 (pendiente)
+
+----
+
+6. Historial
+------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - Versión
+     - Fecha
+     - Cambio
+   * - 1.0.0
+     - 2026-01-07
+     - Versión inicial derivada de UC_003

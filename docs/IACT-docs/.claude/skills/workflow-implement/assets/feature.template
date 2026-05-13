@@ -1,0 +1,33 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+type: feature
+feature: [Nombre corto]
+Ticket: [ID ticket, ej: PROJ-123]
+author: [Nombre]
+Branch: [nombre-rama]
+files_modified: [N]
+tests: [SI/NO]
+```
+
+feat(scope): short description under 72 chars
+
+Longer explanation of what this feature does and why it's needed.
+Explain the change in detail - what was added, why it matters,
+and any important context for future readers.
+
+Include relevant details:
+- What was implemented
+- Why this approach was chosen
+- Any dependencies or prerequisites
+- Testing approach
+
+Related work:
+- Closes: ROADMAP [Phase/Section]
+- Related to: [other context]
+- Breaking changes: [if any]
+
+Examples:
+feat(api): add user login endpoint
+feat(database): create subscription model
+feat(docs): add deployment guide
+feat(roadmap): complete Phase 2 authentication

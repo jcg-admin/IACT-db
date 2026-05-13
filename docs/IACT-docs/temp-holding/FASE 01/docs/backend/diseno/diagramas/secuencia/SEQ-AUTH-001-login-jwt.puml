@@ -1,0 +1,233 @@
+@startuml SEQ-AUTH-001-login-jwt
+!theme plain
+title Flujo de Autenticación JWT con Sesión Única
+caption Proceso completo de login con validación, bloqueo y generación de tokens
+footer Proyecto IACT | Generado: 2025-11-17 | ADR-GOB-004 | UC-013
+
+actor Usuario as user
+participant "Frontend\nReact" as frontend
+participant "API\nDjango" as api
+participant "AuthenticationService" as auth_service
+participant "Database\nPostgreSQL" as db
+participant "AuditLog" as audit
+participant "UserSession" as session
+participant "JWT Token\nGenerator" as jwt
+participant "InternalMessage\n(Notifications)" as notif
+
+== Solicitud de Login ==
+
+user -> frontend: Ingresar credenciales\nusername: "juan.perez"\npassword: "SecureP@ss123"
+activate frontend
+
+frontend -> api: POST /api/auth/login/\n{\n  "username": "juan.perez",\n  "password": "SecureP@ss123"\n}
+activate api
+
+api -> api: Extraer IP y User Agent\nip = "192.168.1.100"\nuser_agent = "Mozilla/5.0..."
+
+api -> auth_service: login(\n  username="juan.perez",\n  password="SecureP@ss123",\n  request=request\n)
+activate auth_service
+
+== 1. Verificar Usuario Existe ==
+
+auth_service -> db: SELECT * FROM auth_user\nWHERE username = 'juan.perez'
+activate db
+db --> auth_service: User{id=1, status='ACTIVO', ...}
+deactivate db
+
+alt Usuario NO existe
+    auth_service -> audit: LOG: LOGIN_FAILURE\n(usuario_inexistente)
+    auth_service --> api: Exception: "Credenciales inválidas"
+    api --> frontend: HTTP 400 Bad Request
+    frontend --> user: "Credenciales inválidas"
+end
+
+== 2. Verificar Usuario Activo ==
+
+alt Usuario NO activo (status != 'ACTIVO')
+    auth_service -> audit: LOG: LOGIN_FAILURE\n(usuario_inactivo)
+    activate audit
+    audit --> auth_service: OK
+    deactivate audit
+    auth_service --> api: PermissionDenied: "Usuario inactivo"
+    api --> frontend: HTTP 403 Forbidden
+    frontend --> user: "Usuario inactivo"
+end
+
+== 3. Verificar Usuario NO Bloqueado ==
+
+auth_service -> auth_service: Verificar is_locked\ny locked_until
+
+alt Usuario bloqueado Y tiempo NO expiró
+    auth_service -> audit: LOG: LOGIN_FAILURE\n(cuenta_bloqueada)
+    auth_service --> api: PermissionDenied:\n"Cuenta bloqueada. Tiempo restante: 12 minutos"
+    api --> frontend: HTTP 403 Forbidden
+    frontend --> user: "Cuenta bloqueada temporalmente"
+end
+
+alt Usuario bloqueado PERO tiempo expiró
+    note right of auth_service
+      Desbloqueo automático
+    end note
+
+    auth_service -> db: UPDATE auth_user SET\n  is_locked = false,\n  locked_until = NULL,\n  failed_login_attempts = 0\nWHERE id = 1
+    activate db
+    db --> auth_service: OK
+    deactivate db
+
+    auth_service -> audit: LOG: USER_UNLOCKED\n(automatic_timeout)
+    activate audit
+    audit --> auth_service: OK
+    deactivate audit
+end
+
+== 4. Verificar Contraseña ==
+
+auth_service -> auth_service: check_password(\n  password="SecureP@ss123",\n  user.password\n)
+
+alt Contraseña INCORRECTA
+    auth_service -> db: UPDATE auth_user SET\n  failed_login_attempts = failed_login_attempts + 1,\n  last_failed_login_at = NOW()\nWHERE id = 1
+    activate db
+    db --> auth_service: OK\nfailed_attempts = 2
+    deactivate db
+
+    alt failed_attempts >= 3 (MAX_FAILED_ATTEMPTS)
+        note right of auth_service
+          ¡BLOQUEAR USUARIO!
+        end note
+
+        auth_service -> db: UPDATE auth_user SET\n  is_locked = true,\n  locked_until = NOW() + INTERVAL '15 minutes',\n  lock_reason = 'MAX_FAILED_ATTEMPTS'\nWHERE id = 1
+        activate db
+        db --> auth_service: OK
+        deactivate db
+
+        auth_service -> audit: LOG: USER_LOCKED\n(max_failed_attempts, attempts=3)
+        activate audit
+        audit --> auth_service: OK
+        deactivate audit
+
+        auth_service -> notif: InternalMessage.create(\n  recipient=user,\n  subject="Cuenta bloqueada por seguridad",\n  body="Tu cuenta ha sido bloqueada...",\n  message_type="alert",\n  priority="high"\n)
+        activate notif
+        notif --> auth_service: OK
+        deactivate notif
+
+        auth_service --> api: Exception:\n"Cuenta bloqueada por múltiples intentos fallidos"
+        api --> frontend: HTTP 400 Bad Request
+        frontend --> user: "Cuenta bloqueada por seguridad"
+    else failed_attempts < 3
+        auth_service -> audit: LOG: LOGIN_FAILURE\n(credenciales_invalidas, attempts=2, remaining=1)
+        auth_service --> api: Exception: "Credenciales inválidas"
+        api --> frontend: HTTP 400 Bad Request
+        frontend --> user: "Credenciales inválidas\n(Te quedan 1 intento)"
+    end
+end
+
+== 5. Contraseña CORRECTA - Login Exitoso ==
+
+note over auth_service
+  Credenciales válidas ✓
+  Usuario activo ✓
+  NO bloqueado ✓
+end note
+
+== 5.1. Cerrar Sesiones Previas (Sesión Única) ==
+
+auth_service -> session: SELECT * FROM users_user_sessions\nWHERE user_id = 1\n  AND is_active = true
+activate session
+session --> auth_service: [UserSession{id=42, session_key="abc123"}]
+deactivate session
+
+loop Para cada sesión activa
+    auth_service -> session: close(\n  session_id=42,\n  reason="NEW_SESSION"\n)
+    activate session
+    session -> db: UPDATE users_user_sessions\nSET is_active = false,\n    closed_at = NOW(),\n    close_reason = "NEW_SESSION"\nWHERE id = 42
+    activate db
+    db --> session: OK
+    deactivate db
+    session --> auth_service: OK
+    deactivate session
+
+    auth_service -> audit: LOG: SESSION_CLOSED\n(reason=new_session, old_session=abc123)
+
+    auth_service -> notif: InternalMessage.create(\n  recipient=user,\n  subject="Nueva sesión iniciada",\n  body="Se ha iniciado una nueva sesión...",\n  message_type="info",\n  priority="medium"\n)
+end
+
+== 5.2. Resetear Contador de Intentos Fallidos ==
+
+auth_service -> db: UPDATE auth_user SET\n  failed_login_attempts = 0,\n  last_failed_login_at = NULL,\n  last_login_at = NOW(),\n  last_login_ip = '192.168.1.100'\nWHERE id = 1
+activate db
+db --> auth_service: OK
+deactivate db
+
+== 5.3. Crear Nueva Sesión ==
+
+auth_service -> session: UserSession.create(\n  user_id=1,\n  session_key="session_1_1731849600",\n  is_active=true,\n  ip_address="192.168.1.100",\n  user_agent="Mozilla/5.0..."\n)
+activate session
+session -> db: INSERT INTO users_user_sessions (...)
+activate db
+db --> session: UserSession{id=99}
+deactivate db
+session --> auth_service: OK
+deactivate session
+
+== 5.4. Generar Tokens JWT ==
+
+auth_service -> jwt: RefreshToken.for_user(user)
+activate jwt
+jwt --> auth_service: RefreshToken{...}
+deactivate jwt
+
+auth_service -> auth_service: access_token = str(refresh.access_token)\nrefresh_token = str(refresh)
+
+note right of auth_service
+  Access Token: válido 15 minutos (900s)
+  Refresh Token: válido 24 horas
+
+  Payload contiene:
+  - user_id
+  - username
+  - exp (expiration)
+  - iat (issued at)
+end note
+
+== 5.5. Auditar Login Exitoso ==
+
+auth_service -> audit: LOG: LOGIN_SUCCESS\n(session_key=session_1)
+activate audit
+audit -> db: INSERT INTO audit_audit_log (...)
+activate db
+db --> audit: OK
+deactivate db
+audit --> auth_service: OK
+deactivate audit
+
+== 5.6. Retornar Tokens ==
+
+auth_service --> api: {\n  "access_token": "eyJhbGc...",\n  "refresh_token": "eyJhbGc...",\n  "token_type": "Bearer",\n  "expires_in": 900\n}
+deactivate auth_service
+
+api --> frontend: HTTP 200 OK\n{\n  "access_token": "eyJhbGc...",\n  "refresh_token": "eyJhbGc...",\n  "token_type": "Bearer",\n  "expires_in": 900,\n  "user": {\n    "id": 1,\n    "username": "juan.perez",\n    "email": "juan.perez@example.com"\n  }\n}
+deactivate api
+
+frontend -> frontend: Guardar tokens en localStorage:\n- access_token\n- refresh_token
+
+frontend -> frontend: Redirigir a Dashboard
+
+frontend --> user: Mostrar Dashboard\n"Bienvenido, Juan Pérez"
+deactivate frontend
+
+== Notas de Seguridad ==
+
+note over user, notif
+  SEGURIDAD IMPLEMENTADA:
+
+  1. ✓ Sesión única (cierra sesiones previas)
+  2. ✓ Bloqueo automático tras 3 intentos fallidos
+  3. ✓ Desbloqueo automático tras 15 minutos
+  4. ✓ Auditoría completa de todos los intentos
+  5. ✓ Notificaciones al usuario sobre eventos de seguridad
+  6. ✓ Tokens JWT con expiración
+  7. ✓ No revela si usuario existe (respuesta genérica)
+  8. ✓ Hash de contraseñas (bcrypt/PBKDF2)
+end note
+
+@enduml

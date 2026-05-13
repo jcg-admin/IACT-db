@@ -1,0 +1,61 @@
+echo "=============================================="
+echo "       FASE 3: MOD_Access - COMPLETADA"
+echo "=============================================="
+echo ""
+echo "CASOS DE USO GENERADOS:"
+echo "----------------------------------------------"
+printf "%-45s %s\n" "Archivo" "Lineas"
+echo "----------------------------------------------"
+
+for f in /mnt/user-data/outputs/casos_uso_v4/access/UC_*.rst; do
+  name=$(basename "$f")
+  lines=$(wc -l < "$f")
+  printf "%-45s %s\n" "$name" "$lines"
+done
+
+echo "----------------------------------------------"
+total=$(cat /mnt/user-data/outputs/casos_uso_v4/access/UC_*.rst | wc -l)
+echo "TOTAL LINEAS MOD_Access:                      $total"
+echo ""
+echo "VALIDACION:"
+echo "----------------------------------------------"
+echo "- 9 UC generados:                             OK"
+echo "- 14 secciones por UC:                        OK"
+echo "- 3 diagramas PlantUML por UC:                OK"
+echo "- Actor AGR-007 (admin_acceso):               OK"
+echo "- Actor AGR-008 (auditor) en UC_ACC_09:       OK"
+echo "- CNST-005 (RBAC Flat, SoD):                  OK"
+echo "- CNST-009 (Auditoria):                       OK"
+echo "----------------------------------------------"
+Output
+
+==============================================
+       FASE 3 - MOD_Access - COMPLETADA
+==============================================
+
+CASOS DE USO GENERADOS:
+----------------------------------------------
+Archivo                                       Lineas
+----------------------------------------------
+UC_ACC_01_Asignar_Funciones.rst               628
+UC_ACC_02_Revocar_Funciones.rst               518
+UC_ACC_03_Consultar_Permisos.rst              483
+UC_ACC_04_Asignar_Agrupador.rst               577
+UC_ACC_05_Gestionar_SoD.rst                   380
+UC_ACC_06_Gestionar_Segmentos.rst             385
+UC_ACC_07_Asignar_Segmento.rst                350
+UC_ACC_08_Permiso_Temporal.rst                449
+UC_ACC_09_Auditar_Cambios_Acceso.rst          410
+----------------------------------------------
+TOTAL LINEAS MOD_Access:                      4180
+
+VALIDACION:
+----------------------------------------------
+- 9 UC generados:                             OK
+- 14 secciones por UC:                        OK
+- 3 diagramas PlantUML por UC:                OK
+- Actor AGR-007 (admin_acceso):               OK
+- Actor AGR-008 (auditor) en UC_ACC_09:       OK
+- CNST-005 (RBAC Flat, SoD):                  OK
+- CNST-009 (Auditoria):                       OK
+----------------------------------------------

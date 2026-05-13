@@ -1,0 +1,38 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+feature: [nombre-del-wp]
+wp: [YYYY-MM-DD-HH-MM-SS-nombre-del-wp]
+fase: FASE [N]
+tds_resueltos: [N]
+```
+
+# TDs Resueltos — {nombre-wp}
+
+> Registro de deudas técnicas cerradas o movidas durante este work package.
+> Fuente: `.thyrox/context/technical-debt.md` — entradas marcadas `[x]` o `[-]` por este WP.
+
+---
+
+## TDs cerrados en este WP
+
+> `[x]` = implementado y verificado en este WP.
+
+| TD | Descripción | FASE que lo implementó | Notas |
+|----|-------------|------------------------|-------|
+| TD-NNN | [descripción del TD] | FASE [N] | [notas opcionales] |
+
+---
+
+## TDs archivados (ya marcados en fases anteriores)
+
+> `[-]` = ya marcado antes de este WP; se mueve aquí para reducir el tamaño de technical-debt.md.
+
+| TD | Descripción | FASE que lo implementó | Fecha marcado |
+|----|-------------|------------------------|---------------|
+| TD-NNN | [descripción del TD] | FASE [N] | [YYYY-MM-DD] |
+
+---
+
+## Notas
+
+[Observaciones adicionales sobre la resolución de los TDs, decisiones tomadas, TDs que quedaron parciales, etc.]

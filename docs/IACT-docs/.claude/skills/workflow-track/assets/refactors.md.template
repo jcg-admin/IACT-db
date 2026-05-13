@@ -1,0 +1,104 @@
+```yml
+type: Documentación de Tracking
+category: Refactors & Deuda Técnica
+version: 1.0
+purpose: Tracking de refactorizaciones, mejoras de código y deuda técnica
+goal: Documentar oportunidades de mejora y deuda técnica con priorización
+updated_at: [YYYY-MM-DD HH:MM:SS]
+phase: Phase 11 — TRACK/EVALUATE
+activate_if: hay deuda técnica o refactors identificados durante análisis que necesitan tracking estructurado
+```
+
+# REFACTORS
+
+## Propósito
+
+Tracking de refactorizaciones, mejoras de código y deuda técnica. Documenta oportunidades de mejora organizadas por categoría y prioridad.
+
+> Objetivo: Organizar y priorizar trabajo de mejora técnica para ejecución futura.
+
+---
+
+## Descripción General
+
+Refactorizaciones, mejoras de código y technical debt tracking.
+
+### Code Quality
+
+- [ ] Extraer validación en módulo compartido
+- [ ] Mejorar tipos TypeScript
+- [ ] Reducir complejidad de funciones largas
+- [ ] Usar async/await en lugar de callbacks
+
+### Performance
+
+- [ ] Agregar caching a queries
+- [ ] Optimizar N+1 queries
+- [ ] Comprimir responses JSON
+- [ ] Implementar database indexing
+
+### Seguridad
+
+- [ ] Sanitizar inputs de usuario
+- [ ] Validar todos los endpoints
+- [ ] Usar prepared statements
+- [ ] Agregar rate limiting
+
+### Estructura
+
+- [ ] Reorganizar carpetas por feature
+- [ ] Crear servicios compartidos
+- [ ] Mejorar inyección de dependencias
+- [ ] Separar lógica de presentación
+
+---
+
+## Deuda Técnica
+
+### Alta Prioridad
+
+- [ ] **Fix: N+1 queries en users endpoint**
+  - Impacto: Performance
+  - Esfuerzo: Medio
+  - Afectado: /api/users
+
+- [ ] **Refactor: Consolidar validación**
+  - Impacto: Mantenibilidad
+  - Esfuerzo: Alto
+  - Ubicación: api/src/validators/
+
+### Media Prioridad
+
+- [ ] **Improve: Error handling**
+  - Impacto: UX
+  - Esfuerzo: Medio
+  - Ubicación: api/src/middleware/
+
+### Baja Prioridad
+
+- [ ] **Nice-to-have: Logging mejorado**
+  - Impacto: Debugging
+  - Esfuerzo: Bajo
+
+---
+
+## Completados
+
+- [x] Estructura inicial documentada (2025-03-24)
+
+---
+
+## Proceso
+
+1. Identificar refactor necesario
+2. Agregar aquí con descripción
+3. Estimar esfuerzo (Bajo/Medio/Alto)
+4. Priorizar según impacto
+5. Cuando comiences, mover a ROADMAP.md
+6. Una vez completado, marcar con `[x]`
+
+---
+
+**Prioridad:** Media
+**Owner:** TODO
+**Fecha Creación:** [YYYY-MM-DD HH:MM:SS]

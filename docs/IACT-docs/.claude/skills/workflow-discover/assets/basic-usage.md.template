@@ -1,0 +1,171 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+flow_version: [1.0]
+author: [Nombre]
+system: [Nombre/versión del sistema]
+Estado flujo: [Diseño/Implementado/En testing]
+```
+
+# Basic Usage: [PROJECT_NAME]
+
+## Propósito
+
+Documentar CÓMO funciona el sistema operacionalmente. Describe el flujo completo desde la perspectiva del usuario.
+
+> Objetivo: Que todos entiendan cómo el sistema funciona en la práctica, qué flujos existen, y cuáles son las interacciones principales.
+
+---
+
+## Descripción Narrativa
+
+[2-3 párrafos describiendo:]
+- Qué es el sistema y para qué sirve
+- Contexto de uso
+- Objetivo general operacional
+
+**Ejemplo:**
+"El objetivo general del ecommerce es permitir que clientes compren productos en línea de forma segura y rápida.
+
+El sistema cubre todo el ciclo de vida de una compra: desde navegación de productos, selección y carrito de compra, hasta procesamiento seguro de pagos y seguimiento de pedidos.
+
+Los usuarios interactúan con el sistema a través de web o aplicación móvil, y pueden rastrear sus órdenes en tiempo real."
+
+---
+
+## Flujo Principal de Operación
+
+1. [First step]
+   [Description of what happens]
+
+2. [Second step]
+   [Description of what happens]
+
+3. [Third step]
+   [Description of what happens]
+
+4. [Fourth step]
+   [Description of what happens]
+
+**Ejemplo:**
+1. Usuario accede a la plataforma ecommerce
+   El sistema presenta catálogo de productos disponibles
+
+2. Usuario navega, busca y selecciona productos
+   El sistema muestra detalles y opiniones
+
+3. Usuario agregaproductos al carrito
+   El sistema mantiene carrito actualizado con cantidades y precios
+
+4. Usuario procede a checkout
+   El sistema guía a través de envío y pago
+
+5. Sistema procesa pago de forma segura
+   El sistema se integra con proveedor de pagos
+
+6. Usuario recibe confirmación de pedido
+   El sistema genera confirmación con número de orden
+
+7. Usuario puede seguir estado del pedido
+   El sistema actualiza estado en tiempo real
+
+---
+
+## Modos de Operación
+
+### Modo 1: [Operation Mode Name]
+
+**Descripción:**
+[How users interact in this mode]
+
+**Cuándo usar:**
+[When this mode is appropriate]
+
+**Acceso:**
+[How to access this mode]
+
+**Ejemplo (Modo 1: Tienda Web):**
+
+**Descripción:**
+Usuario accede vía navegador web con interfaz completa
+
+**Cuándo usar:**
+Para compras complejas, múltiples productos, revisión de detalles
+
+**Acceso:**
+https://ecommerce.example.com
+
+### Modo 2: [Operation Mode Name]
+
+[Repetir estructura]
+
+**Ejemplo (Modo 2: Aplicación Móvil):**
+
+**Descripción:**
+Usuario accede vía app móvil con interfaz optimizada
+
+**Cuándo usar:**
+Para compras rápidas, órdenes frecuentes, on-the-go
+
+**Acceso:**
+App Store / Google Play
+
+### Modo 3: [Operation Mode Name]
+
+[Repetir estructura]
+
+---
+
+## Diagrama de Flujo (Opcional)
+
+[Visual representation of main flow]
+
+**Ejemplo:**
+```
+Usuario
+  ↓
+Navegación → Búsqueda → Catálogo
+  ↓
+Carrito
+  ↓
+Checkout → Envío → Pago
+  ↓
+Confirmación
+  ↓
+Seguimiento
+```
+
+---
+
+## Resultados Observables
+
+El usuario observa:
+- [Observable result 1]
+- [Observable result 2]
+- [Observable result 3]
+
+**Ejemplo:**
+- Confirmación de compra en pantalla
+- Email de confirmación recibido
+- Pedido aparece en "Mis Pedidos"
+- Acceso a seguimiento de envío
+- Notificaciones de estado de orden
+
+---
+
+## Validación Checklist
+
+- [ ] Descripción narrativa clara
+- [ ] Pasos numerados y secuenciales
+- [ ] Cada paso es observable
+- [ ] Flujo completo documentado
+- [ ] Modos de operación descriptos
+- [ ] Resultados observables documentados
+- [ ] Lenguaje simple (no técnico)
+
+---
+
+## Siguiente Paso
+
+Una vez completado este documento:
+→ Pasar a `constraints.md`

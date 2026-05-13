@@ -1,0 +1,101 @@
+```yml
+type: Documentación de Proyecto
+category: Casos de Uso
+version: 1.0
+purpose: Template para documentar casos de uso del proyecto
+goal: Capturar flujos usuario-sistema de forma consistente
+updated_at: [YYYY-MM-DD HH:MM:SS]
+```
+
+# Casos de Uso - [Nombre del Proyecto]
+
+## Resumen
+
+[Breve descripción de los principales casos de uso del proyecto]
+
+---
+
+## UC-001: [Nombre del Caso de Uso]
+
+**Actor Primario:** [Rol del usuario - ej: User, Admin, Guest]<br>
+**Actores Secundarios:** [Si aplica - otros actores involucrados]<br>
+**Precondiciones:** [Estado requerido antes de iniciar]
+
+**Flujo Principal:**
+```
+1. [Actor] [acción inicial]
+2. [Sistema] [respuesta/validación]
+3. [Actor] [siguiente acción]
+4. [Sistema] [resultado]
+...
+```
+
+<!-- Cuando el UC tiene ≥4 pasos o actores secundarios: agregar diagrama Mermaid complementario al texto. -->
+
+```mermaid
+sequenceDiagram
+    actor A as [Actor Primario]
+    participant Sys as Sistema
+
+    A->>+Sys: [Acción inicial]
+    Sys->>Sys: [Validación / proceso interno]
+    Sys-->>-A: [Respuesta / resultado]
+```
+
+**Flujos Alternativos:**
+
+Alternativa 2a: Si [condición específica]
+```
+2a.1. [Sistema/Actor] [acción alternativa]
+2a.2. [Continúa en paso X del flujo principal]
+```
+
+Alternativa 3b: Si [condición específica]
+```
+3b.1. [Sistema/Actor] [acción alternativa]
+3b.2. [Fin del caso de uso O continúa]
+```
+
+**Postcondiciones:** [Estado del sistema después de completar]<br>
+**Notas:** [Información adicional, restricciones, asunciones]<br>
+**Prioridad:** [Alta / Media / Baja]
+
+---
+
+## UC-002: [Nombre del Caso de Uso]
+
+[Repetir estructura anterior para cada caso de uso adicional]
+
+---
+
+## UC-003: [Nombre del Caso de Uso]
+
+[Continuar con más casos según sea necesario]
+
+---
+
+## Relación con Requisitos
+
+| UC-ID | Requisito Asociado | Descripción |
+|-------|-------------------|-------------|
+| UC-001 | REQ-001 | [Cómo este caso de uso satisface el requisito] |
+| UC-002 | REQ-002 | [Cómo este caso de uso satisface el requisito] |
+
+---
+
+## Relación con Stakeholders
+
+| Actor | Stakeholder | Rol |
+|-------|------------|-----|
+| User | End User | Utiliza la aplicación |
+| Admin | Administrator | Gestiona sistema |
+| System | Sistema | Procesa automaticamente |
+
+---
+
+## Notas de Diseño
+
+[Consideraciones técnicas para implementación, restricciones, patrones]
+
+**Última Actualización:** YYYY-MM-DD-HH-MM-SS<br>
+**Próxima Revisión:** YYYY-MM-DD-HH-MM-SS

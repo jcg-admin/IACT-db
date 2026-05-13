@@ -1,0 +1,154 @@
+.. meta::
+   :artefacto: FR-043.03
+   :tipo: Requisito Funcional
+   :dominio: requisitos
+   :subdominio: funcionales/access
+   :estado: Aprobado
+   :version: 1.0.0
+   :fecha: 2026-01-07
+   :autor: Equipo IACT
+
+.. _fr-043-03:
+
+==============================================================================
+FR-043.03: Listar restricciones vigentes
+==============================================================================
+
+----
+
+1. Identificación
+-----------------
+
+.. list-table::
+   :widths: 25 75
+
+   * - **ID**
+     - FR-043.03
+   * - **Nombre**
+     - Listar todas las restricciones SoD vigentes
+   * - **UC Origen**
+     - UC_043: Configurar Restricciones SoD
+   * - **Paso UC**
+     - Paso 2 del flujo normal
+   * - **Módulo**
+     - MOD_Access
+   * - **Prioridad**
+     - Media
+   * - **Tipo**
+     - Proceso
+
+----
+
+2. Especificación
+-----------------
+
+**Declaración:**
+
+   El sistema DEBE mostrar todas las restricciones SoD configuradas
+   CUANDO el admin accede a la configuración de SoD.
+
+**Descripción:**
+
+   El listado muestra:
+   
+   **Por cada Restricción:**
+   
+   - Función A (código y nombre)
+   - Función B (código y nombre)
+   - Severidad (HARD/SOFT)
+   - Descripción/Motivo
+   - Fecha de creación
+   - Creado por
+   - Estado (Activa/Inactiva)
+   
+   **Funcionalidades:**
+   
+   - Filtro por severidad
+   - Filtro por módulo
+   - Búsqueda por código de función
+   - Ordenamiento por columnas
+   - Acciones: Editar, Eliminar
+
+----
+
+3. Criterio de Aceptación
+-------------------------
+
+::
+
+   DADO admin en configuración de SoD
+   CUANDO carga la vista
+   ENTONCES ve listado de todas las restricciones
+   
+   Escenario 1: Lista completa
+   DADO 10 restricciones SoD configuradas
+   CUANDO se carga la pantalla
+   ENTONCES se muestran las 10 restricciones
+   Y cada una tiene sus datos completos
+   
+   Escenario 2: Filtro por severidad
+   DADO filtro severidad = HARD
+   CUANDO se aplica
+   ENTONCES solo se muestran restricciones HARD
+   
+   Escenario 3: Sin restricciones
+   DADO sistema sin restricciones SoD
+   CUANDO se carga la pantalla
+   ENTONCES se muestra "No hay restricciones configuradas"
+   Y botón "Crear primera restricción"
+   
+   Escenario 4: Acciones disponibles
+   DADO restricción visible en lista
+   CUANDO admin hace clic en acciones
+   ENTONCES ve opciones: Ver detalle, Editar, Eliminar
+
+----
+
+4. Reglas y Restricciones
+-------------------------
+
+- **BR aplicables:**
+  - BR_007: Separación de Funciones
+  
+- **CNST aplicables:** Ninguna específica
+
+**Visualización:**
+
+Usar colores distintivos para HARD (rojo) y SOFT (amarillo).
+
+----
+
+5. Trazabilidad
+---------------
+
+.. list-table::
+   :widths: 20 80
+
+   * - **BReq**
+     - BReq-004: Cumplimiento de Seguridad
+   * - **UC**
+     - UC_043: Configurar SoD
+   * - **Depende de**
+     - Ninguno
+   * - **Requerido por**
+     - FR-043.04, FR-043.05
+   * - **BR**
+     - BR_007
+   * - **TEST**
+     - TST-FR-043.03 (pendiente)
+
+----
+
+6. Historial
+------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - Versión
+     - Fecha
+     - Cambio
+   * - 1.0.0
+     - 2026-01-07
+     - Versión inicial derivada de UC_043

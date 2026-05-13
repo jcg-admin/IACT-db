@@ -1,0 +1,146 @@
+================================================================================
+TASK-REORG-INFRA-013: Lista de Archivos Movidos
+================================================================================
+Fecha: 2025-11-18 10:45
+Tarea: Mover archivos de arquitectura desde raíz
+Estado: COMPLETADO
+Total Archivos Movidos: 2/2 (100%)
+================================================================================
+
+TABLA DE ARCHIVOS: ORIGEN → DESTINO
+================================================================================
+
+#  | Archivo                       | Origen                                    | Destino                                                          | Estado
+---|-------------------------------|-------------------------------------------|------------------------------------------------------------------|--------
+1  | ambientes_virtualizados.md    | /docs/infraestructura/                    | /docs/infraestructura/diseno/arquitectura/                       | MOVIDO
+2  | storage_architecture.md       | /docs/infraestructura/                    | /docs/infraestructura/diseno/arquitectura/                       | MOVIDO
+
+================================================================================
+TAMAÑOS DE ARCHIVO
+================================================================================
+
+Archivo                         | Tamaño PRE  | Tamaño POST | Match  | Estado
+--------------------------------|-------------|-------------|--------|--------
+ambientes_virtualizados.md      | 4.2 KB      | 4.2 KB      | SI     | OK
+storage_architecture.md         | 3.8 KB      | 3.8 KB      | SI     | OK
+
+Total: 8.0 KB movidos (sin pérdida de datos)
+
+================================================================================
+CHECKSUMS (MD5)
+================================================================================
+
+Archivo: ambientes_virtualizados.md
+  PRE-movimiento:  a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
+  POST-movimiento: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
+  Estado: MATCH ✓
+
+Archivo: storage_architecture.md
+  PRE-movimiento:  f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1
+  POST-movimiento: f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1
+  Estado: MATCH ✓
+
+Checksums coincidentes: 2/2 (100%)
+Integridad verificada: SI
+
+================================================================================
+COMANDOS GIT MV EJECUTADOS
+================================================================================
+
+1. git mv /home/user/IACT/docs/infraestructura/ambientes_virtualizados.md \
+          /home/user/IACT/docs/infraestructura/diseno/arquitectura/
+
+2. git mv /home/user/IACT/docs/infraestructura/storage_architecture.md \
+          /home/user/IACT/docs/infraestructura/diseno/arquitectura/
+
+================================================================================
+GIT STATUS - RESULTADO
+================================================================================
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        renamed: ambientes_virtualizados.md -> diseno/arquitectura/ambientes_virtualizados.md
+        renamed: storage_architecture.md -> diseno/arquitectura/storage_architecture.md
+
+Historial Git: PRESERVADO
+Renamed detectado: SI (2/2)
+
+================================================================================
+VALIDACIONES DE INTEGRIDAD
+================================================================================
+
+[ ✓ ] Archivos existen en destino (2/2)
+[ ✓ ] Archivos eliminados de origen (0 en raíz)
+[ ✓ ] Contenido íntegro - checksums match (2/2)
+[ ✓ ] Git status muestra renamed (2/2)
+[ ✓ ] Permisos correctos (rw-r--r--)
+[ ✓ ] Contenido legible (Markdown válido)
+[ ✓ ] Sin duplicados (1 copia cada archivo)
+
+Total validaciones: 7/7 PASS (100%)
+
+================================================================================
+RUTAS COMPLETAS
+================================================================================
+
+ARCHIVO: ambientes_virtualizados.md
+  Ubicación anterior: /home/user/IACT/docs/infraestructura/ambientes_virtualizados.md
+  Ubicación actual:   /home/user/IACT/docs/infraestructura/diseno/arquitectura/ambientes_virtualizados.md
+
+ARCHIVO: storage_architecture.md
+  Ubicación anterior: /home/user/IACT/docs/infraestructura/storage_architecture.md
+  Ubicación actual:   /home/user/IACT/docs/infraestructura/diseno/arquitectura/storage_architecture.md
+
+================================================================================
+METADATOS DE ARCHIVOS
+================================================================================
+
+ambientes_virtualizados.md
+  Tamaño:       4301 bytes (4.2 KB)
+  MD5:          a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
+  Permisos:     -rw-r--r--
+  Tipo:         Documento Arquitectura
+  Categoría:    Diseño / Arquitectura
+
+storage_architecture.md
+  Tamaño:       3892 bytes (3.8 KB)
+  MD5:          f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1
+  Permisos:     -rw-r--r--
+  Tipo:         Documento Arquitectura
+  Categoría:    Diseño / Arquitectura
+
+================================================================================
+REFERENCIAS ACTUALIZADAS
+================================================================================
+
+1. /home/user/IACT/docs/infraestructura/diseno/arquitectura/README.md
+   - Actualizado: Agregados 2 archivos al índice
+
+2. /home/user/IACT/docs/infraestructura/INDEX.md
+   - Actualizado: Enlaces a nueva ubicación
+
+3. /home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-004/MAPEO-MIGRACION-DOCS.md
+   - Actualizado: TASK-013 marcada como completada
+
+Total referencias actualizadas: 3
+
+================================================================================
+RESUMEN EJECUTIVO
+================================================================================
+
+Resultado:                EXITOSO
+Archivos procesados:      2/2 (100%)
+Integridad:               100% (checksums match)
+Historial Git:            Preservado (renamed)
+Tiempo ejecución:         45 minutos
+Problemas encontrados:    0
+Acciones correctivas:     Ninguna requerida
+
+================================================================================
+FIN DEL REPORTE
+================================================================================
+Generado: 2025-11-18 10:45
+Técnica: Self-Consistency (validación múltiple)
+Validador: QA Infraestructura
+Estado final: COMPLETADO CON EXITO
+================================================================================

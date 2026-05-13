@@ -1,0 +1,127 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+Hash commit: [hash SHA-1 abreviado, ej: a1b2c3d]
+author: [Nombre]
+project: [Nombre del proyecto]
+branch: [nombre-rama]
+Tipo cambio: [feature/fix/refactor/docs/test/chore]
+scope: [Componente afectado]
+Tickets relacionados: [TICKET-1, TICKET-2]
+Archivos: [N]
+tests: [SI/NO]
+Breaking change: [SI/NO]
+```
+
+# Commit Message Template - Conventional Commits
+
+## Propósito
+
+Template MAESTRO de Conventional Commits. Guía completa para escribir mensajes consistentes.
+
+> Objetivo: Objetivo: Estandarizar mensajes de commit para facilitar auditoría, generación de CHANGELOG y búsqueda.
+
+---
+# Formato: <type>(<scope>): <subject>
+#
+# <body>
+#
+# <footer>
+
+[type]([scope]): [subject]
+
+[body - opcional]
+
+[footer - opcional]
+
+# ============================================================================
+# INSTRUCCIONES DE USO
+# ============================================================================
+#
+# 1. Reemplazar placeholders entre [corchetes] con tu contenido
+# 2. Eliminar líneas que comienzan con # (comentarios)
+# 3. Mantener líneas en blanco entre secciones
+#
+# ============================================================================
+# TYPE: Tipo de cambio
+# ============================================================================
+#
+# feat:     Nueva funcionalidad
+# fix:      Corrección de bug
+# docs:     Cambios solo en documentación
+# style:    Cambios de formato (espacios, puntuación, etc)
+# refactor: Refactorización de código (sin cambios funcionales)
+# test:     Agregar o modificar tests
+# chore:    Cambios en build, configuración, dependencias
+# perf:     Mejoras de performance
+#
+# ============================================================================
+# SCOPE: Ámbito del cambio (opcional pero recomendado)
+# ============================================================================
+#
+# Ejemplos de scopes comunes en ADT:
+# - skills: Cambios en skills (.codex/skills/)
+# - docs: Documentación general
+# - workflow: Cambios en workflows
+# - build: Sistema de build
+# - architecture: Documentación arquitectura
+# - sphinx: Configuración Sphinx
+# - translation: Traducciones
+#
+# ============================================================================
+# SUBJECT: Descripción breve
+# ============================================================================
+#
+# Reglas:
+# - Usar modo imperativo ("add" no "added" ni "adds")
+# - No usar punto final
+# - Máximo 50 caracteres
+# - Primera palabra en minúscula
+#
+# Ejemplos:
+# - add user authentication
+# - fix bug in translation workflow
+# - update architecture docs section 10
+#
+# ============================================================================
+# BODY: Descripción detallada (opcional)
+# ============================================================================
+#
+# Explicar:
+# - QUÉ cambió
+# - POR QUÉ se hizo el cambio
+# - Contexto adicional
+#
+# Usar viñetas si hay múltiples puntos
+# Mantener líneas bajo 72 caracteres
+#
+# ============================================================================
+# FOOTER: Metadata adicional (opcional)
+# ============================================================================
+#
+# Usar para:
+# - Breaking changes: BREAKING CHANGE: descripción
+# - Referencias a issues: Refs: #123
+# - Co-autores: Co-authored-by: Name <email>
+#
+# ============================================================================
+# EJEMPLOS COMPLETOS
+# ============================================================================
+#
+# Ejemplo 1 - Simple:
+# feat(skills): add commit-message template
+#
+# Ejemplo 2 - Con body:
+# fix(translation): correct terminology in architecture docs section 10
+#
+# Update glossary with correct technical terms for
+# quality requirements section.
+#
+# Ejemplo 3 - Con breaking change:
+# refactor(skills)!: change skill naming convention
+#
+# BREAKING CHANGE: Skills now use kebab-case instead of
+# snake_case for directory names. Update all skill references.
+#
+# Refs: #456
+#
+# ============================================================================

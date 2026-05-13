@@ -1,0 +1,79 @@
+```yml
+type: Documentación de Tracking
+category: Tareas Ad-hoc
+version: 1.0
+purpose: Registro de tareas pequeñas, enhancements y mejoras ad-hoc
+goal: Trackear y organizar trabajo pequeño que surge durante desarrollo
+updated_at: [YYYY-MM-DD HH:MM:SS]
+phase: Phase 10 — IMPLEMENT
+activate_if: tareas pequeñas (<2h) que no justifican work package completo
+```
+
+# AD_HOC_TASKS
+
+## Propósito
+
+Registro de tareas pequeñas, enhancements y mejoras que surgen durante el desarrollo. Para trabajo que no justifica un PRD completo.
+
+> Objetivo: Organizar y trackear mejoras y enhancements pequeños de forma ágil.
+
+---
+
+## Descripción General
+
+Tareas pequeñas, enhancements y mejoras que surgen durante el desarrollo.
+
+## Convencion
+- `[ ]` = Pendiente
+- `[-]` = En Progreso
+- `[x]` = Completado
+
+---
+
+## Tareas Actuales
+
+### Documentación
+
+- [ ] Mejorar README con más ejemplos
+- [ ] Crear ARCHITECTURE.md
+- [ ] Documentar decisiones de diseño
+- [ ] Agregar diagrama de arquitectura
+
+### Código
+
+- [ ] Agregar logging a API
+- [ ] Mejorar manejo de errores
+- [ ] Agregar validation schemas
+- [ ] Extraer constantes a config
+
+### Testing
+
+- [ ] Aumentar cobertura a 85%
+- [ ] Agregar tests de integración
+- [ ] Crear fixtures de datos
+- [ ] Tests para edge cases
+
+### DevOps
+
+- [ ] Configurar pre-commit hooks
+- [ ] Agregar GitHub Actions
+- [ ] Crear Dockerfile
+- [ ] Documentar CI/CD pipeline
+
+---
+
+## Completadas
+
+- [x] Crear estructura inicial (2025-03-24)
+
+---
+
+## Notas
+
+- Tareas muy pequeñas o rápidas van aquí
+- Si crece > 5 items, considerar PRD
+- Revisar semanalmente y limpiar
+
+**Prioridad:** Baja a Media
+**Owner:** TODO
+**Fecha Creación:** [YYYY-MM-DD HH:MM:SS]

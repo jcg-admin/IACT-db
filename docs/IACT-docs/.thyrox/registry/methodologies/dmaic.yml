@@ -1,0 +1,59 @@
+# DMAIC — Define-Measure-Analyze-Improve-Control
+# type: sequential
+# Flujo lineal de 5 fases. Metodología Six Sigma para reducción de defectos y variación.
+
+id: dmaic
+type: sequential
+display: "DMAIC — Six Sigma"
+note: >
+  Metodología Six Sigma de mejora de procesos. Flujo estrictamente secuencial;
+  cada fase produce un entregable formal (tollgate) antes de avanzar.
+  El coordinator verifica que el tollgate esté completo antes de transicionar.
+
+native_phase_count: 5
+produces:
+  - Project Charter
+  - Baseline Data (DPU/DPMO/Sigma Level)
+  - Root Cause Analysis
+  - Improvement Solution
+  - Control Plan
+consumes:
+  - problem-statement
+  - process-data
+  - quality-metrics
+
+steps:
+  - id: dmaic:define
+    display: "Define — Definir alcance del problema y proyecto"
+    tollgate: "Project Charter aprobado"
+    activities: ["Definir problem statement", "Identificar CTQs (Critical to Quality)", "Mapear SIPOC (Suppliers-Inputs-Process-Outputs-Customers)", "Estimar beneficio del proyecto"]
+    output: "Project Charter con scope, CTQs y SIPOC"
+    next: [dmaic:measure]
+
+  - id: dmaic:measure
+    display: "Measure — Establecer baseline cuantitativo del proceso"
+    tollgate: "Baseline con Sigma Level calculado"
+    activities: ["Definir plan de medición", "Recopilar datos del proceso actual", "Calcular Sigma Level baseline", "Validar sistema de medición (MSA)"]
+    output: "Baseline cuantitativo: DPU, DPMO, Sigma Level"
+    next: [dmaic:analyze]
+
+  - id: dmaic:analyze
+    display: "Analyze — Identificar causas raíz estadísticas"
+    tollgate: "Causas raíz validadas con datos"
+    activities: ["Análisis de Pareto", "Diagrama de Ishikawa", "Análisis de correlación/regresión", "Validar causas con hipótesis estadísticas"]
+    output: "Lista priorizada de causas raíz validadas estadísticamente"
+    next: [dmaic:improve]
+
+  - id: dmaic:improve
+    display: "Improve — Implementar y validar soluciones"
+    tollgate: "Mejora validada con datos post-implementación"
+    activities: ["Generar soluciones alternativas", "Seleccionar solución óptima (DOE si aplica)", "Implementar en piloto", "Validar reducción de variación/defectos"]
+    output: "Solución implementada con datos de mejora vs baseline"
+    next: [dmaic:control]
+
+  - id: dmaic:control
+    display: "Control — Sostener las mejoras en el tiempo"
+    tollgate: "Control Plan activo, proceso transferido a dueño"
+    activities: ["Crear Control Plan", "Documentar nuevos SOPs", "Configurar monitoreo continuo (SPC si aplica)", "Transferir a dueño del proceso"]
+    output: "Control Plan + SOPs actualizados + sistema de monitoreo activo"
+    next: []

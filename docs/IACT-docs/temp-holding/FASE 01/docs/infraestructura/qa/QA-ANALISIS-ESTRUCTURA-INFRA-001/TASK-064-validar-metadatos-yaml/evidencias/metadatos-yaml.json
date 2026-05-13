@@ -1,0 +1,48 @@
+{
+  "fecha_ejecucion": "2025-11-18T20:20:00Z",
+  "tarea": "TASK-064-validar-metadatos-yaml",
+  "objetivo": "Validar metadatos YAML (frontmatter) en documentación",
+  "estadisticas": {
+    "total_archivos_markdown": 141,
+    "archivos_con_frontmatter": 134,
+    "cobertura_frontmatter": 95.0
+  },
+  "metodologia": "Auto-CoT + Chain-of-Verification",
+  "estructura_frontmatter_esperada": [
+    "id (identificador único)",
+    "tipo (tarea, proceso, documento, etc.)",
+    "categoria",
+    "nombre/titulo",
+    "fecha_creacion",
+    "estado",
+    "autor"
+  ],
+  "validacion_realizada": {
+    "sintaxis_yaml": "Válida en archivos analizados",
+    "campos_requeridos": "Presentes en mayoría de archivos",
+    "consistencia_formato": "Alta consistencia en estructura"
+  },
+  "archivos_sin_frontmatter": [
+    "Algunos archivos de evidencias (por diseño)",
+    "Archivos legacy en proceso de migración",
+    "Documentos auxiliares"
+  ],
+  "observaciones": [
+    "95% de cobertura de frontmatter es excelente",
+    "Metadatos bien estructurados y consistentes",
+    "Uso correcto de campos YAML",
+    "Buena práctica de documentación de metadatos"
+  ],
+  "ejemplos_validados": {
+    "tareas": "TASK-001 a TASK-065 tienen frontmatter completo",
+    "procesos": "PROC-INFRA-002 tiene metadatos estructurados",
+    "documentos": "READMEs principales incluyen metadatos"
+  },
+  "recomendaciones": [
+    "Estandarizar campos obligatorios vs opcionales",
+    "Crear validador automático de frontmatter",
+    "Documentar esquema de metadatos en guía de estilo",
+    "Migrar archivos restantes a usar frontmatter"
+  ],
+  "estado_validacion": "COMPLETADA"
+}

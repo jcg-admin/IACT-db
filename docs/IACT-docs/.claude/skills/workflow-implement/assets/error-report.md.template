@@ -1,0 +1,35 @@
+# Error Report
+
+```yml
+created_at: YYYY-MM-DD HH:MM:SS
+project: [Nombre]
+work_package: YYYY-MM-DD-HH-MM-SS-nombre
+phase: Phase 10 — IMPLEMENT
+author: [Nombre]
+error_id: ERR-NNN
+severity: CRÍTICO / ALTO / MEDIO / BAJO
+status: Abierto / En progreso / Resuelto
+```
+
+## Descripción del error
+
+[Qué ocurrió]
+
+## Pasos para reproducir
+
+1. [Paso 1]
+2. [Paso 2]
+
+## Causa raíz
+
+[Por qué ocurrió — con evidencia observable]
+
+## Solución aplicada
+
+[Qué se hizo para resolver]
+
+## Verificación
+
+- [ ] Error no reproduce en condiciones originales
+- [ ] Tests pasan
+- [ ] Documentación actualizada si aplica

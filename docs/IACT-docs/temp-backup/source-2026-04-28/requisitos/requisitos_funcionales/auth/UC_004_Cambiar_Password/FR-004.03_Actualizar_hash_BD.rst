@@ -1,0 +1,167 @@
+.. meta::
+   :artefacto: FR-004.03
+   :tipo: Requisito Funcional
+   :dominio: requisitos
+   :subdominio: funcionales/auth
+   :estado: Aprobado
+   :version: 1.0.0
+   :fecha: 2026-01-07
+   :autor: Equipo IACT
+
+.. _fr-004-03:
+
+================================
+FR-004.03: Actualizar hash en BD
+================================
+
+
+1. Identificación
+-----------------
+
+.. list-table::
+   :widths: 25 75
+
+   * - **ID**
+     - FR-004.03
+   * - **Nombre**
+     - Actualizar hash de password en base de datos
+   * - **UC Origen**
+     - UC_004: Cambiar Password
+   * - **Paso UC**
+     - Paso 8 del flujo normal
+   * - **Módulo**
+     - MOD_Auth
+   * - **Prioridad**
+     - Alta
+   * - **Tipo**
+     - Datos
+
+----
+
+2. Especificación
+-----------------
+
+**Declaración:**
+
+   El sistema DEBE actualizar el hash del password en la base de datos
+   CUANDO el nuevo password ha sido validado exitosamente.
+
+**Descripción:**
+
+   El proceso de actualización:
+   
+   1. Genera hash bcrypt del nuevo password (cost=12)
+   2. Guarda hash anterior en tabla ``password_history``
+   3. Actualiza campo ``password_hash`` en tabla ``users``
+   4. Actualiza ``password_changed_at = NOW()``
+   5. Si ``must_change_password = true``, cambia a ``false``
+   6. Registra evento en auditoría (sin el password)
+   
+   **Almacenamiento de Historial:**
+   
+   Se guardan los últimos 5 hashes para prevenir reutilización:
+   
+   - Tabla: ``password_history``
+   - Campos: user_id, password_hash, created_at
+
+----
+
+3. Criterio de Aceptación
+-------------------------
+
+::
+
+   DADO nuevo password validado correctamente
+   CUANDO el sistema actualiza la base de datos
+   ENTONCES el hash se almacena y el historial se actualiza
+   
+   Escenario 1: Actualización exitosa
+   DADO password que cumple requisitos
+   CUANDO se guarda
+   ENTONCES users.password_hash contiene nuevo hash
+   Y users.password_changed_at = NOW()
+   Y password_history contiene hash anterior
+   
+   Escenario 2: Historial limitado a 5
+   DADO usuario con 5 passwords en historial
+   CUANDO cambia password nuevamente
+   ENTONCES el más antiguo se elimina del historial
+   Y el nuevo se agrega al final
+   
+   Escenario 3: Cambio forzado completado
+   DADO usuario con must_change_password = true
+   CUANDO cambia password exitosamente
+   ENTONCES must_change_password = false
+   
+   Escenario 4: Transacción atómica
+   DADO cualquier error durante actualización
+   CUANDO falla algún paso
+   ENTONCES se hace rollback completo
+   Y el password anterior sigue vigente
+
+----
+
+4. Reglas y Restricciones
+-------------------------
+
+- **BR aplicables:** Ninguna específica
+  
+- **CNST aplicables:**
+  - CNST-002: Gestión de datos en BD
+  - CNST-005: Seguridad
+
+**Parámetros de Hashing:**
+
+.. list-table::
+   :widths: 30 30 40
+   :header-rows: 1
+
+   * - Parámetro
+     - Valor
+     - Notas
+   * - Algoritmo
+     - bcrypt
+     - Estándar industria
+   * - Cost Factor
+     - 12
+     - Balance seguridad/performance
+   * - Salt
+     - Auto-generado
+     - Único por password
+
+----
+
+5. Trazabilidad
+---------------
+
+.. list-table::
+   :widths: 20 80
+
+   * - **BReq**
+     - BReq-004: Cumplimiento de Seguridad
+   * - **UC**
+     - UC_004: Cambiar Password
+   * - **Depende de**
+     - FR-004.02
+   * - **Requerido por**
+     - FR-004.04
+   * - **CNST**
+     - CNST-002, CNST-005
+   * - **TEST**
+     - TST-FR-004.03 (pendiente)
+
+----
+
+6. Historial
+------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - Versión
+     - Fecha
+     - Cambio
+   * - 1.0.0
+     - 2026-01-07
+     - Versión inicial derivada de UC_004

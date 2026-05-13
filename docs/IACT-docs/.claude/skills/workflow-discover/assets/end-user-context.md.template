@@ -1,0 +1,85 @@
+```yml
+project: [Nombre del proyecto]
+work_package: [YYYY-MM-DD-HH-MM-SS-nombre]
+created_at: [YYYY-MM-DD HH:MM:SS]
+updated_at: [YYYY-MM-DD HH:MM:SS]
+phase: Phase 1 — DISCOVER
+```
+
+# END USER CONTEXT: [Nombre del Work Package]
+
+Documento de contexto de usuario final. Se crea en **Stage 1 DISCOVER**, antes del análisis de los 8 aspectos. Su propósito es anclar el trabajo en las necesidades reales del usuario final, no en las del implementador.
+
+> **Regla:** El "usuario final" no es quien escribe el código ni quien gestiona el proyecto. Es la persona que usa el sistema resultante para resolver un problema real.
+
+---
+
+## END USER
+
+**¿Quién es?**
+
+[Descripción concreta de la persona. Evitar roles abstractos. Ejemplo: "El desarrollador Python que usa el MCP server para consultar datos desde su IDE", no "el usuario del sistema".]
+
+**¿Qué problema resuelve con nuestro sistema?**
+
+[Descripción en el vocabulario del END USER, sin jerga técnica del implementador.]
+
+**¿Cómo mide el éxito?**
+
+[Indicadores observables desde la perspectiva del END USER. No métricas técnicas internas.]
+- [Indicador 1: ej. "La consulta responde en menos de 2 segundos desde su IDE"]
+- [Indicador 2]
+
+**¿Qué lo frustra hoy (sin nuestro sistema)?**
+
+[Puntos de dolor actuales — ayudan a priorizar y a no sobre-ingeniar.]
+- [Frustración 1]
+- [Frustración 2]
+
+---
+
+## Cadena de Requisitos
+
+Traza cómo la necesidad del END USER se transforma a lo largo de las capas del sistema. Una restricción que nace en una capa inferior puede anular un requisito que viene de arriba.
+
+| Capa | Traducción del requisito | Restricción que introduce |
+|------|--------------------------|--------------------------|
+| **END USER** | [Qué necesita el usuario final] | — |
+| **App / Producto** | [Cómo la app traduce esa necesidad] | [Qué limita esta capa] |
+| **Framework / Metodología** | [Cómo el framework implementa la feature] | [Qué limita esta capa] |
+| **Platform / Runtime** | [Restricciones de la plataforma] | [Qué limita esta capa] |
+| **Hardware / Infraestructura** | [Límites físicos o de infra] | [Lo que el END USER percibe] |
+
+**Puntos de fricción (dónde se pierde fidelidad):**
+
+[Identifica dónde la cadena introduce distorsión respecto a la necesidad original. Si no hay ninguno, escribe "Ninguno identificado".]
+- [Fricción 1: ej. "Platform X no soporta Y → el END USER debe hacer Z manualmente"]
+- [Fricción 2]
+
+---
+
+## Restricciones Relevantes para el END USER
+
+Restricciones de bajo nivel que el END USER **percibe directamente**. No son restricciones del equipo de desarrollo.
+
+| Restricción | Origen (capa) | Impacto en END USER | ¿Mitigable? |
+|-------------|--------------|---------------------|-------------|
+| [Descripción] | hardware / platform / framework / app | [Cómo lo siente el usuario] | sí / no |
+| [Descripción] | | | |
+
+---
+
+## Notas de Contexto
+
+[Contexto libre: decisiones pasadas que afectan al END USER, deuda técnica visible desde su perspectiva, dependencias externas no controlables, o consideraciones especiales.]
+
+---
+
+## Checklist Step 0
+
+- [ ] END USER identificado como persona real (no rol abstracto)
+- [ ] Problema que resuelve expresado en su vocabulario
+- [ ] Al menos un indicador de éxito desde su perspectiva
+- [ ] Cadena de requisitos trazada (todas las capas)
+- [ ] Al menos un punto de fricción identificado o "Ninguno" explícito
+- [ ] Restricciones de bajo nivel documentadas (o "Ninguna" explícito)

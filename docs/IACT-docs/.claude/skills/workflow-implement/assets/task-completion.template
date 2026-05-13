@@ -1,0 +1,59 @@
+```yml
+completed_at: [YYYY-MM-DD HH:MM:SS]
+type: task
+Task ID: [ID de la tarea, ej: TASK-789]
+Feature relacionada: [Nombre feature]
+owner: [Nombre]
+started_at: [YYYY-MM-DD HH:MM:SS]
+ended_at: [YYYY-MM-DD HH:MM:SS]
+hours_spent: [N]
+tests: [SI/NO]
+Code review: [Pendiente/Completo]
+```
+
+feat(scope): implement [feature name] (Phase X: [PHASE NAME])
+
+ROADMAP Reference:
+Phase: [X. Phase Name]
+Feature: [Feature Name]
+Status: COMPLETE
+
+Completed tasks:
+- [x] Subtask 1 (YYYY-MM-DD-HH-MM-SS)
+- [x] Subtask 2 (YYYY-MM-DD-HH-MM-SS)
+- [x] Subtask 3 (YYYY-MM-DD-HH-MM-SS)
+
+Feature summary:
+Describe what was implemented and why it matters.
+Include key functionality added and use cases covered.
+
+Implementation details:
+- Architecture approach used
+- Key decisions made
+- Technologies/patterns applied
+- Testing approach taken
+
+Files modified:
+[List main files affected]
+
+Testing:
+- Unit tests: [count]
+- Integration tests: [count]
+- Manual testing: [what was tested]
+
+Documentation:
+- Code comments: [yes/no]
+- API docs: [yes/no]
+- User guide: [yes/no]
+
+Deployment notes:
+- Database migrations: [if any]
+- Environment variables: [if any]
+- Breaking changes: [if any]
+
+Closes ROADMAP Phase X: [Feature Name]
+
+Examples:
+feat(api): implement user authentication (Phase 2: Sub-proyecto API)
+feat(payments): add stripe integration (Phase 3: Payment System)
+feat(admin): create dashboard views (Phase 4: Admin Features)

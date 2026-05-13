@@ -1,0 +1,44 @@
+PROPUESTA REGENERACION - Template 3 de 10
+==========================================
+
+TEMPLATE A REGENERAR:
+TPL_FR_Documentacion_10_Componentes_1_3_0.rst
+
+PRIORIDAD: CRITICA (Template esencial para FR)
+
+VERSION ACTUAL v1_2_0:
+- Lineas: 844
+- Placeholders: 45 (5.3% ratio)
+- Calidad: REGULAR/MALO
+- Problema: 10 componentes con estructura pero ejemplos incompletos
+
+VERSION OBJETIVO v1_3_0:
+- Lineas: 900-1,000
+- Placeholders: < 45 (< 5% ratio)
+- Calidad: EXCELENTE
+- Solucion: FR-RPT-01-07 COMPLETO con los 10 componentes detallados
+
+CONTENIDO:
+
+Introduccion (50 lineas)
+- Que son los 10 componentes
+- Por que son importantes
+- Como usarlos
+
+Los 10 Componentes (800 lineas):
+1. DERIVADO DE (80 lineas)
+2. DESCRIPCION (60 lineas)
+3. CONSULTA SQL (120 lineas)
+4. PARAMETROS (80 lineas)
+5. OUTPUT (70 lineas)
+6. VALIDACIONES (100 lineas)
+7. TIMEOUT (60 lineas)
+8. MANEJO ERRORES (100 lineas)
+9. LOGS (80 lineas)
+10. TESTS (120 lineas)
+
+Ejemplo: FR-RPT-01-07 Ejecutar Query Principal Reporte
+- Codigo SQL completo
+- Python completo
+- Tests pytest completos
+

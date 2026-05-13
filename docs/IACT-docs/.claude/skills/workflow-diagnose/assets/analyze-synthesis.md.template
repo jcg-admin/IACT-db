@@ -1,0 +1,127 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+work_package: [YYYY-MM-DD-HH-MM-SS-nombre]
+current_phase: Phase 3 — ANALYZE
+author: [Nombre]
+status: Borrador
+domains_analyzed: [N]
+root_causes_identified: [N]
+```
+
+# Análisis: [Nombre del Work Package]
+
+## Propósito
+
+Sintetizar hallazgos de los sub-análisis por dominio e identificar causas raíz. Este documento es la entrada principal para Phase 4 CONSTRAINTS y Phase 5 STRATEGY.
+
+> Diferencia con DISCOVER: Phase 1 entiende el contexto. Phase 3 encuentra causas raíz.
+
+---
+
+## Resumen ejecutivo
+
+[2-4 líneas: cuál es el problema real (no el síntoma), cuáles son las causas raíz más importantes, qué implica para la solución.]
+
+---
+
+## Sub-análisis realizados
+
+| Dominio | Archivo | Hallazgo principal |
+|---------|---------|-------------------|
+| [Arquitectura] | `analyze/architecture-*.md` | [hallazgo] |
+| [Performance] | `analyze/performance-*.md` | [hallazgo] |
+| [Datos] | `analyze/data-*.md` | [hallazgo] |
+| [Proceso] | `analyze/process-*.md` | [hallazgo] |
+
+---
+
+## Causas raíz identificadas
+
+### CR-001: [Título que nombra la causa, no el síntoma]
+
+**Síntoma observado**: [lo que el usuario o el sistema reporta]
+
+**Causa raíz**: [por qué ocurre realmente — la condición estructural que lo genera]
+
+**Evidencia**: [datos de Phase 2 MEASURE o hallazgos de Phase 1 DISCOVER que confirman esto]
+
+**Dominios afectados**: [lista de subdominios relevantes]
+
+**Impacto si no se resuelve**: [qué pasa si se ignora esta causa]
+
+---
+
+### CR-002: [Título]
+
+[Repetir estructura]
+
+---
+
+## Dependencias entre causas
+
+[Si hay causas raíz relacionadas — una que habilita otra, o una que amplifica el efecto de otra — documentarlo aquí. Usar Mermaid si hay más de 3 causas.]
+
+```mermaid
+graph TD
+    CR001["CR-001: Título"] --> CR003["CR-003: Título"]
+    CR002["CR-002: Título"] --> CR003
+```
+
+---
+
+## Áreas fuera del scope de análisis
+
+[Dominios que se decidió NO analizar en este WP, y por qué. Esto previene que las fases siguientes asuman que se cubrió todo.]
+
+| Dominio | Razón de exclusión |
+|---------|-------------------|
+| [Dominio] | [razón] |
+
+---
+
+## Implicaciones para fases siguientes
+
+**Para Phase 4 CONSTRAINTS**: [qué restricciones surgen de estas causas]
+
+**Para Phase 5 STRATEGY**: [qué decisiones de diseño son inevitables dado el análisis]
+
+**Para Phase 8 PLAN EXECUTION**: [si hay sub-tareas de análisis que deben completarse durante ejecución]
+
+---
+
+## Evidencia de respaldo
+
+> Todo claim que fundamente una decisión de gate Stage 3→4 debe estar clasificado aquí.
+> Claims SPECULATIVE sin fuente observable bloquean el gate (I-012). Ver: `.claude/references/evidence-classification.md`
+
+| Claim | Tipo | Fuente | Confianza | Origen |
+|-------|------|--------|-----------|--------|
+| [afirmación principal sobre causa raíz] | PROVEN/INFERRED/SPECULATIVE | [tool output citado / documento / inferencia] | alta/media/baja | nuevo/heredado/externo |
+
+**Criterios de Confianza:**
+- alta: claim OBSERVABLE con herramienta ejecutada y output citado textualmente
+- media: claim INFERRED con razonamiento explícito y fuente documentada
+- baja: claim SPECULATIVE o inferencia sin fuente primaria verificable
+
+**Criterios de Origen:**
+- nuevo: generado en este WP con evidencia directa
+- heredado: propagado de un stage anterior sin re-verificación en este stage
+- externo: proveniente de documento o referencia fuera del WP (citar fuente)
+
+> PROVEN = producido por tool_use ejecutado en este WP (Bash, Read, Grep output citado textualmente)
+> INFERRED = derivado de observables con razonamiento explícito documentado
+> SPECULATIVE = sin observable de origen — NO puede fundamentar gates de stage (I-012)
+> Origen heredado + Confianza baja → re-verificar en este stage antes de avanzar (I-013)
+
+---
+
+## Stopping Point Manifest
+
+> Completar antes de presentar el gate 3→4.
+
+| SP | Descripción | Estado |
+|----|-------------|--------|
+| SP-01 | Gate 3→4: usuario valida causas raíz | pendiente |
+| SP-02 | Risk register actualizado con hallazgos | pendiente |
+| SP-03 | Sección "Evidencia de respaldo" con ≥3 claims clasificados (ninguno SPECULATIVE sin flag) | pendiente |

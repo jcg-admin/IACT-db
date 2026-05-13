@@ -1,0 +1,86 @@
+# Lean Six Sigma — DMADV/DMAIC lite (Lean Manufacturing / Waste Elimination)
+# type: sequential
+# 5-phase Lean methodology focused on waste elimination (TIMWOOD) and continuous flow.
+# Flujo secuencial: cada fase construye sobre la anterior. Artefacto central: Value Stream Map.
+
+id: lean
+type: sequential
+display: "Lean — Lean Six Sigma (Waste Elimination)"
+note: >
+  Metodología Lean para eliminación de desperdicio y mejora de flujo de valor.
+  5 fases secuenciales adaptadas al ciclo Lean DMAIC. El Value Stream Map (VSM)
+  es el artefacto transversal. Énfasis en identificar los 8 desperdicios (TIMWOOD)
+  y crear flujo continuo. Integra herramientas 5S, Kaizen, Kanban, Poka-Yoke.
+
+native_phase_count: 5
+produces:
+  - Lean Charter
+  - Current State VSM
+  - Future State VSM
+  - Improvement Data (pre/post comparison)
+  - SOPs + Visual Management System
+consumes:
+  - process-scope
+  - value-stream-data
+  - waste-observations
+
+steps:
+  - id: lean:define
+    display: "Define — Definir el problema y el valor para el cliente"
+    tollgate: "Lean Charter aprobado con VOC capturado y desperdicios priorizados"
+    activities:
+      - "Capturar Voice of Customer (VOC)"
+      - "Definir el flujo de valor afectado"
+      - "Identificar desperdicios TIMWOOD visibles"
+      - "Crear Lean Project Charter"
+      - "Establecer métricas de flujo (Lead Time, Cycle Time, Takt Time)"
+    output: "Lean Charter + identificación inicial de desperdicios + métricas de flujo base"
+    next: [lean:measure]
+
+  - id: lean:measure
+    display: "Measure — Mapear el estado actual y cuantificar desperdicios"
+    tollgate: "Current State VSM completado con desperdicios cuantificados"
+    activities:
+      - "Crear Value Stream Map (VSM) estado actual"
+      - "Medir tiempos de ciclo, esperas y colas"
+      - "Cuantificar cada tipo de desperdicio (TIMWOOD)"
+      - "Calcular eficiencia del flujo (VA / Lead Time total)"
+      - "Identificar cuellos de botella (bottlenecks)"
+    output: "Current State VSM + cuantificación de desperdicios + eficiencia de flujo baseline"
+    next: [lean:analyze]
+
+  - id: lean:analyze
+    display: "Analyze — Analizar causas raíz de los desperdicios"
+    tollgate: "Causas raíz de desperdicios validadas; Future State VSM diseñado"
+    activities:
+      - "Aplicar 5 Whys a cada desperdicio prioritario"
+      - "Identificar actividades VA / BVA / NVA"
+      - "Analizar flujo de información y materiales"
+      - "Diseñar Value Stream Map estado futuro"
+      - "Definir eventos Kaizen necesarios"
+    output: "Root cause analysis + Future State VSM + lista de eventos Kaizen"
+    next: [lean:improve]
+
+  - id: lean:improve
+    display: "Improve — Implementar mejoras Lean y eliminar desperdicios"
+    tollgate: "Mejoras implementadas; desperdicios reducidos con datos"
+    activities:
+      - "Implementar 5S en el área de trabajo"
+      - "Aplicar Kaizen events para eliminación de desperdicios"
+      - "Implementar flujo pull y Kanban donde aplique"
+      - "Aplicar Poka-Yoke para errores frecuentes"
+      - "Medir mejora en Lead Time y eficiencia de flujo"
+    output: "Implementación documentada + datos pre/post mejora + VSM actualizado"
+    next: [lean:control]
+
+  - id: lean:control
+    display: "Control — Sostener las mejoras y estandarizar"
+    tollgate: "Proceso estandarizado; métricas de flujo dentro de target sostenido"
+    activities:
+      - "Crear SOPs para nuevos procesos Lean"
+      - "Establecer visual management (tableros Kanban, indicadores)"
+      - "Capacitar al equipo en prácticas Lean"
+      - "Configurar revisiones periódicas (Daily Stand-up, Gemba Walk)"
+      - "Documentar lecciones aprendidas para Yokoten"
+    output: "SOPs actualizados + sistema visual management activo + plan de Yokoten"
+    next: []

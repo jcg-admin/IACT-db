@@ -1,0 +1,112 @@
+bash
+
+echo "=============================================="
+echo "       FASE 4: MOD_Pipeline - COMPLETADA"
+echo "=============================================="
+echo ""
+echo "CASOS DE USO GENERADOS:"
+echo "----------------------------------------------"
+printf "%-45s %s\n" "Archivo" "Lineas"
+echo "----------------------------------------------"
+
+for f in /mnt/user-data/outputs/casos_uso_v4/pipeline/UC_*.rst; do
+  name=$(basename "$f")
+  lines=$(wc -l < "$f")
+  printf "%-45s %s\n" "$name" "$lines"
+done
+
+echo "----------------------------------------------"
+total=$(cat /mnt/user-data/outputs/casos_uso_v4/pipeline/UC_*.rst | wc -l)
+echo "TOTAL LINEAS MOD_Pipeline:                    $total"
+echo ""
+echo "VALIDACION:"
+echo "----------------------------------------------"
+echo "- 4 UC generados:                             OK"
+echo "- Actor AGR-009 (admin_pipeline):             OK"
+echo "- CNST-003 (BD Dual IVR/Analytics):           OK"
+echo "- CNST-009 (Auditoria):                       OK"
+echo "- SoD: PIP-* incompatible con AUD-*:          OK"
+echo "----------------------------------------------"
+
+echo ""
+echo "=============================================="
+echo "         PROGRESO TOTAL DEL PROYECTO"
+echo "=============================================="
+
+f0_base=$(cat /mnt/user-data/outputs/casos_uso_v4/*.rst 2>/dev/null | wc -l)
+f0_static=$(cat /mnt/user-data/outputs/casos_uso_v4/_static/*.iuml 2>/dev/null | wc -l)
+f0_idx=$(cat /mnt/user-data/outputs/casos_uso_v4/*/index.rst 2>/dev/null | wc -l)
+total_f0=$((f0_base + f0_static + f0_idx))
+
+total_f1=$(cat /mnt/user-data/outputs/casos_uso_v4/auth/UC_*.rst 2>/dev/null | wc -l)
+total_f2=$(cat /mnt/user-data/outputs/casos_uso_v4/users/UC_*.rst 2>/dev/null | wc -l)
+total_f3=$(cat /mnt/user-data/outputs/casos_uso_v4/access/UC_*.rst 2>/dev/null | wc -l)
+total_f4=$(cat /mnt/user-data/outputs/casos_uso_v4/pipeline/UC_*.rst 2>/dev/null | wc -l)
+
+total=$((total_f0 + total_f1 + total_f2 + total_f3 + total_f4))
+
+echo ""
+echo "Fase 0: Preparacion ............ COMPLETADA ($total_f0 lineas)"
+echo "Fase 1: MOD_Auth (5 UC) ........ COMPLETADA ($total_f1 lineas)"
+echo "Fase 2: MOD_Users (4 UC) ....... COMPLETADA ($total_f2 lineas)"
+echo "Fase 3: MOD_Access (9 UC) ...... COMPLETADA ($total_f3 lineas)"
+echo "Fase 4: MOD_Pipeline (4 UC) .... COMPLETADA ($total_f4 lineas)"
+echo "Fase 5: MOD_Reports (14 UC) .... PENDIENTE"
+echo "Fase 6: MOD_Alerts (5 UC) ...... PENDIENTE"
+echo "Fase 7: MOD_Audit (4 UC) ....... PENDIENTE"
+echo "Fase 8: MOD_Logs (4 UC) ........ PENDIENTE"
+echo ""
+echo "----------------------------------------------"
+echo "TOTAL ACTUAL:                    $total lineas"
+echo "UC COMPLETADOS: 22 de 49 (45%)"
+echo "UC PENDIENTES:  27"
+echo "----------------------------------------------"
+echo ""
+echo "SIGUIENTE: Fase 5 - MOD_Reports (14 UC)"
+Output
+
+==============================================
+       FASE 4: MOD_Pipeline - COMPLETADA
+==============================================
+
+CASOS DE USO GENERADOS:
+----------------------------------------------
+Archivo                                       Lineas
+----------------------------------------------
+UC_PIP_01_Supervisar_ETL.rst                  474
+UC_PIP_02_Consultar_Errores_ETL.rst           391
+UC_PIP_03_Consultar_Disponibilidad.rst        379
+UC_PIP_04_Solicitar_Reintento.rst             534
+----------------------------------------------
+TOTAL LINEAS MOD_Pipeline:                    1778
+
+VALIDACION:
+----------------------------------------------
+- 4 UC generados:                             OK
+- Actor AGR-009 (admin_pipeline):             OK
+- CNST-003 (BD Dual IVR/Analytics):           OK
+- CNST-009 (Auditoria):                       OK
+- SoD: PIP-* incompatible con AUD-*:          OK
+----------------------------------------------
+
+==============================================
+         PROGRESO TOTAL DEL PROYECTO
+==============================================
+
+Fase 0: Preparacion ............ COMPLETADA (2529 lineas)
+Fase 1: MOD_Auth (5 UC) ........ COMPLETADA (3251 lineas)
+Fase 2: MOD_Users (4 UC) ....... COMPLETADA (2584 lineas)
+Fase 3: MOD_Access (9 UC) ...... COMPLETADA (4180 lineas)
+Fase 4: MOD_Pipeline (4 UC) .... COMPLETADA (1778 lineas)
+Fase 5: MOD_Reports (14 UC) .... PENDIENTE
+Fase 6: MOD_Alerts (5 UC) ...... PENDIENTE
+Fase 7: MOD_Audit (4 UC) ....... PENDIENTE
+Fase 8: MOD_Logs (4 UC) ........ PENDIENTE
+
+----------------------------------------------
+TOTAL ACTUAL:                    14322 lineas
+UC COMPLETADOS: 22 de 49 (45%)
+UC PENDIENTES:  27
+----------------------------------------------
+
+SIGUIENTE: Fase 5 - MOD_Reports (14 UC)

@@ -1,0 +1,94 @@
+{
+  "script_name": "generate_dora_report.sh",
+  "script_path": "scripts/generate_dora_report.sh",
+  "analysis_timestamp": "2025-11-13T09:06:18.918173",
+  "analysis_mode": "standard",
+  "overall_score": 100.0,
+  "constitutional": {
+    "overall_compliance": true,
+    "compliance_score": 100.0,
+    "rule_results": {
+      "1": {
+        "rule_number": 1,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "2": {
+        "rule_number": 2,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "3": {
+        "rule_number": 3,
+        "compliant": true,
+        "score": 100,
+        "violations": [],
+        "recommendations": []
+      },
+      "4": {
+        "rule_number": 4,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "5": {
+        "rule_number": 5,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "6": {
+        "rule_number": 6,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "7": {
+        "rule_number": 7,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "8": {
+        "rule_number": 8,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      }
+    },
+    "total_violations": 0
+  },
+  "quality": {
+    "metrics": {
+      "lines_of_code": 40,
+      "lines_of_comments": 7,
+      "number_of_functions": 0,
+      "max_function_length": 0,
+      "average_function_length": 0.0,
+      "cyclomatic_complexity": 0.0,
+      "comment_ratio": 0.175
+    },
+    "code_smells": [],
+    "refactoring_opportunities": [],
+    "quality_score": 100.0
+  },
+  "security": {
+    "issues": [],
+    "severity_counts": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "security_score": 100
+  }
+}

@@ -1,0 +1,5 @@
+name: diagrama-ishikawa
+description: "Especialista en análisis de causa raíz con diagramas de Ishikawa (espina de pescado / causa-efecto). Usar cuando se necesite identificar causas raíz de cualquier problema — técnico, organizacional, de proceso, de producto, de ventas, de calidad, o de investigación. Se auto-adapta al dominio del problema detectando el contexto. Puede invocar sub-agentes para investigar causas específicas. Usar PROACTIVAMENTE cuando aparezcan errores recurrentes, fallas sistémicas o cuando se quiera analizar por qué no se alcanza un objetivo."
+tools: Read, Write, Grep, Glob, Bash, Agent
+installation: manual
+async_suitable: false

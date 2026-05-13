@@ -1,0 +1,22 @@
+.. _uc-pip-01-parte-05:
+
+==========================
+Parte 5 — Excepciones
+==========================
+
+EX-01: JWT — 401.
+EX-02: Sin permiso — 403.
+EX-03: Metadata BD timeout — 503.
+
+.. list-table::
+ :widths: 12 40 18 30
+ :header-rows: 1
+
+ * - ID
+   - Condicion
+   - Status
+   - Audit
+ * - EX-01..03
+   - varios
+   - 401/403/503
+   - middleware

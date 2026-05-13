@@ -1,0 +1,71 @@
+{
+  "skill_name": "sphinx",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need to create documentation for my Python project. I have source code files but no documentation yet. Help me set up Sphinx and create a basic structure.",
+      "expected_output": "Sphinx project initialized with conf.py, index.rst, and Makefile. Should include autodoc extension configured.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "sphinx-quickstart-run",
+          "type": "text_contains",
+          "text": "sphinx-quickstart",
+          "negate": false
+        },
+        {
+          "name": "conf-py-exists",
+          "type": "file_exists",
+          "path": "docs/source/conf.py"
+        },
+        {
+          "name": "autodoc-enabled",
+          "type": "text_contains",
+          "file": "docs/source/conf.py",
+          "text": "sphinx.ext.autodoc"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have an existing Sphinx project but the build is failing with warnings. The error mentions 'unknown directive'. Help me debug and fix it.",
+      "expected_output": "Identify the missing extension, show how to add it to conf.py, and explain the fix.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "extension-check",
+          "type": "text_contains",
+          "text": "extensions"
+        },
+        {
+          "name": "conf-py-reference",
+          "type": "text_contains",
+          "text": "conf.py"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I want to build my documentation as both HTML and PDF. Show me how to configure Sphinx for PDF output and build both formats.",
+      "expected_output": "Instructions for LaTeX installation, PDF builder configuration, and build commands for both HTML and PDF.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "latex-mentioned",
+          "type": "text_contains",
+          "text": "latex"
+        },
+        {
+          "name": "make-pdf",
+          "type": "text_contains",
+          "text": "make latexpdf"
+        },
+        {
+          "name": "make-html",
+          "type": "text_contains",
+          "text": "make html"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+#!/bin/bash
+#
+# Git Hook: pre-push
+# Purpose: Prevent direct pushes to main or develop branches
+#
+# This hook runs before push and aborts if you're trying to push
+# directly to main or develop (must use pull requests instead).
+#
+# To bypass this hook: git push --no-verify
+#
+
+# Get the branch being pushed
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Branches that are protected (must use PRs)
+PROTECTED_BRANCHES=("main" "develop")
+
+# Check if the branch being pushed is protected
+for protected in "${PROTECTED_BRANCHES[@]}"; do
+  if [ "$BRANCH" = "$protected" ]; then
+    echo "ERROR: Direct push to '$BRANCH' is not allowed!" >&2
+    echo "" >&2
+    echo "You must use a Pull Request to merge to '$BRANCH'." >&2
+    echo "" >&2
+    echo "Instead, please:" >&2
+    echo "  1. Push your feature branch: git push -u origin feature/your-branch" >&2
+    echo "  2. Create a Pull Request on GitHub" >&2
+    echo "  3. Get code review" >&2
+    echo "  4. Merge through GitHub UI" >&2
+    echo "" >&2
+    echo "To bypass this check: git push --no-verify" >&2
+    exit 1
+  fi
+done
+
+exit 0

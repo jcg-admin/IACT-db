@@ -1,0 +1,13 @@
+docs/backend/adr
+docs/backend/catalogos
+docs/backend/ci_cd
+docs/backend/ejemplos
+docs/backend/estilos
+docs/backend/glosarios
+docs/backend/metodologias
+docs/backend/plantillas
+docs/backend/procesos
+docs/backend/referencias
+docs/backend/templates
+docs/backend/trazabilidad
+docs/backend/vision_y_alcance

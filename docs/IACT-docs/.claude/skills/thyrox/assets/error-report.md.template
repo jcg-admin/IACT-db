@@ -1,0 +1,28 @@
+```yml
+id: ERR-NNN
+created_at: [YYYY-MM-DD HH:MM:SS]
+phase: Phase N — PHASE_NAME
+severity: alta | media | baja
+recurrence: primera | reincidencia de ERR-XXX
+```
+
+# ERR-NNN: [Título descriptivo]
+
+## Qué pasó
+
+[Descripción concreta del error. Qué se hizo mal y qué consecuencia tuvo.]
+
+## Por qué
+
+[Causa raíz. ¿Por qué ocurrió? ¿Qué condición lo permitió?]
+
+## Prevención
+
+[OBLIGATORIO. Acción concreta para que NO vuelva a ocurrir.
+Ejemplos: "Agregar check en validate-phase-readiness.sh",
+"Agregar regla en CLAUDE.md", "Modificar paso N en Phase X del SKILL".]
+
+## Insight
+
+[Lección generalizable. ¿Qué principio se puede extraer?
+Formato: "Cuando [condición], hacer [acción] porque [razón]."]

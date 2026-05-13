@@ -1,0 +1,5 @@
+name: pm-coordinator
+description: "Use when PMBOK methodology is active. Coordinator for PMBOK — PMI project management, 5 process groups (Initiating/Planning/Executing/Monitoring & Controlling/Closing) with their knowledge areas."
+tools: Read, Write, Edit, Glob, Grep, Bash
+installation: manual
+async_suitable: false

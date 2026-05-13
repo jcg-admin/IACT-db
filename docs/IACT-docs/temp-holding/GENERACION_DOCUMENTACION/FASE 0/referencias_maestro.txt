@@ -1,0 +1,154 @@
+# MAPEO DE NOMBRES ANTIGUOS → NUEVOS
+# Generado: 2026-01-08
+# NOM_001 v2.0.0
+
+# ========================================
+# PARTES PEDAGÓGICAS
+# ========================================
+PARTE_0 → PARTE_0_Contexto_Fundamentos_IACT_1_0_0.md
+PARTE 0 → PARTE_0_Contexto_Fundamentos_IACT_1_0_0.md
+"PARTE 0" → PARTE_0_Contexto_Fundamentos_IACT_1_0_0.md
+
+PARTE_1 → PARTE_1_Identificar_Reglas_Negocio_IACT_1_0_0.md
+PARTE 1 → PARTE_1_Identificar_Reglas_Negocio_IACT_1_0_0.md
+"PARTE 1" → PARTE_1_Identificar_Reglas_Negocio_IACT_1_0_0.md
+
+PARTE_2A → PARTE_2A_Fundamentos_Transformacion_IACT_1_0_0.md
+PARTE 2A → PARTE_2A_Fundamentos_Transformacion_IACT_1_0_0.md
+"PARTE 2A" → PARTE_2A_Fundamentos_Transformacion_IACT_1_0_0.md
+
+PARTE_2B → PARTE_2B_Construccion_Detallada_IACT_1_0_0.md
+PARTE 2B → PARTE_2B_Construccion_Detallada_IACT_1_0_0.md
+
+PARTE_2C → PARTE_2C_Casos_Especiales_Validacion_IACT_1_0_0.md
+PARTE 2C → PARTE_2C_Casos_Especiales_Validacion_IACT_1_0_0.md
+
+PARTE_3A → PARTE_3A_Introduccion_CRUD_IACT_1_0_0.md
+PARTE 3A → PARTE_3A_Introduccion_CRUD_IACT_1_0_0.md
+
+PARTE_3B → PARTE_3B_Tecnica_Larman_IACT_1_0_0.md
+PARTE 3B → PARTE_3B_Tecnica_Larman_IACT_1_0_0.md
+
+PARTE_3C → PARTE_3C_UI_Stakeholders_IACT_1_0_0.md
+PARTE 3C → PARTE_3C_UI_Stakeholders_IACT_1_0_0.md
+
+PARTE_3D → PARTE_3D_Consolidacion_Resumen_IACT_1_0_0.md
+PARTE 3D → PARTE_3D_Consolidacion_Resumen_IACT_1_0_0.md
+
+PARTE_4 → PARTE_4_Requisitos_Funcionales_IACT_1_0_0.md
+PARTE 4 → PARTE_4_Requisitos_Funcionales_IACT_1_0_0.md
+
+PARTE_5 → PARTE_5_Trazabilidad_Gestion_IACT_1_0_0.md
+PARTE 5 → PARTE_5_Trazabilidad_Gestion_IACT_1_0_0.md
+
+PARTE_6 → PARTE_6_Casos_Practicos_Completos_IACT_1_0_0.md
+PARTE 6 → PARTE_6_Casos_Practicos_Completos_IACT_1_0_0.md
+
+# ========================================
+# TEMPLATES
+# ========================================
+T01 → TPL_BR_Decision_Tipo_1_0_0.rst
+Template T01 → TPL_BR_Decision_Tipo_1_0_0.rst
+T01_Decision_Tipo_BR.md → TPL_BR_Decision_Tipo_1_0_0.rst
+
+T02 → TPL_UC_Construccion_7_Pasos_1_0_0.rst
+Template T02 → TPL_UC_Construccion_7_Pasos_1_0_0.rst
+
+T03 → TPL_UC_Identificacion_Actor_1_0_0.rst
+Template T03 → TPL_UC_Identificacion_Actor_1_0_0.rst
+
+T04 → TPL_FR_Documentacion_10_Componentes_1_0_0.rst
+Template T04 → TPL_FR_Documentacion_10_Componentes_1_0_0.rst
+
+T05 → TPL_UC_Flujos_Alternos_1_0_0.rst
+Template T05 → TPL_UC_Flujos_Alternos_1_0_0.rst
+
+T06 → TPL_UC_Integracion_BR_1_0_0.rst
+Template T06 → TPL_UC_Integracion_BR_1_0_0.rst
+
+T07 → TPL_UC_Derivacion_FR_1_0_0.rst
+Template T07 → TPL_UC_Derivacion_FR_1_0_0.rst
+
+T08 → TPL_FR_Casos_Prueba_1_0_0.rst
+Template T08 → TPL_FR_Casos_Prueba_1_0_0.rst
+
+T09 → TPL_UC_Checklist_Calidad_26_Puntos_1_0_0.rst
+Template T09 → TPL_UC_Checklist_Calidad_26_Puntos_1_0_0.rst
+
+T10 → TPL_UC_Peer_Review_1_0_0.rst
+Template T10 → TPL_UC_Peer_Review_1_0_0.rst
+
+T11 → TPL_UC_Walkthrough_Stakeholder_1_0_0.rst
+Template T11 → TPL_UC_Walkthrough_Stakeholder_1_0_0.rst
+
+T12 → TPL_TRZ_Matriz_RTM_1_0_0.rst
+Template T12 → TPL_TRZ_Matriz_RTM_1_0_0.rst
+
+# ========================================
+# BUSINESS RULES
+# ========================================
+BR-IACT-028 → BR_IACT_028_Aprobacion_Consultas_1_0_0.rst
+BR-028 → BR_IACT_028_Aprobacion_Consultas_1_0_0.rst
+
+BR-IACT-031 → BR_IACT_031_Notificar_Sesion_Expira_1_0_0.rst
+BR-031 → BR_IACT_031_Notificar_Sesion_Expira_1_0_0.rst
+
+BR-IACT-046 → BR_IACT_046_Marcar_Sesion_Expirada_1_0_0.rst
+BR-046 → BR_IACT_046_Marcar_Sesion_Expirada_1_0_0.rst
+
+BR-IACT-087 → BR_IACT_087_Nivel_Seguridad_Criticas_1_0_0.rst
+BR-087 → BR_IACT_087_Nivel_Seguridad_Criticas_1_0_0.rst
+
+BR-IACT-053 → BR_IACT_053_Calculo_Promedio_Duracion_1_0_0.rst
+BR-053 → BR_IACT_053_Calculo_Promedio_Duracion_1_0_0.rst
+
+# ========================================
+# USE CASES
+# ========================================
+UC-IACT-RPT-01 → UC_IACT_RPT_01_Consultar_Reporte_4_0_0.rst
+UC-RPT-01 → UC_IACT_RPT_01_Consultar_Reporte_4_0_0.rst
+
+UC-IACT-RPT-09 → UC_IACT_RPT_09_Aprobar_Rechazar_Consulta_4_0_0.rst
+UC-RPT-09 → UC_IACT_RPT_09_Aprobar_Rechazar_Consulta_4_0_0.rst
+
+UC-IACT-AUTH-01 → UC_IACT_AUTH_01_Iniciar_Sesion_4_0_0.rst
+UC-AUTH-01 → UC_IACT_AUTH_01_Iniciar_Sesion_4_0_0.rst
+
+UC-IACT-AUTH-07 → UC_IACT_AUTH_07_Notificar_Sesion_4_0_0.rst
+UC-AUTH-07 → UC_IACT_AUTH_07_Notificar_Sesion_4_0_0.rst
+
+UC-IACT-AUTH-08 → UC_IACT_AUTH_08_Marcar_Sesiones_Expiradas_4_0_0.rst
+UC-AUTH-08 → UC_IACT_AUTH_08_Marcar_Sesiones_Expiradas_4_0_0.rst
+
+UC-IACT-ACC-01 → UC_IACT_ACC_01_Asignar_Funciones_4_0_0.rst
+UC-ACC-01 → UC_IACT_ACC_01_Asignar_Funciones_4_0_0.rst
+
+# ========================================
+# FUNCTIONAL REQUIREMENTS
+# ========================================
+FR-RPT-01-07 → FR_RPT_01_07_Calcular_Count_1_0_0.rst
+FR-AUTH-07-02 → FR_AUTH_07_02_Query_Sesiones_Expirar_1_0_0.rst
+FR-ACC-01-04 → FR_ACC_01_04_Validar_Nivel_Seguridad_1_0_0.rst
+
+# ========================================
+# FUNDACIONALES
+# ========================================
+STD-001 → STD_001_Estandares_Documentacion_1_1_0.rst
+STD_001 → STD_001_Estandares_Documentacion_1_1_0.rst
+
+NOM-001 → NOM_001_Nomenclatura_Proyecto_2_0_0.rst
+NOM_001 → NOM_001_Nomenclatura_Proyecto_2_0_0.rst
+
+# ========================================
+# CONSTRAINTS
+# ========================================
+CNST-001 → CNST_001_No_Emails_Externos_1_0_0.rst
+CNST-003 → CNST_003_BD_IVR_Solo_Lectura_1_0_0.rst
+CNST-005 → CNST_005_RBAC_Flat_SoD_1_0_0.rst
+CNST-006 → CNST_006_Rango_Maximo_2_Anios_1_0_0.rst
+CNST-007 → CNST_007_Limites_Exportacion_1_0_0.rst
+CNST-009 → CNST_009_Auditoria_Obligatoria_1_0_0.rst
+
+# ========================================
+# FIN DEL MAPEO
+# ========================================

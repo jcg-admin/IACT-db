@@ -1,0 +1,181 @@
+@startuml UC-PERM-007 Verificar Permiso
+!theme plain
+title UC-PERM-007: Verificar Permiso de Usuario\nAlgoritmo de Verificación con Precedencia
+
+participant "Client\n(Frontend/Backend)" as client
+participant "API\nEndpoint" as api
+database "PostgreSQL\nDB" as db
+participant "Cache\nRedis" as cache
+participant "SQL\nFunction" as func
+
+== Escenario 1: Verificación con Cache Hit ==
+
+client -> api: GET /api/permisos/verificar/123/tiene-permiso/\n?capacidad=sistema.vistas.dashboards.ver
+activate api
+
+api -> cache: GET permisos:user:123
+activate cache
+cache --> api: [HIT] Lista de capacidades en cache
+deactivate cache
+
+note right of api
+  Cache contiene:
+  [
+    "sistema.vistas.dashboards.ver",
+    "sistema.vistas.reportes.ver",
+    ...
+  ]
+
+  Verificación in-memory: < 1ms
+end note
+
+api -> api: capacidad in cache_capacidades?
+api --> api: ✓ TRUE
+
+api --> client: HTTP 200:\n{\n  "usuario_id": 123,\n  "capacidad": "...",\n  "tiene_permiso": true,\n  "origen": "cache",\n  "latency_ms": 0.8\n}
+deactivate api
+
+== Escenario 2: Verificación con Cache Miss ==
+
+client -> api: GET /api/permisos/verificar/123/tiene-permiso/\n?capacidad=sistema.administracion.usuarios.eliminar
+activate api
+
+api -> cache: GET permisos:user:123
+cache --> api: [MISS] Cache vacío o expirado
+
+note right of api
+  Cache MISS:
+  - Primera verificación después de login
+  - Cache expirado (TTL=5min)
+  - Cache invalidado (cambio de permisos)
+end note
+
+api -> func: SELECT usuario_tiene_permiso(\n  123,\n  'sistema.administracion.usuarios.eliminar')
+activate func
+
+== Algoritmo de Verificación (Orden de Precedencia) ==
+
+func -> db: -- PASO 1: Verificar REVOCACIONES excepcionales\nSELECT EXISTS (\n  SELECT 1 FROM permisos_excepcionales\n  WHERE usuario_id = 123\n    AND capacidad_id = (\n      SELECT id FROM capacidades\n      WHERE codigo = '...'\n    )\n    AND tipo = 'revocar'\n    AND activo = TRUE\n    AND (fecha_fin IS NULL OR fecha_fin > NOW())\n)
+activate db
+
+alt Existe revocación activa
+  db --> func: TRUE
+  note right of func
+    REVOCACIÓN tiene prioridad MÁXIMA
+    → Denegar inmediatamente
+    → Sin importar grupos o concesiones
+  end note
+  func --> api: FALSE
+  api --> client: HTTP 200: {tiene_permiso: false,\n  origen: "excepcional_revocar"}
+else No hay revocación
+  db --> func: FALSE
+
+  func -> db: -- PASO 2: Verificar CONCESIONES excepcionales\nSELECT EXISTS (\n  SELECT 1 FROM permisos_excepcionales\n  WHERE usuario_id = 123\n    AND capacidad_id = ...\n    AND tipo = 'conceder'\n    AND activo = TRUE\n    AND (fecha_fin IS NULL OR fecha_fin > NOW())\n)
+
+  alt Existe concesión activa
+    db --> func: TRUE
+    note right of func
+      CONCESIÓN excepcional
+      → Conceder inmediatamente
+      → Sin revisar grupos
+    end note
+    func --> api: TRUE
+    api --> client: HTTP 200: {tiene_permiso: true,\n  origen: "excepcional_conceder"}
+  else No hay concesión excepcional
+    db --> func: FALSE
+
+    func -> db: -- PASO 3: Verificar GRUPOS\nSELECT EXISTS (\n  SELECT 1 FROM usuarios_grupos ug\n  INNER JOIN grupo_capacidades gc\n    ON ug.grupo_id = gc.grupo_id\n  INNER JOIN capacidades c\n    ON gc.capacidad_id = c.id\n  WHERE ug.usuario_id = 123\n    AND ug.activo = TRUE\n    AND c.codigo = '...'\n    AND c.activa = TRUE\n)
+
+    alt Tiene capacidad por grupo
+      db --> func: TRUE
+      note right of func
+        Usuario tiene capacidad
+        por pertenecer a grupo
+        que la incluye
+      end note
+      func --> api: TRUE
+      api --> client: HTTP 200: {tiene_permiso: true,\n  origen: "grupo"}
+    else No tiene por grupo
+      db --> func: FALSE
+      note right of func
+        No hay revocaciones,
+        No hay concesiones,
+        No hay grupos con la capacidad
+        → DENEGAR
+      end note
+      func --> api: FALSE
+      api --> client: HTTP 200: {tiene_permiso: false,\n  origen: "ninguno"}
+    end
+  end
+end
+
+deactivate db
+deactivate func
+
+== Actualización de Cache ==
+
+api -> func: SELECT obtener_capacidades_usuario(123)
+func -> db: -- Obtiene TODAS las capacidades del usuario\n-- (considera revocaciones, concesiones, grupos)
+db --> func: ["sistema.vistas.dashboards.ver", ...]
+func --> api: Lista completa de capacidades
+
+api -> cache: SET permisos:user:123\nEX 300  (TTL=5 min)
+cache --> api: Cache actualizado
+
+deactivate api
+
+== Escenario 3: Verificación con Vista Optimizada (Backend Interno) ==
+
+participant "Backend\nInterno" as backend
+
+backend -> func: SELECT * FROM vista_capacidades_usuario\nWHERE usuario_id = 123\n  AND capacidad_codigo = '...'
+activate func
+
+note right of func
+  Vista materializa el algoritmo:
+
+  UNION ALL:
+  1. Capacidades de grupos activos
+  2. Concesiones excepcionales
+
+  EXCEPT:
+  3. Revocaciones excepcionales
+
+  Performance: 10-20ms (vs 30-50ms ORM)
+end note
+
+func -> db: Query ejecutada contra vista pre-calculada
+db --> func: 1 row → tiene permiso\nOR\n0 rows → no tiene permiso
+
+alt Tiene permiso
+  func --> backend: 1 row
+  backend -> backend: tiene_permiso = TRUE
+else No tiene permiso
+  func --> backend: 0 rows
+  backend -> backend: tiene_permiso = FALSE
+end
+
+deactivate func
+
+== Performance Comparison ==
+
+note over client, db
+  PERFORMANCE TARGETS:
+
+  ┌─────────────────────────┬──────────┬───────────┐
+  │ Método                  │ Latencia │ Use Case  │
+  ├─────────────────────────┼──────────┼───────────┤
+  │ Cache Hit               │ < 1ms    │ Hot path  │
+  │ SQL Function            │ 5-10ms   │ Cache miss│
+  │ SQL Vista               │ 10-20ms  │ Analytics │
+  │ ORM (Django)            │ 30-50ms  │ Dev/Test  │
+  └─────────────────────────┴──────────┴───────────┘
+
+  PRECEDENCIA (Mayor a Menor):
+  1. Revocación Excepcional (NIEGA siempre)
+  2. Concesión Excepcional (CONCEDE si no hay revocación)
+  3. Grupos (CONCEDE si no hay excepciones)
+  4. Default: DENEGAR
+end note
+
+@enduml

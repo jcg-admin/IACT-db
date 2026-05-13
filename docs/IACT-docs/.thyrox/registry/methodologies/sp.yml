@@ -1,0 +1,126 @@
+# Strategic Planning — 8-step strategic management cycle
+# type: sequential (with cyclic return: sp:adjust → sp:analysis)
+# Structured approach to strategic planning and execution. Supports multi-cycle iteration.
+# Artefacto central: Strategic Plan Document + Balanced Scorecard.
+
+id: sp
+type: sequential
+display: "SP — Strategic Planning"
+note: >
+  Metodología de planificación estratégica estructurada en 8 pasos.
+  Flujo primariamente secuencial; sp:adjust puede retornar a sp:analysis para
+  ciclos estratégicos subsiguientes (revisión anual o ante cambio de contexto).
+  Herramientas: PESTEL, SWOT, Porter's Five Forces, Balanced Scorecard, OKRs.
+  Artefactos centrales: Strategic Plan Document y Strategy Map.
+
+native_phase_count: 8
+produces:
+  - Strategic Context Brief
+  - PESTEL Analysis + SWOT Matrix
+  - Strategic Gap Analysis
+  - Strategy Map + Objectives
+  - Strategic Plan Document + Balanced Scorecard + Roadmap
+  - Implementation Progress Reports
+  - Strategy Review Reports
+  - Lessons Learned + Next Cycle Decision
+consumes:
+  - organizational-context
+  - business-goals
+  - competitive-landscape
+
+steps:
+  - id: sp:context
+    display: "Context — Establecer contexto estratégico y mandato"
+    tollgate: "Mandato organizacional claro; stakeholders clave identificados"
+    activities:
+      - "Revisar misión, visión y valores organizacionales"
+      - "Identificar stakeholders clave y sus expectativas"
+      - "Definir horizonte de planificación (1, 3 o 5 años)"
+      - "Establecer scope del proceso estratégico"
+      - "Revisar estrategias y resultados del ciclo anterior"
+    output: "Strategic Context Brief: mandato, stakeholders, horizonte, scope"
+    next: [sp:analysis]
+
+  - id: sp:analysis
+    display: "Analysis — Analizar entorno externo e interno"
+    tollgate: "Análisis PESTEL, SWOT y Five Forces completados con evidencia"
+    activities:
+      - "Aplicar análisis PESTEL (macro-entorno)"
+      - "Aplicar Porter's Five Forces (entorno competitivo)"
+      - "Realizar análisis interno de capacidades y recursos"
+      - "Construir matriz SWOT consolidada"
+      - "Identificar tendencias críticas y disruptores"
+    output: "PESTEL analysis + Five Forces + SWOT matrix + análisis de tendencias"
+    next: [sp:gaps]
+
+  - id: sp:gaps
+    display: "Gaps — Identificar brechas estratégicas"
+    tollgate: "Brechas estratégicas cuantificadas entre estado actual y aspiración"
+    activities:
+      - "Definir estado deseado (Strategic Aspiration)"
+      - "Comparar capacidades actuales vs requeridas"
+      - "Cuantificar brechas en cada perspectiva (financiera, cliente, proceso, aprendizaje)"
+      - "Priorizar brechas por impacto estratégico"
+      - "Validar brechas con datos del análisis"
+    output: "Strategic Gap Analysis: brechas priorizadas con impacto cuantificado"
+    next: [sp:formulate]
+
+  - id: sp:formulate
+    display: "Formulate — Formular opciones y elegir estrategia"
+    tollgate: "Estrategia seleccionada con objetivos estratégicos definidos"
+    activities:
+      - "Generar opciones estratégicas (3-5 alternativas)"
+      - "Evaluar opciones vs criterios (viabilidad, deseabilidad, factibilidad)"
+      - "Seleccionar estrategia ganadora con justificación"
+      - "Definir objetivos estratégicos SMART por perspectiva"
+      - "Construir Strategy Map (relaciones causa-efecto)"
+    output: "Strategy Map + objetivos estratégicos por perspectiva + justificación de selección"
+    next: [sp:plan]
+
+  - id: sp:plan
+    display: "Plan — Crear plan estratégico e iniciativas"
+    tollgate: "Plan estratégico aprobado con iniciativas, KPIs y recursos asignados"
+    activities:
+      - "Definir iniciativas estratégicas por objetivo"
+      - "Establecer KPIs y metas por perspectiva (Balanced Scorecard)"
+      - "Asignar responsables y recursos a cada iniciativa"
+      - "Crear roadmap de implementación con hitos"
+      - "Alinear presupuesto con prioridades estratégicas"
+    output: "Strategic Plan Document + Balanced Scorecard + Roadmap de implementación"
+    next: [sp:execute]
+
+  - id: sp:execute
+    display: "Execute — Ejecutar iniciativas estratégicas"
+    tollgate: "Iniciativas estratégicas en ejecución; primeros hitos alcanzados"
+    activities:
+      - "Comunicar estrategia a toda la organización (cascading)"
+      - "Ejecutar iniciativas según roadmap"
+      - "Gestionar cambio organizacional necesario"
+      - "Resolver impedimentos y riesgos emergentes"
+      - "Reportar avance mensual vs KPIs"
+    output: "Reporte de avance de iniciativas + log de decisiones tácticas"
+    next: [sp:monitor]
+
+  - id: sp:monitor
+    display: "Monitor — Monitorear resultados y ajustar"
+    tollgate: "Revisión estratégica completada; desviaciones identificadas y accionadas"
+    activities:
+      - "Revisar KPIs vs metas (revisión mensual/trimestral)"
+      - "Analizar variaciones significativas"
+      - "Identificar nuevas amenazas u oportunidades"
+      - "Actualizar Balanced Scorecard con datos reales"
+      - "Decidir si se requiere ajuste estratégico"
+    output: "Strategy Review Report + Balanced Scorecard actualizado + decisiones de ajuste"
+    next: [sp:adjust]
+
+  - id: sp:adjust
+    display: "Adjust — Ajustar estrategia o iniciar nuevo ciclo"
+    tollgate: "Ajustes implementados O nuevo ciclo estratégico iniciado con aprendizajes"
+    activities:
+      - "Implementar ajustes tácticos aprobados"
+      - "Documentar aprendizajes estratégicos"
+      - "Evaluar si se requiere reformulación estratégica"
+      - "Si nuevo ciclo: iniciar sp:analysis con contexto actualizado"
+      - "Si cierre: capturar lecciones aprendidas y transferir conocimiento"
+    output: "Ajustes documentados + Lessons Learned + decisión: cierre o nuevo ciclo"
+    next: [sp:analysis]

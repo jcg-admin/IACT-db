@@ -1,0 +1,219 @@
+@startuml UCD-[DOMINIO]-[###]-[descripcion]
+/'
+INSTRUCCIONES PARA DIAGRAMA UML DE CASOS DE USO
+================================================
+
+Este template crea un diagrama UML de casos de uso siguiendo el estándar definido
+en ADR-GOB-008: Diagramas UML de Casos de Uso.
+
+NOMENCLATURA:
+- Archivo: UCD-DOMINIO-###-descripcion.puml
+- DOMINIO: BACK, FRONT, DEVOPS, QA, AI, GOB
+- ###: Número secuencial 001-999
+- descripcion: Descripción en snake_case
+
+ELEMENTOS PRINCIPALES:
+1. Actores (figuras de palo)
+2. Casos de Uso (óvalos)
+3. Límite del Sistema (rectángulo)
+4. Relaciones (flechas)
+
+REGLA DE ORO - DIRECCIÓN DE FLECHAS:
+- Actor → Caso de Uso = Actor PRIMARIO (ejecuta el caso de uso)
+- Caso de Uso → Actor = Actor SECUNDARIO (proporciona soporte)
+
+RELACIONES ENTRE CASOS DE USO:
+- UC1 .> UC2 : <<include>> = UC1 SIEMPRE incluye UC2
+- UC3 .> UC1 : <<extend>> = UC3 OPCIONALMENTE extiende UC1
+- UC5 --|> UC4 = UC5 es especialización de UC4 (herencia)
+
+BUENAS PRÁCTICAS:
+- Siempre incluir límite del sistema
+- Nombres de casos de uso en formato VERBO+OBJETO
+- Usar español para nombres
+- Actores fuera del rectángulo del sistema
+- Casos de uso dentro del rectángulo del sistema
+'/
+
+!theme plain
+left to right direction
+skinparam packageStyle rectangle
+
+/' ============================================
+   DEFINICIÓN DE ACTORES
+   ============================================
+   Sintaxis: actor "Nombre del Actor" as actorID
+
+   Ejemplos:
+   actor "Solicitante" as solicitante
+   actor "Gerente de Laboratorio" as gerente
+   actor "Sistema de Inventario" as inventario
+'/
+
+actor "Nombre Actor Primario 1" as actor1
+actor "Nombre Actor Primario 2" as actor2
+actor "Nombre Actor Secundario" as actorSec
+actor "Sistema Externo" as sistemaExt
+
+/' ============================================
+   LÍMITE DEL SISTEMA Y CASOS DE USO
+   ============================================
+   El rectángulo define el límite del sistema.
+   TODO lo que está dentro es parte del sistema.
+   Los actores están FUERA del sistema.
+'/
+
+rectangle "Nombre del Sistema" {
+  /'
+  Casos de uso dentro del sistema.
+  Sintaxis: usecase "VERBO Objeto" as UC###
+
+  Ejemplos:
+  usecase "Iniciar Sesión" as UC001
+  usecase "Gestionar Permisos" as UC002
+  usecase "Solicitar Producto Químico" as UC004
+  '/
+
+  usecase "VERBO Objeto 1" as UC001
+  usecase "VERBO Objeto 2" as UC002
+  usecase "VERBO Objeto 3" as UC003
+  usecase "VERBO Objeto 4" as UC004
+  usecase "VERBO Objeto 5" as UC005
+}
+
+/' ============================================
+   RELACIONES: ACTORES → CASOS DE USO
+   ============================================
+
+   CRÍTICO: Dirección de las flechas indica tipo de actor
+
+   Actor → UC: Actor es PRIMARIO (ejecuta el caso de uso)
+   Sintaxis: actor1 --> UC001
+
+   UC → Actor: Actor es SECUNDARIO (proporciona soporte)
+   Sintaxis: UC001 --> actorSec
+'/
+
+/' Actores primarios (flechas de actor a caso de uso) '/
+actor1 --> UC001
+actor1 --> UC002
+actor2 --> UC003
+
+/' Actores secundarios (flechas de caso de uso a actor) '/
+UC001 --> actorSec
+UC002 --> sistemaExt
+UC003 --> sistemaExt
+
+/' ============================================
+   RELACIONES ENTRE CASOS DE USO
+   ============================================
+   Solo agregue estas relaciones si existen.
+   Si no hay relaciones entre casos de uso, elimine esta sección.
+'/
+
+/' Include: UC1 SIEMPRE incluye UC2 '/
+/' UC001 .> UC004 : <<include>> '/
+
+/' Extend: UC5 OPCIONALMENTE extiende UC001 bajo ciertas condiciones '/
+/' UC005 .> UC001 : <<extend>> '/
+
+/' Generalización: UC003 es especialización de UC001 '/
+/' UC003 --|> UC001 '/
+
+/' ============================================
+   NOTAS EXPLICATIVAS
+   ============================================
+   OPCIONAL: Agregue notas para clarificar elementos.
+   Útil para documentar decisiones o aclaraciones.
+'/
+
+note right of UC001
+  Descripción breve del caso de uso
+  si es necesario clarificar algo.
+
+  Ejemplo:
+  El actor primario es [Actor1].
+  [ActorSec] proporciona soporte.
+end note
+
+note left of UC003
+  Otra nota explicativa
+  si es necesario.
+end note
+
+/' ============================================
+   NOTAS GENERALES DEL DIAGRAMA
+   ============================================
+   OPCIONAL: Nota general sobre todo el diagrama
+'/
+
+note bottom
+  <b>Diagrama de Casos de Uso: [Nombre del Módulo]</b>
+
+  Versión: 1.0.0
+  Fecha: [YYYY-MM-DD]
+  Autor: [Nombre]
+
+  Este diagrama ilustra los casos de uso para [descripción del módulo].
+
+  <b>Convenciones</b>:
+  • Flecha Actor → UC: Actor primario (ejecuta)
+  • Flecha UC → Actor: Actor secundario (soporte)
+end note
+
+/' ============================================
+   EJEMPLOS DE USO
+   ============================================
+
+   EJEMPLO 1: Módulo de Autenticación
+
+   actor "Usuario" as usuario
+   actor "Administrador" as admin
+   actor "Sistema LDAP" as ldap
+
+   rectangle "Sistema IACT - Autenticación" {
+     usecase "Iniciar Sesión" as UC001
+     usecase "Cerrar Sesión" as UC002
+     usecase "Cambiar Contraseña" as UC003
+     usecase "Recuperar Contraseña" as UC004
+     usecase "Validar Credenciales" as UC005
+   }
+
+   usuario --> UC001
+   usuario --> UC002
+   usuario --> UC003
+   usuario --> UC004
+   admin --> UC003
+
+   UC001 --> ldap
+   UC005 --> ldap
+
+   UC001 .> UC005 : <<include>>
+   UC003 .> UC005 : <<include>>
+
+   ============================================
+
+   EJEMPLO 2: Módulo de Gestión de Químicos
+
+   actor "Solicitante" as solicitante
+   actor "Comprador" as comprador
+   actor "Sistema de Inventario" as inventario
+
+   rectangle "Sistema IACT - Gestión de Químicos" {
+     usecase "Solicitar Producto Químico" as UC001
+     usecase "Aprobar Solicitud" as UC002
+     usecase "Consultar Disponibilidad" as UC003
+   }
+
+   solicitante --> UC001
+   comprador --> UC002
+
+   UC001 --> inventario
+   UC002 --> inventario
+
+   UC001 .> UC003 : <<include>>
+
+   ============================================
+'/
+
+@enduml

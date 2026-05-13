@@ -1,0 +1,59 @@
+# BABOK — Business Analysis Body of Knowledge
+# type: non-sequential
+# 6 knowledge areas sin orden fijo. El coordinator selecciona el área según el
+# contexto del proyecto y las necesidades del stakeholder en cada momento.
+
+id: ba
+type: non-sequential
+display: "BABOK — Business Analysis Body of Knowledge"
+note: >
+  Las 6 knowledge areas de BABOK no tienen un orden prescrito — el coordinator
+  selecciona el área más relevante según el contexto actual del proyecto.
+  Business Analysis Planning & Monitoring y Elicitation típicamente preceden
+  a las demás, pero no es un requisito estricto.
+  El coordinator presenta las áreas disponibles y el analista/usuario elige
+  qué trabajar en función del estado del proyecto.
+
+native_phase_count: 6
+produces:
+  - BA Plan + Stakeholder Engagement Plan
+  - Elicitation Results + Stakeholder Collaboration Records
+  - Requirements Traceability Matrix + Change Log
+  - Business Need + Change Strategy
+  - Requirements Specification + Design Options
+  - Solution Evaluation Report + Value Recommendations
+consumes:
+  - organizational-context
+  - stakeholder-needs
+  - existing-solutions
+
+areas:
+  - id: ba:planning
+    display: "BA Planning & Monitoring — Planificar y monitorear actividades de BA"
+    tasks: ["Plan BA Approach", "Plan Stakeholder Engagement", "Plan BA Governance", "Plan Information Management", "Identify BA Performance Improvements"]
+    output: "BA Plan con approach, stakeholders y métricas de desempeño"
+
+  - id: ba:elicitation
+    display: "Elicitation & Collaboration — Obtener y confirmar información"
+    tasks: ["Prepare for Elicitation", "Conduct Elicitation", "Confirm Elicitation Results", "Communicate BA Information", "Manage Stakeholder Collaboration"]
+    output: "Resultados de elicitación confirmados y comunicados"
+
+  - id: ba:requirements-lifecycle
+    display: "Requirements Lifecycle Management — Gestionar trazabilidad y cambios"
+    tasks: ["Trace Requirements", "Maintain Requirements", "Prioritize Requirements", "Assess Requirements Changes", "Approve Requirements"]
+    output: "Requisitos trazados, priorizados y bajo control de cambios"
+
+  - id: ba:strategy
+    display: "Strategy Analysis — Analizar contexto y definir necesidades del negocio"
+    tasks: ["Analyze Current State", "Define Future State", "Assess Risks", "Define Change Strategy"]
+    output: "Business Need definida + Change Strategy aprobada"
+
+  - id: ba:requirements-analysis
+    display: "Requirements Analysis & Design Definition — Especificar y modelar"
+    tasks: ["Specify and Model Requirements", "Verify Requirements", "Validate Requirements", "Define Requirements Architecture", "Define Design Options", "Analyze Potential Value"]
+    output: "Requisitos especificados, verificados y validados + opciones de diseño"
+
+  - id: ba:solution-evaluation
+    display: "Solution Evaluation — Evaluar valor entregado por la solución"
+    tasks: ["Measure Solution Performance", "Analyze Performance Measures", "Assess Solution Limitations", "Assess Enterprise Limitations", "Recommend Actions to Increase Value"]
+    output: "Evaluación de valor con recomendaciones de mejora"

@@ -1,0 +1,528 @@
+{
+  "fecha_analisis": "2025-11-18",
+  "estructura_requerida": {
+    "descripcion": "Tipos de archivos de evidencia que cada TASK debe tener según el modelo de gobernanza",
+    "archivos_obligatorios": [
+      {
+        "nombre": "evidencia-ejecucion.md",
+        "descripcion": "Documento con comandos ejecutados, resultados, criterios de éxito, checklist y conclusiones",
+        "contenido_minimo": [
+          "Metadata (tarea, fecha_ejecucion, estado)",
+          "Timestamp (inicio, fin, duración)",
+          "Comandos ejecutados con sus resultados",
+          "Criterios de éxito cumplidos (checklist)",
+          "Checklist de finalización",
+          "Conclusiones y estado final"
+        ]
+      }
+    ],
+    "archivos_opcionales": [
+      {
+        "tipo": "Archivos de análisis",
+        "ejemplos": [
+          "ANALISIS-*.md",
+          "RESUMEN-*.md",
+          "VALIDACION-*.md"
+        ],
+        "uso": "Análisis detallados, validaciones self-consistency, CoT"
+      },
+      {
+        "tipo": "Archivos de mapeo",
+        "ejemplos": [
+          "MAPEO-*.md",
+          "CHECKLIST-*.md",
+          "INDEX.md"
+        ],
+        "uso": "Documentación de mapeos, índices y checklists específicos"
+      },
+      {
+        "tipo": "Archivos de resultados",
+        "ejemplos": [
+          "*.txt",
+          "checksums-*.txt",
+          "validacion-*.txt"
+        ],
+        "uso": "Resultados de validaciones, checksums, listas de archivos"
+      },
+      {
+        "tipo": "Archivos específicos",
+        "ejemplos": [
+          "backup-commit-hash.txt",
+          "scripts-created.txt"
+        ],
+        "uso": "Evidencias específicas del tipo de tarea (backups, scripts, etc.)"
+      }
+    ]
+  },
+  "tasks_sin_evidencias": [
+    {
+      "nombre": "TASK-REORG-INFRA-001-crear-backup-completo",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-001-crear-backup-completo",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-002-crear-estructura-carpetas-nuevas",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-002-crear-estructura-carpetas-nuevas",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-013-mover-archivos-arquitectura",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-013-mover-archivos-arquitectura",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-014-mover-archivos-procedimientos",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-014-mover-archivos-procedimientos",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-015-mover-archivos-qa",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-015-mover-archivos-qa",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-017-completar-readmes-vacios",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-017-completar-readmes-vacios",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-018-actualizar-enlaces-archivos-movidos",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-018-actualizar-enlaces-archivos-movidos",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-019-crear-indice-adrs",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-019-crear-indice-adrs",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-020-validar-estructura-post-fase2",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-020-validar-estructura-post-fase2",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-021-eliminar-archivos-duplicados",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-021-eliminar-archivos-duplicados",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-022-mover-archivos-raiz",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-022-mover-archivos-raiz",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-023-actualizar-enlaces-archivos-movidos",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-023-actualizar-enlaces-archivos-movidos",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-024-validar-reorganizacion-raiz",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-024-validar-reorganizacion-raiz",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-025-actualizar-readme-procedimientos",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-025-actualizar-readme-procedimientos",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-026-actualizar-readme-devops",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-026-actualizar-readme-devops",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-027-actualizar-readme-checklists",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-027-actualizar-readme-checklists",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-028-actualizar-readme-solicitudes",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-028-actualizar-readme-solicitudes",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-029-crear-indice-adrs",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-029-crear-indice-adrs",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-030-validar-estructura-adr",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-030-validar-estructura-adr",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-032-crear-adr-infra-002-pipeline-cicd",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-032-crear-adr-infra-002-pipeline-cicd",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-033-crear-adr-infra-003-podman-vs-docker",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-033-crear-adr-infra-003-podman-vs-docker",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-034-crear-adr-infra-004-networking",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-034-crear-adr-infra-004-networking",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-035-crear-adr-infra-005-secretos",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-035-crear-adr-infra-005-secretos",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-036-crear-adr-infra-006-cpython",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-036-crear-adr-infra-006-cpython",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-037-crear-adr-infra-007-dual-database",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-037-crear-adr-infra-007-dual-database",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-038-validar-adrs",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-038-validar-adrs",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-039-crear-proc-infra-001-gestion-vms",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-039-crear-proc-infra-001-gestion-vms",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-044-crear-proced-infra-001-provision-vm",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-044-crear-proced-infra-001-provision-vm",
+      "archivos_evidencias": [],
+      "total_archivos": 0,
+      "razon": "No tiene carpeta evidencias o solo contiene .gitkeep",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    }
+  ],
+  "tasks_con_evidencias_parciales": [
+    {
+      "nombre": "TASK-REORG-INFRA-004-mapeo-migracion-documentos",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-004-mapeo-migracion-documentos",
+      "archivos_evidencias": [
+        "PROCESO-AUTO-COT-SELF-CONSISTENCY.md"
+      ],
+      "total_archivos": 1,
+      "razon": "Tiene archivos de evidencia pero falta evidencia-ejecucion.md",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-005-herramientas-validacion",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-005-herramientas-validacion",
+      "archivos_evidencias": [
+        "test-results.md",
+        "scripts-created.txt"
+      ],
+      "total_archivos": 2,
+      "razon": "Tiene archivos de evidencia pero falta evidencia-ejecucion.md",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-006-consolidar-diseno-arquitectura",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-006-consolidar-diseno-arquitectura",
+      "archivos_evidencias": [
+        "RESUMEN-EJECUTIVO.md",
+        "VALIDACION-SELF-CONSISTENCY.md",
+        "MAPEO-ARCHIVOS-ARQUITECTURA.md",
+        "ESPECIFICACION-TECNICA-CONSOLIDACION.md",
+        "INDEX.md",
+        "GUIA-IMPLEMENTACION-RAPIDA.md"
+      ],
+      "total_archivos": 6,
+      "razon": "Tiene archivos de evidencia pero falta evidencia-ejecucion.md",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-007-consolidar-diseno-detallado",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-007-consolidar-diseno-detallado",
+      "archivos_evidencias": [
+        "CHECKLIST-COMPLETITUD.md",
+        "ANALISIS-SELF-CONSISTENCY.md",
+        "ARCHIVOS-CANDIDATOS.md"
+      ],
+      "total_archivos": 3,
+      "razon": "Tiene archivos de evidencia pero falta evidencia-ejecucion.md",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-008-canvas-devcontainer-host",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-008-canvas-devcontainer-host",
+      "archivos_evidencias": [
+        "resumen-ejecucion.md",
+        "canvas-validation-report.md",
+        "INDEX.md",
+        "auto-cot-analysis.md"
+      ],
+      "total_archivos": 4,
+      "razon": "Tiene archivos de evidencia pero falta evidencia-ejecucion.md",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-009-canvas-pipeline-cicd-devcontainer",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-009-canvas-pipeline-cicd-devcontainer",
+      "archivos_evidencias": [
+        "resumen-ejecucion.md",
+        "canvas-validation-report.md",
+        "INDEX.md"
+      ],
+      "total_archivos": 3,
+      "razon": "Tiene archivos de evidencia pero falta evidencia-ejecucion.md",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-010-consolidar-diseno-database",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-010-consolidar-diseno-database",
+      "archivos_evidencias": [
+        "RESTRICCIONES-CRITICAS-DATABASE.md",
+        "DOCUMENTOS-DATABASE-IDENTIFICADOS.md",
+        "INFRASTRUCTURE-BOX-DATABASE-INVENTORY.md",
+        "FASE-1-RESUMEN-EJECUTIVO.md"
+      ],
+      "total_archivos": 4,
+      "razon": "Tiene archivos de evidencia pero falta evidencia-ejecucion.md",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-011-consolidar-planificacion",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-011-consolidar-planificacion",
+      "archivos_evidencias": [
+        "GUIA-CONVENCIONES-PLANES.md",
+        "CHECKLIST-EJECUCION.md",
+        "ANALISIS-PLANIFICACION-DISPERSA.md"
+      ],
+      "total_archivos": 3,
+      "razon": "Tiene archivos de evidencia pero falta evidencia-ejecucion.md",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-012-reorganizar-sesiones",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-012-reorganizar-sesiones",
+      "archivos_evidencias": [
+        "VALIDACION_SELF_CONSISTENCY.md",
+        "MAPEO_MIGRACION_NOMENCLATURA.md",
+        "RESUMEN_CREACION_TASK.md",
+        "ANALISIS_SESIONES_EXISTENTES.md",
+        "PLANTILLA_SESION_ESTANDAR.md"
+      ],
+      "total_archivos": 5,
+      "razon": "Tiene archivos de evidencia pero falta evidencia-ejecucion.md",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-016-eliminar-duplicados",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-016-eliminar-duplicados",
+      "archivos_evidencias": [
+        "referencias-index.txt",
+        "RESUMEN-EJECUCION.md",
+        "referencias-spec.txt",
+        "ANALISIS-DUPLICADOS.md",
+        "checksums-pre.txt",
+        "validacion-post.txt"
+      ],
+      "total_archivos": 6,
+      "razon": "Tiene archivos de evidencia pero falta evidencia-ejecucion.md",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    },
+    {
+      "nombre": "TASK-REORG-INFRA-031-crear-adr-infra-001-vagrant-devcontainer",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-031-crear-adr-infra-001-vagrant-devcontainer",
+      "archivos_evidencias": [
+        "validacion-completitud.md"
+      ],
+      "total_archivos": 1,
+      "razon": "Tiene archivos de evidencia pero falta evidencia-ejecucion.md",
+      "archivos_faltantes": [
+        "evidencia-ejecucion.md"
+      ]
+    }
+  ],
+  "tasks_con_evidencias_completas": [
+    {
+      "nombre": "TASK-REORG-INFRA-003-crear-readmes-carpetas-nuevas",
+      "ruta": "/home/user/IACT/docs/infrastructure/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/TASK-REORG-INFRA-003-crear-readmes-carpetas-nuevas",
+      "archivos_evidencias": [
+        "validacion-readmes.md",
+        "TAREA-COMPLETADA.md",
+        "readmes-creados.txt"
+      ],
+      "total_archivos": 3,
+      "razon": "Tiene evidencia-ejecucion.md o TAREA-COMPLETADA.md"
+    }
+  ],
+  "resumen_estadistico": {
+    "total_tasks": 40,
+    "sin_evidencias": {
+      "cantidad": 28,
+      "porcentaje": 70.0
+    },
+    "parciales": {
+      "cantidad": 11,
+      "porcentaje": 27.5
+    },
+    "completas": {
+      "cantidad": 1,
+      "porcentaje": 2.5
+    }
+  }
+}

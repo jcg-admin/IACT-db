@@ -1,0 +1,66 @@
+---
+nombre: Nombre descriptivo del patrón (verbo + sustantivo si es procedural, sustantivo si es regla)
+problema: Una frase del problema que resuelve este patrón
+categoria: [Infraestructura|Agentes|Git|Migración|Referencias|Metodología|Configuración]
+mejor_para: Contexto de uso óptimo — cuándo este patrón da los mejores resultados
+origen: FASE N o "múltiples FASEs"
+fecha: YYYY-MM-DD
+confianza: [Alta|Media|Emergente]  # Alta=validado ≥2 veces en contextos distintos; Emergente=primera ocurrencia
+---
+
+## Problema
+
+Descripción del problema que ocurre **sin** este patrón. Incluir ejemplo concreto
+del comportamiento problemático — "sin este patrón, pasa X" (verificable, no aspiracional).
+
+## Solución (el Patrón)
+
+Descripción concisa de la solución. Una o dos oraciones que cualquiera pueda
+recordar y aplicar sin releer el documento completo.
+
+```
+[Representación visual del patrón si aplica: flujo, tabla, diagram]
+```
+
+## Implementación
+
+Pasos concretos, código o configuración de ejemplo. Si hay variantes, documentar
+cada una con su condición de uso.
+
+```bash
+# Código o comandos de ejemplo
+```
+
+### [Sub-sección opcional por variante o herramienta]
+
+[Implementación específica para el contexto X]
+
+## Cuándo Aplicar
+
+Condiciones que indican que este patrón es relevante:
+
+- [Señal concreta 1]
+- [Señal concreta 2]
+
+## Cuándo NO Aplicar
+
+Excepciones o casos donde el patrón no aplica o sería contraproducente:
+
+- [Caso límite 1: por qué no aplica]
+- [Caso límite 2: ...]
+
+## Nivel de Confianza
+
+<!-- Omitir si confianza=Alta y evidencia es obvia -->
+
+| Aspecto | Confianza | Evidencia |
+|---------|-----------|-----------|
+| Efectividad | [Alta/Media/Baja] | [FASEs donde se validó] |
+| Generalización | [Alta/Media/Baja] | [Contextos probados vs pendientes] |
+
+## Referencias
+
+- Lección origen: `[lessons/nombre-leccion.md]`
+- WP: `.thyrox/context/work/[wp-id]/`
+- Commits relevantes: `[type(scope): descripción]`
+- Enforcement automático si aplica: `[script o hook]`

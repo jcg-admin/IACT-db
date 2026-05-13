@@ -1,0 +1,4041 @@
+{
+  "summary": {
+    "total_scripts": 145,
+    "average_score": 92.04137931034482,
+    "total_issues": 503,
+    "constitutional_violations": 116,
+    "security_issues": 387,
+    "quality_issues": 0
+  },
+  "issues": {
+    "constitutional": [
+      {
+        "file": "exit_codes.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "check_csrf_protection.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 73,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "check_csrf_protection.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 87,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "lightweight_venv.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 65,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "validator.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 154,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "validator.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 160,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "validator.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 197,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "validator.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 201,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "build_cpython.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 237,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "fix_db_connectivity.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "deploy.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 260,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "logger.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 102,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "vagrant_setup_example.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "check_docs_old_references.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 51,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "check_docs_old_references.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 83,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "cleanup.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 86,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "cleanup.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 115,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "cleanup.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 172,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "post_start.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 356,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "post_start.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 359,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "post_start.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 362,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "post_start.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 365,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "post_start.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 368,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "check_sql_injection.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 61,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "check_sql_injection.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 75,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "check_sql_injection.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 86,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "check_sql_injection.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 100,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "python.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "core.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "logging.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "common.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "on_create.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 285,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "on_create.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 388,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "on_create.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 391,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "on_create.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 394,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "on_create.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 397,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "on_create.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 400,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "on_create.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 403,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "on_create.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 406,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "check_guides_broken_links.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 46,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "validate-naming-compliance.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "demo.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 77,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "demo.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 107,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "demo.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 136,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "demo.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 160,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "demo.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 187,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "system_prepare.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 25,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "system_prepare.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 185,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "system_prepare.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 186,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "system_prepare.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 189,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "check_xss_protection.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 57,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "check_xss_protection.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 88,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "validate_security_config.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 44,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "mariadb_install.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 186,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "mariadb_install.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 262,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "mariadb_install.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 263,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "mariadb_install.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 298,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "mariadb_install.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 350,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "mariadb_install.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 354,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "mariadb_install.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 358,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "mariadb_install.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 359,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "mariadb_install.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 362,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "update_content.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 460,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "update_content.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 463,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "update_content.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 466,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "update_content.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 469,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "update_content.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 472,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "update_content.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 475,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "update_content.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 478,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "database_postgres.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "security_scan.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 124,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "security_scan.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 139,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 91,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 93,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 101,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 162,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 171,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "library_template.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "post_create.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 420,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "post_create.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 423,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "post_create.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 426,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "post_create.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 429,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "post_create.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 432,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "post_create.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 435,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "post_create.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 438,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "test-execution-time.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 50,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "seed_data.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "validation.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "install-cassandra.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 55,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "run_all_use_cases.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "database.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "ver_documentacion.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 193,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "ver_documentacion.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 225,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "validate_critical_restrictions.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 76,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "postgres_install.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 118,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "postgres_install.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 119,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "postgres_install.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 223,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "postgres_install.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 299,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "postgres_install.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 300,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "postgres_install.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 333,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "verificar_servicios.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "database_mariadb.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "listar_requisitos.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "validar_estructura_docs.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "validar_estructura_docs.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 103,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "validar_estructura_docs.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 118,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "verify_connections_.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "verify_connections.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "state_manager.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 214,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "state_manager.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 281,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "check_email_usage.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 53,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "bootstrap.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 330,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "bootstrap.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 331,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "contar_requisitos.sh",
+        "rule": "3",
+        "severity": "critical",
+        "line": null,
+        "description": "Missing 'set -e' or 'set -euo pipefail'",
+        "recommendation": "Add 'set -euo pipefail' at the beginning of the script"
+      },
+      {
+        "file": "backup_data_centralization.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 114,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      },
+      {
+        "file": "backup_data_centralization.sh",
+        "rule": "3",
+        "severity": "high",
+        "line": 115,
+        "description": "Silent error handling with '|| true'",
+        "recommendation": "Use explicit error handling instead"
+      }
+    ],
+    "security": [
+      {
+        "file": "validate-scripts.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-scripts.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-scripts.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-scripts.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_compliance_checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_compliance_checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_compliance_checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_compliance_checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_compliance_checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_compliance_checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_compliance_checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "example_ci_integration.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "setup_mariadb_database.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "setup_mariadb_database.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "setup_mariadb_database.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "setup_mariadb_database.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "setup_mariadb_database.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "cleanup_sessions.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "cleanup_sessions.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-secrets-enhanced.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-secrets-enhanced.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-secrets-enhanced.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-secrets-enhanced.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-secrets-enhanced.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-secrets-enhanced.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-secrets-enhanced.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-secrets-enhanced.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-secrets-enhanced.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-secrets-enhanced.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-secrets-enhanced.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-secrets-enhanced.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_unit_tests.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_unit_tests.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "update_version.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "update_version.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "update_version.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "update_version.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "update_version.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "update_version.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "update_version.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "update_version.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validator.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validator.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validator.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-hardware-requirements.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-hardware-requirements.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-hardware-requirements.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-hardware-requirements.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "csrf-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "csrf-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "csrf-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "quickstart.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "quickstart.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "quickstart.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "quickstart.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "quickstart.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "quickstart.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "quickstart.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "build_cpython.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "build_cpython.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "build_cpython.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "setup_postgres_database.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "setup_postgres_database.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "setup_postgres_database.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "setup_postgres_database.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "setup_postgres_database.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "setup_postgres_database.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "setup_postgres_database.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "fix_db_connectivity.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "logger.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "cleanup.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "cleanup.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "cleanup.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "cleanup.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "cleanup.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "cleanup.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "post_start.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "post_start.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "post_start.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "python.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "python.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "python.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "python.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "python.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "python.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "python.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "python.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "python.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "python.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "python.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_guides_frontmatter.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_guides_frontmatter.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "install_hooks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "install_hooks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "core.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "core.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "core.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "check_all.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "check_all.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "on_create.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "on_create.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "on_create.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "on_create.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "on_create.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "on_create.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "on_create.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "on_create.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "backup_cassandra.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run-all-gates.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run-all-gates.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run-all-gates.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "pre-up-validations.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "pre-up-validations.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "pre-up-validations.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "pre-up-validations.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "pre-up-validations.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "pre-up-validations.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "pre-up-validations.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "pre-up-validations.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "pre-up-validations.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "pre-up-validations.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "pre-up-validations.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "pre-up-validations.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "pre-up-validations.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "check_guides_broken_links.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "check_guides_broken_links.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-naming-compliance.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-naming-compliance.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-naming-compliance.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-naming-compliance.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-naming-compliance.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-naming-compliance.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-naming-compliance.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-naming-compliance.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-naming-compliance.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "health-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "health-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "health-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "health-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "health-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "health-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "health-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "health-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "health-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "health-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "health-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "health-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "reorganizar_docs_por_dominio.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "network.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "network.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "network.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "network.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "network.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "network.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "network.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "network.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "network.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "network.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "cleanup_branches.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_frontmatter.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_frontmatter.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_frontmatter.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_frontmatter.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-docker.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-docker.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-docker.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-docker.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-docker.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "get_next_version.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "get_next_version.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "get_next_version.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_tests.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_tests.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_tests.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_tests.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_tests.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_tests.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_tests.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_tests.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_autogenerated_docs.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_autogenerated_docs.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "system_prepare.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "system_prepare.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "system_prepare.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "system_prepare.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "system_prepare.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "system_prepare.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "system_prepare.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "system_prepare.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "system_prepare.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "system_prepare.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "system_prepare.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "system_prepare.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "system_prepare.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "system_prepare.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_security_config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_security_config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_security_config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_security_config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_security_config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_security_config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_security_config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_security_config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_security_config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_security_config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_security_config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_security_config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_security_config.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "mariadb_install.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "mariadb_install.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "mariadb_install.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "mariadb_install.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-environment-files.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "update_content.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "update_content.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "update_content.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "update_content.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "update_content.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "test_pyramid_check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "test_pyramid_check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "test_pyramid_check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "test_pyramid_check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "test_pyramid_check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "test_pyramid_check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "test_pyramid_check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "generate_plan.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_shell_constitution.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "init_host.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "init_host.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run-all-checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run-all-checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run-all-checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run-all-checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run-all-checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_guides_structure.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_guides_structure.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "backup_mysql.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "library_template.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "library_template.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_security_checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_security_checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_security_checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_security_checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_security_checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "run_all_security_checks.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "setup-cron-jobs.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "post_create.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "test-execution-time.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "test-execution-time.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "test-execution-time.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "test-pyramid.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validation.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validation.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "django-security-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "django-security-check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "complete_sync.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "complete_sync.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_build.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "ver_documentacion.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "test_dr.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "test_dr.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "test_dr.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_critical_restrictions.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_critical_restrictions.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_critical_restrictions.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_critical_restrictions.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_critical_restrictions.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_critical_restrictions.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_critical_restrictions.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate_critical_restrictions.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "postgres_install.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "postgres_install.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "postgres_install.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "postgres_install.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "postgres_install.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "name_parser.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "name_parser.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "name_parser.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "name_parser.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "name_parser.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "name_parser.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "example_single_file.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "health_check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "health_check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "health_check.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "verify_connections_.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "verify_connections_.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "verify_connections_.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "verify_connections_.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "verify_connections.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "verify_connections.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "verify_connections.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "verify_connections.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "verify_connections.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "verify_connections.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-software-dependencies.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-software-dependencies.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-software-dependencies.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "state_manager.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "state_manager.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "state_manager.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "state_manager.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "state_manager.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "state_manager.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "state_manager.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "state_manager.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "validate-environment.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "simple_load_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "simple_load_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "simple_load_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "simple_load_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "simple_load_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "simple_load_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "simple_load_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "bootstrap.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "bootstrap.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "contar_requisitos.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "backup_data_centralization.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "backup_data_centralization.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "retry_handler.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "retry_handler.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "retry_handler.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "retry_handler.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "retry_handler.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "retry_handler.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "retry_handler.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "retry_handler.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "retry_handler.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "retry_handler.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "retry_handler.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "retry_handler.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "retry_handler.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "bootstrap_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "bootstrap_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "bootstrap_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "bootstrap_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "bootstrap_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "bootstrap_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "bootstrap_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "bootstrap_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      },
+      {
+        "file": "bootstrap_test.sh",
+        "type": "potential_command_injection",
+        "severity": "high",
+        "line": 0,
+        "cwe": "CWE-78",
+        "description": "Unquoted variable in command substitution"
+      }
+    ],
+    "quality": []
+  }
+}

@@ -1,0 +1,31 @@
+# [Nombre del Documento]
+
+```yml
+created_at: YYYY-MM-DD HH:MM:SS
+project: [Nombre]
+work_package: YYYY-MM-DD-HH-MM-SS-nombre
+phase: Phase 7 — DESIGN/SPECIFY
+author: [Nombre]
+status: Borrador
+```
+
+## Propósito
+
+[Qué problema resuelve este documento]
+
+## Requisitos
+
+### Funcionales
+
+| ID | Descripción | Prioridad |
+|----|-------------|-----------|
+| RF-001 | [Descripción] | Alta/Media/Baja |
+
+### No funcionales
+
+[Lista de restricciones de calidad, rendimiento, seguridad]
+
+## Criterios de aceptación
+
+- [ ] [Criterio verificable 1]
+- [ ] [Criterio verificable 2]

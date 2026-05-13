@@ -1,0 +1,38 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+type: docs
+Sección documentada: [Nombre/ruta]
+docs_version: [1.0]
+author: [Nombre]
+docs_files: [N]
+Ejemplos añadidos: [N]
+reviewer: [Nombre]
+status: [Borrador/Publicado]
+```
+
+docs(scope): short description of documentation changes
+
+Explain what documentation was added/updated:
+- New sections added
+- Existing sections updated
+- Removed outdated content
+- Improved clarity or examples
+
+Type of documentation:
+- README: [yes/no]
+- API documentation: [yes/no]
+- Architecture guides: [yes/no]
+- Setup instructions: [yes/no]
+- Examples/tutorials: [yes/no]
+- Comments/docstrings: [yes/no]
+
+Files affected:
+- [file 1]: brief description
+- [file 2]: brief description
+
+Examples:
+docs(readme): add installation and quick start guide
+docs(api): document all endpoints with examples
+docs(contribute): update contribution guidelines
+docs(setup): add troubleshooting section
+docs(code): improve docstrings in auth module

@@ -1,0 +1,86 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+work_package: [YYYY-MM-DD-HH-MM-SS-nombre]
+current_phase: Phase 12 — STANDARDIZE
+author: [Nombre]
+status: Borrador
+patterns_count: [N]
+```
+
+# Patterns: [Nombre del Work Package]
+
+## Propósito
+
+Documentar los patrones reutilizables emergidos durante este WP para que future work packages los adopten como estándar.
+
+> Un patrón no es "lo que hicimos" — es "por qué funciona y cuándo aplicarlo".
+
+---
+
+## Patrones identificados
+
+### PAT-001: [Nombre del patrón]
+
+**Contexto**: [Situación donde este patrón aplica]
+
+**Problema**: [Qué dificultad resuelve]
+
+**Solución**: [Descripción concreta del patrón — estructura, relaciones, mecanismo]
+
+**Consecuencias**:
+- ✓ [Beneficio 1]
+- ✓ [Beneficio 2]
+- ✗ [Trade-off o limitación conocida]
+
+**Cuándo NO aplicar**: [Condiciones donde este patrón sería contraproducente]
+
+**Ejemplo**:
+
+```
+[Código, configuración, o pseudocódigo que ilustra el patrón]
+```
+
+**Origen**: WP `[nombre-wp]`, [fecha]
+
+---
+
+### PAT-002: [Nombre del patrón]
+
+[Repetir estructura]
+
+---
+
+## Decisiones convertidas en estándar
+
+| Decisión original | Patrón resultante | ADR de referencia |
+|-------------------|------------------|-------------------|
+| [Decisión tomada en este WP] | [PAT-NNN] | [adr-nombre.md] |
+
+---
+
+## Checklists de adopción
+
+> Para que un futuro WP adopte estos patrones, verificar:
+
+### PAT-001
+- [ ] [Precondición 1]
+- [ ] [Precondición 2]
+- [ ] [Cómo verificar que el patrón está bien aplicado]
+
+---
+
+## Patrones descartados
+
+| Patrón considerado | Razón de descarte |
+|--------------------|--------------------|
+| [Patrón alternativo evaluado] | [Por qué no se adoptó] |
+
+---
+
+## Próxima revisión
+
+Estos patrones deben revisarse cuando:
+- [ ] [Condición que invalidaría PAT-001]
+- [ ] Cambia la versión mayor de [dependencia crítica]
+- [ ] Se incorpora un nuevo dominio que no estaba cubierto

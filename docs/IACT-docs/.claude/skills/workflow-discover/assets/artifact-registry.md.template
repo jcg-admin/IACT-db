@@ -1,0 +1,75 @@
+# Artifact Registry — {{WP_NAME}}
+
+> Registro de artefactos producidos por coordinators de metodología activos en este WP.
+> Permite la coordinación entre coordinators cuando se combinan metodologías.
+
+```yml
+created_at: {{CREATED_AT}}
+project: {{PROJECT_NAME}}
+work_package: {{WP_ID}}
+phase: Phase 1 — DISCOVER
+author: {{AUTHOR}}
+status: Activo
+```
+
+---
+
+## Artefactos disponibles
+
+| Artefacto | Coordinator | Paso | Fecha | Estado |
+|-----------|-------------|------|-------|--------|
+| _(ninguno aún)_ | — | — | — | — |
+
+---
+
+## Plantilla de entrada
+
+Al completar cada paso de un coordinator, agregar una fila:
+
+```
+| nombre-del-artefacto.md | lean-coordinator | lean:control | YYYY-MM-DD | ready |
+```
+
+**Estados:**
+- `in-progress` — el coordinator está trabajando en este artefacto
+- `ready` — artefacto completo, disponible para consumo por otros coordinators
+- `consumed-by:{coordinator}` — otro coordinator lo usó como input
+
+---
+
+## Dependencias entre coordinators
+
+Cuando se combinan metodologías, documentar aquí qué consume qué:
+
+| Coordinator consumidor | Artefacto requerido | Producido por | Disponible |
+|------------------------|---------------------|---------------|------------|
+| _(vacío hasta que haya combinación activa)_ | — | — | — |
+
+---
+
+## Patrones de combinación activos
+
+Seleccionar los patrones aplicables a este WP:
+
+- [ ] **BPA → Lean**: BPA produce As-Is BPMN → Lean consume process-scope
+- [ ] **DMAIC → Lean**: DMAIC produce Baseline Data → Lean consume waste-observations
+- [ ] **SP → CP**: SP produce Strategic Plan → CP consume sponsor-brief
+- [ ] **RM → RUP**: RM produce Requirements Baseline → RUP consume stakeholder-requirements
+- [ ] **BA → PMBOK**: BA produce Business Need → PMBOK consume business-case
+
+---
+
+## Señales artifact-ready
+
+Cuando un coordinator completa y emite señal artifact-ready, registrar aquí:
+
+```
+[YYYY-MM-DD HH:MM] lean-coordinator COMPLETED
+  Artifacts produced:
+    - lean-define.md (Lean Charter + VOC)
+    - lean-measure.md (Current State VSM)
+    - lean-analyze.md (Future State VSM + Root Causes)
+    - lean-improve.md (Improvement Data pre/post)
+    - lean-control.md (SOPs + Visual Management)
+  Ready for: Stage 11 TRACK/EVALUATE
+```

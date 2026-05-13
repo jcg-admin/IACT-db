@@ -1,0 +1,60 @@
+---
+id: L-[interno — no es el nombre del archivo]
+titulo: Una frase que describe el aprendizaje (qué pasó y qué se aprendió)
+categoria: [Infraestructura|Referencias|Configuración|Agentes|Git|Metodología]
+condicion: Breve descripción del contexto donde aplica esta lección (cuándo activarla)
+origen_wp: YYYY-MM-DD-HH-MM-SS-nombre-del-wp
+origen_fase: FASE N
+fecha: YYYY-MM-DD
+---
+
+## Contexto
+
+Qué estábamos haciendo cuando ocurrió. El estado del sistema y la tarea en
+curso — suficiente para que alguien sin contexto pueda entender por qué la
+situación era posible.
+
+## Qué Pasó
+
+El evento concreto: bug, error, descubrimiento, comportamiento inesperado.
+Incluir evidencia observable (output de herramienta, mensaje de error, síntoma
+visible). Sin esta evidencia, la lección es descriptiva, no accionable.
+
+## Causa Raíz
+
+Por qué ocurrió — la condición subyacente, no solo el síntoma. Responde:
+¿qué decisión, omisión o asunción incorrecta lo permitió?
+
+## Solución Aplicada
+
+Qué se cambió para resolver o evitar la recurrencia. Incluir código o
+configuración concreta si aplica. Si hay patrón derivado, referenciar aquí.
+
+## Regla
+
+> Cuando [condición de aplicación], hacer [acción específica] porque [razón].
+
+La regla debe ser verificable: alguien debe poder decir "esto aplica / no aplica
+a mi situación" sin ambigüedad. Evitar formas aspiracionales ("escribir buen código").
+
+## Cuándo Aplica
+
+Contexto concreto donde esta lección es relevante:
+
+- [Condición 1: acción o situación específica que activa esta lección]
+- [Condición 2: ...]
+
+## Cuándo NO Aplica
+
+Excepciones explícitas — cuándo seguir esta lección sería un error:
+
+- [Caso donde la lección no aplica o sería contraproducente]
+- [...]
+
+## Referencias
+
+- WP: `.thyrox/context/work/[wp-id]/`
+- Commit relacionado: `[type(scope): descripción]`
+- ADR si aplica: `[adr-tema.md]`
+- Patrón derivado si aplica: `[patterns/nombre-patron.md]`
+- Lección relacionada si aplica: `[lessons/nombre-leccion.md]`

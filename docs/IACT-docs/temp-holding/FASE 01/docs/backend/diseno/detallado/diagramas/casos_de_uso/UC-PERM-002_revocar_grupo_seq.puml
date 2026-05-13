@@ -1,0 +1,111 @@
+@startuml UC-PERM-002 Revocar Grupo Sequence
+!theme plain
+title UC-PERM-002: Revocar Grupo de Permisos a Usuario\nFlujo Principal
+
+actor "Administrador" as admin
+participant "UI\nFrontend" as ui
+participant "API\nBackend" as api
+participant "Permission\nDecorator" as decorator
+participant "Usuario\nGrupo Service" as service
+database "PostgreSQL" as db
+participant "Cache\nRedis" as cache
+participant "Notification\nService" as notif
+
+== Fase 1: Navegación y Selección ==
+
+admin -> ui: Accede a gestión de usuarios
+activate ui
+ui -> api: GET /api/usuarios/
+activate api
+api -> db: SELECT * FROM usuarios
+db --> api: Lista de usuarios
+api --> ui: HTTP 200: usuarios[]
+deactivate api
+ui --> admin: Muestra lista de usuarios
+deactivate ui
+
+admin -> ui: Selecciona usuario #123
+activate ui
+ui -> api: GET /api/usuarios/123/grupos/
+activate api
+api -> db: SELECT * FROM usuarios_grupos\nWHERE usuario_id=123 AND activo=TRUE
+db --> api: Grupos activos
+api --> ui: HTTP 200: grupos[]
+deactivate api
+ui --> admin: Muestra grupos activos del usuario
+deactivate ui
+
+== Fase 2: Revocación ==
+
+admin -> ui: Selecciona grupo "Coordinadores" a revocar
+ui --> admin: Muestra modal de confirmación\ncon impacto (15 capacidades a perder)
+
+admin -> ui: Ingresa motivo: "Cambio de rol"
+admin -> ui: Confirma revocación
+
+ui -> api: DELETE /api/usuarios/123/grupos/5/\n{"motivo": "Cambio de rol"}
+activate api
+
+api -> decorator: @require_permission(\n  'sistema.administracion.usuarios.editar')
+activate decorator
+decorator -> db: SELECT usuario_tiene_permiso(1, '...')
+db --> decorator: TRUE
+decorator --> api: Permiso concedido
+deactivate decorator
+
+api -> service: revocar_grupo(usuario_id=123,\n  grupo_id=5, motivo="...")
+activate service
+
+== Fase 3: Actualización de BD ==
+
+service -> db: BEGIN TRANSACTION
+activate db
+
+service -> db: UPDATE usuarios_grupos\nSET activo=FALSE,\n  motivo_revocacion='...',\n  revocado_por_id=1\nWHERE usuario_id=123 AND grupo_id=5
+db --> service: 1 row updated
+
+service -> db: INSERT INTO auditoria_permisos\n(accion='REVOCAR_GRUPO', ...)
+db --> service: Auditoría registrada
+
+service -> db: COMMIT
+deactivate db
+
+== Fase 4: Invalidación de Cache ==
+
+service -> cache: DELETE permisos:user:123\nDELETE capacidades:user:123\nDELETE menu:user:123
+activate cache
+cache --> service: Cache invalidado
+deactivate cache
+
+== Fase 5: Notificación ==
+
+service -> notif: send_notification(\n  usuario_id=123,\n  tipo='PERMISO_REVOCADO',\n  detalle={grupo: 'Coordinadores', ...})
+activate notif
+notif --> service: Notificación enviada (async)
+deactivate notif
+
+service --> api: {success: true, capacidades_removidas: 15}
+deactivate service
+
+api --> ui: HTTP 200: {\n  "success": true,\n  "message": "Grupo revocado",\n  "capacidades_removidas": 15}
+deactivate api
+
+ui --> admin: Muestra confirmación de éxito
+deactivate ui
+
+== Fase 6: Usuario Afectado ==
+
+participant "Usuario\n#123" as user
+
+user -> ui: Intenta acceder a módulo\nque requería capacidad del grupo revocado
+activate ui
+ui -> api: GET /api/verificar/123/tiene-permiso/\n?capacidad=sistema.vistas.equipos.ver
+activate api
+api -> db: SELECT usuario_tiene_permiso(123, '...')
+db --> api: FALSE (ya no tiene el grupo)
+api --> ui: HTTP 200: {tiene_permiso: false}
+deactivate api
+ui --> user: Access Denied\n(redirige a /access-denied)
+deactivate ui
+
+@enduml

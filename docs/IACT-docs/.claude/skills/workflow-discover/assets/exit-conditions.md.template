@@ -1,0 +1,308 @@
+# Exit Conditions — 12 PHASES THYROX
+
+> **GATES ARE MANDATORY.** No avanzar si las condiciones no están cumplidas.
+> Si una condición no puede cumplirse: documentar POR QUÉ en un ADR antes de continuar.
+
+---
+
+## PHASE 1: DISCOVER
+
+**Objetivo:** Explorar contexto, stakeholders, síntomas. Crear WP + risk register.
+
+**Gate Stage 1→2 (o Stage 1→3/10 según tamaño):**
+- `entry_condition`: "WP creado con timestamp real; ningún artefacto de planificación existe aún"
+- `exit_threshold`: "discover/{nombre-wp}-analysis.md sin [NEEDS CLARIFICATION]; 8 aspectos documentados; USER APPROVAL obtenido"
+- `max_rework_iterations: 2` — si el gate no se aprueba en 2 intentos, escalar a decisión humana con resumen de intentos
+- `context_pruning_rule`: "descartar claims SPECULATIVE de esta fase que no tengan observable de origen antes de avanzar; claims Confianza=baja marcados como pendiente:re-verificar"
+
+**Exit Conditions:**
+- [ ] `discover/{nombre-wp}-analysis.md` existe sin `[NEEDS CLARIFICATION]`
+- [ ] `{nombre-wp}-risk-register.md` existe
+- [ ] Stopping Point Manifest documentado en analysis.md
+- [ ] 8 aspectos documentados: objetivo, stakeholders, uso operacional, calidad, restricciones, contexto, fuera de alcance, criterios de éxito
+- [ ] USER APPROVAL obtenido
+
+**Transition:** → Phase 2 MEASURE (complejo) | Phase 3 ANALYZE (mediano) | Phase 10 EXECUTE (micro)
+
+---
+
+## PHASE 2: MEASURE
+
+**Objetivo:** Establecer baseline cuantitativo y métricas de éxito.
+
+**Gate Stage 2→3:**
+- `entry_condition`: "discover/{nombre-wp}-analysis.md aprobado existe en el WP"
+- `exit_threshold`: "≥1 métrica de éxito con valor target definido y método de medición documentado; USER APPROVAL obtenido"
+- `max_rework_iterations: 2` — escalar a decisión humana si el gate no pasa en 2 intentos
+- `context_pruning_rule`: "claims de baseline sin fuente observable documentada no se heredan a Stage 3; marcar como pendiente:re-verificar o descartar"
+
+**Exit Conditions:**
+- [ ] `measure/{nombre-wp}-baseline.md` existe con datos cuantitativos
+- [ ] Al menos una métrica de éxito con valor target definido
+- [ ] Método de medición documentado
+- [ ] USER APPROVAL obtenido
+
+**Transition:** → Phase 3 ANALYZE
+
+---
+
+## PHASE 3: ANALYZE
+
+**Objetivo:** Análisis profundo de causa raíz por dominio.
+
+**Gate Stage 3→4:**
+- `entry_condition`: "discover/ con análisis aprobado existe en el WP"
+- `exit_threshold`: "≥3 claims OBSERVABLE en evidencia de respaldo; causa raíz trazable a observable; síntesis cross-domain existe; USER APPROVAL obtenido"
+- `max_rework_iterations: 3` — análisis puede requerir iteración; escalar a humano en 4to intento
+- `context_pruning_rule`: "claims heredados de Stage 1/2 con Confianza=baja y Origen=heredado: re-verificar con tool_use o descartar antes de incluir en síntesis"
+
+**Exit Conditions:**
+- [ ] `analyze/` tiene contenido por dominio relevante
+- [ ] Síntesis cross-domain existe (`analyze/{nombre-wp}-analyze-synthesis.md`)
+- [ ] Causas raíz identificadas (no solo síntomas)
+- [ ] `{nombre-wp}-risk-register.md` actualizado con hallazgos
+- [ ] USER APPROVAL obtenido
+
+**Transition:** → Phase 4 CONSTRAINTS
+
+---
+
+## PHASE 4: CONSTRAINTS
+
+**Objetivo:** Documentar restricciones que delimitan el espacio de soluciones.
+
+**Gate Stage 4→5:**
+- `entry_condition`: "analyze/ con síntesis aprobada existe; causas raíz identificadas"
+- `exit_threshold`: "restricciones HARD separadas de SOFT; espacio de soluciones permitido documentado positivamente; ADRs existentes revisados; USER APPROVAL obtenido"
+- `max_rework_iterations: 2` — escalar a humano si no pasa en 2 intentos
+- `context_pruning_rule`: "restricciones inferidas de análisis previo sin observable: marcar como INFERRED con cadena de razonamiento explícita o descartar"
+
+**Exit Conditions:**
+- [ ] `constraints/{nombre-wp}-constraints.md` existe
+- [ ] Restricciones HARD separadas de SOFT
+- [ ] ADRs existentes revisados
+- [ ] Espacio de soluciones permitido documentado positivamente
+- [ ] USER APPROVAL obtenido
+
+**Transition:** → Phase 5 STRATEGY
+
+---
+
+## PHASE 5: STRATEGY
+
+**Objetivo:** Diseñar la solución con alternativas investigadas.
+
+**Gate — Pre-Design:**
+- `entry_condition`: "constraints/{nombre-wp}-constraints.md aprobado existe"
+- `exit_threshold`: "cada decisión respeta ADRs existentes; unknowns investigados antes de decidir"
+- `max_rework_iterations: 2`
+- `context_pruning_rule`: "unknowns no investigados no pueden ser fundamento de decisiones de diseño"
+
+**Gate — Post-Design:**
+- `entry_condition`: "strategy/{nombre-wp}-solution-strategy.md borrador existe"
+- `exit_threshold`: "consistencia re-verificada con Phase 1 y Phase 4; alternativas descartadas documentadas; USER APPROVAL obtenido"
+- `max_rework_iterations: 2` — escalar a humano si no pasa en 2 iteraciones de post-design
+
+**Exit Conditions:**
+- [ ] `strategy/{nombre-wp}-solution-strategy.md` existe con 5 secciones obligatorias
+- [ ] Key Ideas, Research, Decisions documentados
+- [ ] Alternativas descartadas documentadas con razón
+- [ ] ADRs creados para decisiones arquitectónicas permanentes
+- [ ] USER APPROVAL obtenido
+
+**Transition:** → Phase 6 PLAN (mediano/grande) | Phase 10 EXECUTE (pequeño)
+
+---
+
+## PHASE 6: PLAN
+
+**Objetivo:** Definir scope con in-scope y out-of-scope explícitos.
+
+**Gate Stage 6→7:**
+- `entry_condition`: "strategy aprobada existe; ninguna decisión de scope contradice constraints/"
+- `exit_threshold`: "in-scope y out-of-scope explícitos; ROADMAP.md actualizado; USER APPROVAL obtenido"
+- `max_rework_iterations: 2`
+- `context_pruning_rule`: "scope items sin trazabilidad a strategy o constraints: descartar o re-documentar con origen"
+
+**Exit Conditions:**
+- [ ] `plan/{nombre-wp}-plan.md` existe con `[x] Scope aprobado`
+- [ ] In-scope: lista explícita
+- [ ] Out-of-scope: lista explícita con razón de cada exclusión
+- [ ] ROADMAP.md actualizado con el WP linkeado
+- [ ] Si hay RCs formales: tabla de trazabilidad RC→tarea incluida
+- [ ] USER APPROVAL obtenido
+
+**Transition:** → Phase 7 DESIGN/SPECIFY
+
+---
+
+## PHASE 7: DESIGN/SPECIFY
+
+**Objetivo:** Especificar exactamente qué se va a implementar.
+
+**Gate — Spec Quality:**
+- `entry_condition`: "plan/{nombre-wp}-plan.md aprobado existe con scope definido"
+- `exit_threshold`: "zero [NEEDS CLARIFICATION] sin resolver; cada SPEC tiene Given/When/Then; USER APPROVAL obtenido"
+- `max_rework_iterations: 3` — specs pueden requerir múltiples revisiones
+- `context_pruning_rule`: "specs con criterios de aceptación SPECULATIVE (sin medición posible): rechazar y re-escribir como INFERRED con umbral verificable"
+
+**Exit Conditions:**
+- [ ] `design/{nombre-wp}-requirements-spec.md` existe
+- [ ] SPEC-001..NNN documentados con criterios de aceptación
+- [ ] `design/{nombre-wp}-design.md` existe si WP es complejo
+- [ ] USER APPROVAL obtenido
+
+**Transition:** → Phase 8 PLAN EXECUTION
+
+---
+
+## PHASE 8: PLAN EXECUTION
+
+**Objetivo:** Descomponer en tareas atómicas ejecutables.
+
+**Gate Stage 8→9 o 8→10:**
+- `entry_condition`: "design/ o strategy/ aprobados existen; scope claro"
+- `exit_threshold`: "tareas T-NNN atómicas (15-30 min); DAG sin ciclos; trazabilidad SPEC→tarea completa; USER APPROVAL obtenido"
+- `max_rework_iterations: 2`
+- `context_pruning_rule`: "tareas sin trazabilidad a SPEC o scope aprobado: descartar o documentar origen"
+
+**Exit Conditions:**
+- [ ] `plan-execution/{nombre-wp}-task-plan.md` existe
+- [ ] Tareas T-001..NNN atómicas (15-30 min cada una)
+- [ ] DAG de dependencias sin ciclos
+- [ ] Trazabilidad SPEC→tarea completa
+- [ ] USER APPROVAL obtenido
+
+**Transition:** → Phase 9 PILOT/VALIDATE (riesgo alto) | Phase 10 EXECUTE (riesgo bajo)
+
+---
+
+## PHASE 9: PILOT/VALIDATE
+
+**Objetivo:** Validar supuestos técnicos críticos con PoC mínimo.
+
+**Gate Stage 9→10 (GO) o 9→5 (NO-GO):**
+- `entry_condition`: "task-plan aprobado existe; supuestos críticos identificados en risk-register"
+- `exit_threshold`: "todos los supuestos críticos evaluados; decisión GO/NO-GO documentada con justificación OBSERVABLE; USER APPROVAL obtenido"
+- `max_rework_iterations: 1` — si el pilot falla, volver a Strategy (Stage 5) directamente
+- `context_pruning_rule`: "supuestos no validados por el pilot permanecen como SPECULATIVE; no pueden ser fundamento de GO"
+
+**Exit Conditions:**
+- [ ] `pilot/{nombre-wp}-pilot-report.md` existe
+- [ ] Todos los supuestos críticos evaluados
+- [ ] Decisión GO/NO-GO documentada con justificación
+- [ ] Si hay ajustes: task-plan actualizado
+- [ ] USER APPROVAL obtenido
+
+**Transition:** → Phase 10 EXECUTE (GO) | Phase 5 STRATEGY (NO-GO)
+
+---
+
+## PHASE 10: EXECUTE
+
+**Objetivo:** Implementar exactamente según plan.
+
+**Gate Stage 10→11:**
+- `entry_condition`: "task-plan aprobado existe; ninguna tarea bloqueada sin resolución"
+- `exit_threshold`: "todas las tareas T-NNN con [x]; tests pasan o N/A documentado; commits convencionales; USER APPROVAL obtenido"
+- `max_rework_iterations: 3` — iteraciones de fix permitidas; en 4to intento escalar
+- `context_pruning_rule`: "no aplica — Stage 10 implementa, no analiza; los claims de análisis ya fueron pruned en stages anteriores"
+
+**Exit Conditions:**
+- [ ] Todas las tareas T-NNN ejecutadas (checkboxes `[x]`)
+- [ ] Tests pasan (o N/A documentado)
+- [ ] Commits realizados con formato convencional
+- [ ] `execute/{nombre-wp}-execution-log.md` actualizado
+- [ ] USER APPROVAL obtenido (gate 10→11)
+
+**Transition:** → Phase 11 TRACK/EVALUATE
+
+---
+
+## PHASE 11: TRACK/EVALUATE
+
+**Objetivo:** Evaluar resultados vs baseline MEASURE y documentar lecciones.
+
+**Gate Stage 11→12:**
+- `entry_condition`: "execute/ completo; todas las tareas [x]; execution-log actualizado"
+- `exit_threshold`: "lessons-learned existe; changelog creado; risk-register actualizado; validate-session-close.sh pasa"
+- `max_rework_iterations: 2`
+- `context_pruning_rule`: "identificar claims heredados de stages anteriores que nunca se re-verificaron — listarlos como 'deuda epistémica' en lessons-learned antes de avanzar a Stage 12"
+
+**Exit Conditions:**
+- [ ] `track/{nombre-wp}-lessons-learned.md` existe
+- [ ] `track/{nombre-wp}-changelog.md` creado
+- [ ] `{nombre-wp}-risk-register.md` actualizado (cerrar riesgos)
+- [ ] Si hay TDs cerrados: `track/{nombre-wp}-technical-debt-resolved.md` creado
+- [ ] Métricas comparadas vs baseline de Phase 2 (si existió)
+- [ ] `validate-session-close.sh` pasa sin errores
+
+**Transition:** → Phase 12 STANDARDIZE
+
+---
+
+## PHASE 12: STANDARDIZE
+
+**Objetivo:** Propagar aprendizajes al framework.
+
+**Gate Stage 12→cierre:**
+- `entry_condition`: "track/ completo; lessons-learned aprobado; validate-session-close.sh pasa"
+- `exit_threshold`: "guidelines/skills/ADRs actualizados si correspondía; ROADMAP.md actualizado; archivos de estado actualizados"
+- `max_rework_iterations: 1` — si Stage 12 falla, volver a Stage 11 para completar artefactos faltantes
+- `context_pruning_rule`: "deuda epistémica identificada en Stage 11 debe tener resolución documentada (re-verificado, descartado, o convertido en TD) antes de cerrar el WP"
+
+**Exit Conditions:**
+- [ ] `standardize/{nombre-wp}-patterns.md` existe
+- [ ] Guidelines actualizadas si correspondía
+- [ ] Skills actualizados si correspondía
+- [ ] ADRs creados si correspondía
+- [ ] ROADMAP.md actualizado (WP marcado como completado)
+- [ ] `validate-session-close.sh` pasa sin errores
+- [ ] Archivos de estado actualizados: `now.md` (null), `focus.md`, `project-state.md`
+
+**La FASE cierra cuando Phase 12 completa** → `now.md::phase = null`, `now.md::current_work = null`.
+
+---
+
+## ESCALABILIDAD — Cuántas fases usar
+
+| Tamaño | Fases obligatorias | Fases opcionales |
+|--------|-------------------|-----------------|
+| Micro (<30 min) | 1, 10, 11 | Ninguna |
+| Pequeño (30m-2h) | 1, 3, 10, 11 | 2, 12 |
+| Mediano (2-8h) | 1, 3, 5, 6, 8, 10, 11 | 2, 4, 7, 9, 12 |
+| Grande (>8h) | 1–12 completo | — |
+
+---
+
+## CÓMO USAR
+
+1. **Al iniciar un WP:** copiar a `context/work/{timestamp}-nombre/`
+2. **Durante cada fase:** marcar `[x]` cuando la condición se cumple
+3. **Al completar una fase:** verificar que TODAS las exit conditions aplican
+4. **Al cerrar el WP:** Phase 12 pasa todas las validaciones
+
+---
+
+## Nota de calibración
+
+Cada gate debe incluir `confidence_threshold` con protocolo de verificación:
+- `0.80` → requiere tool_use confirmatorio (bash output, grep result)
+- `0.60` → inferencia calibrada con referencia citada
+- `0.40` → estimación explícita (hipótesis marcada)
+
+Anti-patrón eliminado: gates como "¿El análisis está completo?" sin criterio verificable.
+El criterio verificable está ahora en `exit_threshold` de cada gate: condición medible con umbral.
+
+**Separabilidad entry/exit:**
+- `entry_condition`: prerequisito para EMPEZAR el stage (qué debe existir antes)
+- `exit_threshold`: criterio medible para TERMINAR el stage (qué debe ser verdad al final)
+- Anti-patrón: "¿El análisis está completo?" mezcla ambos — reemplazar con entry/exit separados
+
+**Loops de rework:**
+- `max_rework_iterations`: número máximo de veces que el WP puede llegar al gate sin aprobación
+- Al superar el límite: escalar a decisión humana con resumen de los N intentos y bloqueos encontrados
+
+**Context pruning:**
+- `context_pruning_rule`: qué claims con Confianza=baja y Origen=heredado se descartan al avanzar
+- Claims no prunned se convierten en "deuda epistémica" — listar en lessons-learned de Stage 11

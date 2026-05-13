@@ -1,0 +1,95 @@
+# PPS — Practical Problem Solving (Toyota Business Practices)
+# type: sequential
+# 8-step structured problem solving methodology from Toyota Business Practices (TBP).
+# Flujo secuencial de 6 skills (8 pasos agrupados). Énfasis en Go-and-See (Gemba)
+# y comprensión profunda del problema antes de actuar. Artefacto central: A3 Report.
+
+id: pps
+type: sequential
+display: "PPS — Practical Problem Solving"
+note: >
+  Metodología Toyota Business Practices (TBP) de resolución estructurada de problemas.
+  8 pasos agrupados en 6 skills. Flujo secuencial; cada paso construye sobre el anterior.
+  El A3 Report es el artefacto transversal que documenta todo el ciclo.
+  Énfasis en Gemba (observación directa) y evidencia antes de actuar.
+
+native_phase_count: 6
+produces:
+  - A3 Report
+  - Problem Clarification Sheet
+  - Target Sheet
+  - Root Cause Analysis Worksheet
+  - Countermeasures Matrix
+  - SOP (if standardization applies)
+consumes:
+  - problem-statement
+  - gemba-observation
+  - process-data
+
+steps:
+  - id: pps:clarify
+    display: "Clarify — Clarificar y descomponer el problema"
+    tollgate: "Problema clarificado con gap cuantificado y sub-problema priorizado"
+    activities:
+      - "Ir al Gemba (observación directa)"
+      - "Definir estado ideal vs estado actual"
+      - "Cuantificar el gap (magnitud del problema)"
+      - "Descomponer en sub-problemas"
+      - "Priorizar sub-problema a resolver"
+    output: "Problem Clarification Sheet: ideal vs actual, gap, impacto, alcance"
+    next: [pps:target]
+
+  - id: pps:target
+    display: "Target — Establecer objetivo SMART"
+    tollgate: "Target SMART definido con baseline y fecha límite"
+    activities:
+      - "Definir baseline cuantitativo del sub-problema priorizado"
+      - "Establecer target SMART (Específico, Medible, Alcanzable, Relevante, Temporal)"
+      - "Confirmar que el target es verificable con datos"
+    output: "Target Sheet: baseline, target, métrica, fecha límite"
+    next: [pps:analyze]
+
+  - id: pps:analyze
+    display: "Analyze — Análisis de causa raíz"
+    tollgate: "Causa raíz identificada y validada con evidencia (no hipótesis)"
+    activities:
+      - "Aplicar 5 Whys iterativamente"
+      - "Construir diagrama Fishbone (Ishikawa 4M/6M)"
+      - "Validar causas raíz con datos del Gemba"
+      - "Confirmar que la causa raíz es accionable"
+    output: "Root Cause Analysis worksheet + A3 Report (secciones 1-4 completas)"
+    next: [pps:countermeasures]
+
+  - id: pps:countermeasures
+    display: "Countermeasures — Desarrollar contramedidas"
+    tollgate: "Contramedidas seleccionadas y plan de acción aprobado"
+    activities:
+      - "Generar múltiples contramedidas por causa raíz"
+      - "Evaluar contramedidas en matriz impacto/factibilidad"
+      - "Seleccionar contramedidas prioritarias"
+      - "Crear plan de acción con responsables y fechas"
+    output: "Countermeasures Matrix + Plan de acción (A3 sección 5)"
+    next: [pps:implement]
+
+  - id: pps:implement
+    display: "Implement — Implementar contramedidas"
+    tollgate: "Contramedidas implementadas según plan de acción"
+    activities:
+      - "Ejecutar acciones del plan"
+      - "Monitorear implementación en tiempo real"
+      - "Ajustar en campo si surgen obstáculos"
+      - "Documentar desviaciones al plan original"
+    output: "Implementation Log + A3 Report actualizado (sección 6)"
+    next: [pps:evaluate]
+
+  - id: pps:evaluate
+    display: "Evaluate — Confirmar resultados y estandarizar"
+    tollgate: "Resultados confirmados con datos; proceso estandarizado si exitoso"
+    activities:
+      - "Medir resultados vs target (¿se alcanzó el objetivo?)"
+      - "Analizar factores externos que pudieron afectar resultados"
+      - "Si exitoso: estandarizar proceso (SOP, visual management)"
+      - "Si no exitoso: regresar a pps:analyze con nuevas hipótesis"
+      - "Compartir aprendizajes (Yokoten)"
+    output: "Effect Confirmation Sheet + A3 Report completo (secciones 7-8) + SOP si aplica"
+    next: []

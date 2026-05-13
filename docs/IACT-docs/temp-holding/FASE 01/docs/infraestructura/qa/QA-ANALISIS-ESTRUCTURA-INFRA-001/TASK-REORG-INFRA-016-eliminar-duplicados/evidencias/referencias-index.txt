@@ -1,0 +1,12 @@
+/home/user/IACT/docs/infraestructura/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/README-REORGANIZACION-ESTRUCTURA.md:1. **2 archivos duplicados** - `index.md` y `spec_infra_001_cpython_precompilado.md` en raíz
+/home/user/IACT/docs/infraestructura/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/PLAN-REORGANIZACION-ESTRUCTURA-INFRA-2025-11-18.md:   - `index.md` y `spec_infra_001_cpython_precompilado.md` duplicados en raiz
+/home/user/IACT/docs/infraestructura/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/PLAN-REORGANIZACION-ESTRUCTURA-INFRA-2025-11-18.md:| /index.md | /diseno/cpython_precompilado/index.md | Mover | P0 | 2 |
+/home/user/IACT/docs/infraestructura/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/PLAN-REORGANIZACION-ESTRUCTURA-INFRA-2025-11-18.md:#### TASK-021: Eliminar duplicado index.md
+/home/user/IACT/docs/infraestructura/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/PLAN-REORGANIZACION-ESTRUCTURA-INFRA-2025-11-18.md:Eliminar archivo duplicado index.md de raiz (si contenido esta en otro lugar).
+/home/user/IACT/docs/infraestructura/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/PLAN-REORGANIZACION-ESTRUCTURA-INFRA-2025-11-18.md:1. Comparar `/index.md` con `/cpython_precompilado/index.md`
+/home/user/IACT/docs/infraestructura/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/PLAN-REORGANIZACION-ESTRUCTURA-INFRA-2025-11-18.md:diff index.md cpython_precompilado/index.md
+/home/user/IACT/docs/infraestructura/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/PLAN-REORGANIZACION-ESTRUCTURA-INFRA-2025-11-18.md:git rm index.md
+/home/user/IACT/docs/infraestructura/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/PLAN-REORGANIZACION-ESTRUCTURA-INFRA-2025-11-18.md:git commit -m "Remove duplicate index.md (content preserved in cpython_precompilado/)"
+/home/user/IACT/docs/infraestructura/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/LISTADO-COMPLETO-TAREAS.md:Eliminar 2 archivos duplicados identificados: `index.md` (duplicado de INDEX.md) y `spec_infra_001_cpython_precompilado.md` (duplicado en cpython_precompilado/).
+/home/user/IACT/docs/infraestructura/index.md:- index.md
+/home/user/IACT/docs/infraestructura/README.md:- [Índice de espacios documentales](../index.md)

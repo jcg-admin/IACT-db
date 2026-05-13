@@ -1,0 +1,5 @@
+name: lean-coordinator
+description: "Use when Lean methodology is active. Coordinator for Lean Six Sigma — waste elimination, value stream improvement, 5 phases with formal tollgates, isolated worktree."
+tools: Read, Write, Edit, Glob, Grep, Bash
+installation: manual
+async_suitable: false

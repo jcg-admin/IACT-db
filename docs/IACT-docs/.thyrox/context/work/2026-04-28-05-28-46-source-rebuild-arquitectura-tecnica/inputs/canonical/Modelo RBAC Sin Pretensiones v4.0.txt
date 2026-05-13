@@ -1,0 +1,3018 @@
+# Modelo RBAC Sin Pretensiones v4.0
+## Enfoque Granular por Funcion con Namespace
+
+---
+
+**Version:** 4.0 FINAL  
+**Fecha:** Octubre 2025  
+**Principio Central:** Los nombres de funciones describen QUE HACE la funcion, no QUIEN es la persona  
+**Patron:** Granular con namespace para multiples dominios
+
+---
+
+## Tabla de Contenidos
+
+1. [Filosofia del Modelo](#filosofia-del-modelo)
+2. [Arquitectura Core](#arquitectura-core)
+3. [Sistema de Nomenclatura](#sistema-de-nomenclatura)
+4. [Modelo de Datos](#modelo-de-datos)
+5. [Funciones Base del Sistema](#funciones-base-del-sistema)
+6. [Funciones Oracle Identity](#funciones-oracle-identity)
+7. [Funciones EPM Automate](#funciones-epm-automate)
+8. [Operaciones Masivas](#operaciones-masivas)
+9. [Restricciones SSD](#restricciones-ssd)
+10. [Bundles de Funciones](#bundles-de-funciones)
+11. [Implementacion SQL](#implementacion-sql)
+12. [Queries Utiles](#queries-utiles)
+13. [Guia de Uso](#guia-de-uso)
+
+---
+
+## Filosofia del Modelo
+
+### Principio Central
+
+Los nombres de funciones deben describir QUE HACE la funcion, no QUIEN es la persona o QUE titulo tiene.
+
+### Por Que Granular
+
+Despues de analizar implementaciones reales en empresas, el enfoque GRANULAR ofrece:
+
+1. Seguridad Maxima: Principio de menor privilegio aplicado al extremo
+2. SoD Posible: Puedes separar funciones conflictivas
+3. Auditoria Precisa: Sabes exactamente que puede hacer cada quien
+4. Escalabilidad: Crece con la organizacion sin refactorizar
+5. Cumplimiento: Facilita certificaciones (SOX, ISO 27001, etc)
+6. Flexibilidad: Componible como LEGO
+
+### Comparacion
+
+Enfoque Tradicional (Pretencioso):
+- CEO
+- Director de Finanzas
+- Desarrollador Senior
+- Service Administrator
+- Application Administrator
+
+Problemas:
+- Basado en jerarquia organizacional
+- Cambio de titulo requiere cambio de roles
+- No describe que permisos tiene
+- Dificil de auditar
+
+Nuestro Enfoque (Funcional Granular):
+- crea_facturas
+- aprueba_facturas
+- identity:gestiona_aplicaciones
+- epm:agrega_miembros
+- modifica_codigo
+
+Ventajas:
+- Claro que puede hacer
+- Titulos organizacionales no afectan RBAC
+- Escalable
+- Facil auditar
+- Cumple regulaciones
+
+---
+
+## Arquitectura Core
+
+### Componentes Principales
+
+```
+Usuario (persona del sistema)
+   |
+   | tiene asignadas (UA - User Assignment)
+   |
+   v
+Funcion (granular, con namespace opcional)
+   |
+   | contiene (PA - Permission Assignment)
+   |
+   v
+Capacidad (permiso atomico)
+   |
+   | sobre
+   |
+   v
+Recurso:Operacion
+```
+
+### Definiciones
+
+Persona:
+- Representa un usuario del sistema
+- Puede tener metadata organizacional (titulo, departamento) SOLO para display
+- Esta metadata NO se usa para determinar permisos
+
+Funcion:
+- Conjunto granular de capacidades relacionadas
+- Nombrada segun patron verbo_sustantivo
+- Puede tener namespace (identity, epm, etc)
+- Una persona puede tener MULTIPLES funciones
+
+Capacidad:
+- Permiso atomico sobre un recurso
+- Formato: recurso:operacion
+- Ejemplos: facturas:crear, usuarios:leer, grupos:agregar_miembros
+
+Recurso:
+- Entidad del sistema sobre la cual se realizan operaciones
+- Ejemplos: facturas, usuarios, grupos, archivos, aplicaciones
+
+Operacion:
+- Accion que se puede realizar sobre un recurso
+- Ejemplos: crear, leer, modificar, eliminar, aprobar
+
+Namespace:
+- Prefijo opcional para agrupar funciones de un dominio/producto
+- Ejemplos: identity, epm, finanzas
+- Evita colisiones entre dominios
+
+---
+
+## Sistema de Nomenclatura
+
+### Estructura con Namespace
+
+```
+[namespace:]verbo_sustantivo[_calificador]
+
+Ejemplos:
+- crea_facturas                    (base, sin namespace)
+- aprueba_facturas                 (base, sin namespace)
+- identity:crea_usuarios           (con namespace identity)
+- identity:gestiona_aplicaciones   (con namespace identity)
+- epm:agrega_miembros              (con namespace epm)
+- epm:sube_archivos                (con namespace epm)
+```
+
+### Reglas de Decision
+
+Regla 1: Usa namespace cuando...
+- Tienes 50+ funciones totales
+- Tienes multiples dominios/productos (identity, epm, etc)
+- Existe riesgo de colision de nombres
+- Quieres agrupar logicamente funciones
+
+Regla 2: Usa 2 palabras cuando...
+- El verbo + sustantivo es claro e inequivoco
+- Ejemplos: crea_facturas, aprueba_gastos, elimina_grupos
+
+Regla 3: Usa 3 palabras cuando...
+- El objeto es PARTE de otro recurso
+- Ejemplos: agrega_miembros_grupos, gestiona_usuarios_aplicaciones
+- Hay MULTIPLES tipos del mismo sustantivo
+- Ejemplos: ve_reportes_financieros, configura_politicas_seguridad
+
+Regla 4: Sustantivos en plural
+- Cuando el recurso es contable: usar plural
+- Ejemplos: grupos, usuarios, archivos, facturas
+
+### Catalogo de Verbos Estandar
+
+Creacion:
+- crea, genera, registra, inicia
+
+Lectura:
+- ve, consulta, lee, lista, busca
+
+Modificacion:
+- modifica, actualiza, edita, cambia
+
+Eliminacion:
+- elimina, borra, remueve
+
+Aprobacion/Rechazo:
+- aprueba, autoriza, valida
+- rechaza, deniega, cancela
+
+Gestion:
+- gestiona, administra, configura
+
+Ejecucion:
+- ejecuta, corre, lanza, procesa
+
+Agregacion/Remocion:
+- agrega, anade
+- remueve, quita
+
+Importacion/Exportacion:
+- importa, exporta, sube, descarga
+
+Monitoreo:
+- monitorea, supervisa, observa
+
+---
+
+## Modelo de Datos
+
+### Diagrama de Entidades
+
+```
++------------------+
+|    personas      |
++------------------+
+| id (PK)          |
+| email            |
+| nombre_completo  |
+| activa           |
++--------+---------+
+         |
+         | UA (User Assignment)
+         |
+         v
++----------------------+
+|   funciones          |
++----------------------+
+| id (PK)              |
+| namespace            |
+| nombre               |
+| nombre_completo      |
+| descripcion_corta    |
+| categoria            |
+| activa               |
++-----------+----------+
+            |
+            | PA (Permission Assignment)
+            |
+            v
++----------------------+
+|   capacidades        |
++----------------------+
+| id (PK)              |
+| recurso              |
+| operacion            |
+| scope (JSONB)        |
+| activa               |
++----------------------+
+```
+
+### Tablas Principales
+
+#### Tabla: personas
+
+```sql
+CREATE TABLE personas (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    nombre_completo VARCHAR(255),
+    
+    -- Metadata organizacional (NO usado para permisos)
+    titulo_organizacional VARCHAR(100),
+    departamento VARCHAR(100),
+    manager_id UUID REFERENCES personas(id),
+    
+    -- Estado
+    activa BOOLEAN DEFAULT true,
+    
+    -- Timestamps
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_ultima_modificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Metadata
+    notas TEXT
+);
+
+CREATE INDEX idx_personas_email ON personas(email);
+CREATE INDEX idx_personas_activa ON personas(activa);
+CREATE INDEX idx_personas_departamento ON personas(departamento);
+CREATE INDEX idx_personas_manager ON personas(manager_id);
+```
+
+#### Tabla: funciones
+
+```sql
+CREATE TABLE funciones (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    
+    -- Namespace opcional para dominios
+    namespace VARCHAR(50),  -- 'identity', 'epm', NULL para funciones base
+    
+    -- Nombre de la funcion
+    nombre VARCHAR(100) NOT NULL,
+    
+    -- Nombre completo generado automaticamente
+    nombre_completo VARCHAR(200) GENERATED ALWAYS AS (
+        CASE 
+            WHEN namespace IS NOT NULL THEN namespace || ':' || nombre
+            ELSE nombre
+        END
+    ) STORED,
+    
+    -- Unique constraint en namespace + nombre
+    CONSTRAINT unique_namespace_nombre UNIQUE (namespace, nombre),
+    
+    -- Descripcion
+    descripcion_corta VARCHAR(255),
+    descripcion_larga TEXT,
+    
+    -- Categorizacion
+    categoria VARCHAR(50),
+    
+    -- Metadata
+    nivel VARCHAR(50),  -- 'granular', 'completo', 'solo_lectura'
+    critico BOOLEAN DEFAULT false,
+    
+    -- Referencias externas
+    oracle_role VARCHAR(255),
+    comando_epm VARCHAR(255),
+    
+    -- Estado
+    activa BOOLEAN DEFAULT true,
+    
+    -- Auditoria
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    creada_por UUID REFERENCES personas(id),
+    fecha_modificacion TIMESTAMP,
+    modificada_por UUID REFERENCES personas(id)
+);
+
+CREATE INDEX idx_funciones_namespace ON funciones(namespace);
+CREATE INDEX idx_funciones_nombre ON funciones(nombre);
+CREATE INDEX idx_funciones_nombre_completo ON funciones(nombre_completo);
+CREATE INDEX idx_funciones_categoria ON funciones(categoria);
+CREATE INDEX idx_funciones_activa ON funciones(activa);
+CREATE INDEX idx_funciones_critico ON funciones(critico);
+```
+
+#### Tabla: capacidades
+
+```sql
+CREATE TABLE capacidades (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    
+    -- Que recurso y operacion
+    recurso VARCHAR(100) NOT NULL,
+    operacion VARCHAR(50) NOT NULL,
+    
+    -- Unique constraint en combinacion
+    CONSTRAINT unique_recurso_operacion UNIQUE (recurso, operacion),
+    
+    -- Descripcion
+    descripcion TEXT,
+    
+    -- Scope (JSONB para flexibilidad)
+    scope JSONB,
+    
+    -- Estado
+    activa BOOLEAN DEFAULT true,
+    
+    -- Timestamps
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_capacidades_recurso ON capacidades(recurso);
+CREATE INDEX idx_capacidades_operacion ON capacidades(operacion);
+CREATE INDEX idx_capacidades_activa ON capacidades(activa);
+CREATE INDEX idx_capacidades_scope ON capacidades USING GIN (scope);
+```
+
+### Tablas de Asignacion
+
+#### Tabla: asignaciones_persona_funcion (UA)
+
+```sql
+CREATE TABLE asignaciones_persona_funcion (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    persona_id UUID NOT NULL REFERENCES personas(id) ON DELETE CASCADE,
+    funcion_id UUID NOT NULL REFERENCES funciones(id) ON DELETE CASCADE,
+    
+    -- Constraint: Una persona no puede tener la misma funcion dos veces
+    CONSTRAINT unique_persona_funcion UNIQUE (persona_id, funcion_id),
+    
+    -- Temporal (opcional)
+    valida_desde TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    valida_hasta TIMESTAMP,
+    
+    -- Contexto
+    asignada_por UUID REFERENCES personas(id),
+    fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    razon TEXT,
+    via_bundle VARCHAR(100),  -- Si fue asignada via bundle
+    
+    -- Estado
+    activa BOOLEAN DEFAULT true
+);
+
+CREATE INDEX idx_asig_pf_persona ON asignaciones_persona_funcion(persona_id, activa);
+CREATE INDEX idx_asig_pf_funcion ON asignaciones_persona_funcion(funcion_id);
+CREATE INDEX idx_asig_pf_vigencia ON asignaciones_persona_funcion(valida_hasta) 
+    WHERE valida_hasta IS NOT NULL;
+CREATE INDEX idx_asig_pf_bundle ON asignaciones_persona_funcion(via_bundle)
+    WHERE via_bundle IS NOT NULL;
+```
+
+#### Tabla: asignaciones_capacidad_funcion (PA)
+
+```sql
+CREATE TABLE asignaciones_capacidad_funcion (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    capacidad_id UUID NOT NULL REFERENCES capacidades(id) ON DELETE CASCADE,
+    funcion_id UUID NOT NULL REFERENCES funciones(id) ON DELETE CASCADE,
+    
+    -- Constraint: Una funcion no puede tener la misma capacidad dos veces
+    CONSTRAINT unique_capacidad_funcion UNIQUE (capacidad_id, funcion_id),
+    
+    -- Contexto
+    asignada_por UUID REFERENCES personas(id),
+    fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Estado
+    activa BOOLEAN DEFAULT true
+);
+
+CREATE INDEX idx_asig_cf_capacidad ON asignaciones_capacidad_funcion(capacidad_id);
+CREATE INDEX idx_asig_cf_funcion ON asignaciones_capacidad_funcion(funcion_id, activa);
+```
+
+### Tablas de Soporte
+
+#### Tabla: restricciones_ssd
+
+```sql
+CREATE TABLE restricciones_ssd (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    nombre VARCHAR(255) UNIQUE NOT NULL,
+    descripcion TEXT,
+    
+    -- Array de IDs de funciones mutuamente exclusivas
+    funciones_exclusivas UUID[] NOT NULL,
+    
+    -- Cardinalidad (max numero de funciones del conjunto que un usuario puede tener)
+    cardinalidad INTEGER DEFAULT 1,
+    
+    -- Estado
+    activa BOOLEAN DEFAULT true,
+    
+    -- Auditoria
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    creada_por UUID REFERENCES personas(id)
+);
+
+CREATE INDEX idx_restricciones_ssd_activa ON restricciones_ssd(activa);
+CREATE INDEX idx_restricciones_ssd_funciones ON restricciones_ssd USING GIN (funciones_exclusivas);
+```
+
+#### Tabla: bundles_funciones
+
+```sql
+CREATE TABLE bundles_funciones (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    nombre VARCHAR(100) UNIQUE NOT NULL,
+    display_name VARCHAR(255) NOT NULL,
+    descripcion TEXT,
+    para_quien TEXT,
+    
+    -- Categoria
+    categoria VARCHAR(50),
+    
+    -- Estado
+    activo BOOLEAN DEFAULT true,
+    
+    -- Auditoria
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    creado_por UUID REFERENCES personas(id)
+);
+
+CREATE INDEX idx_bundles_nombre ON bundles_funciones(nombre);
+CREATE INDEX idx_bundles_categoria ON bundles_funciones(categoria);
+CREATE INDEX idx_bundles_activo ON bundles_funciones(activo);
+```
+
+#### Tabla: bundle_contiene_funciones
+
+```sql
+CREATE TABLE bundle_contiene_funciones (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    bundle_id UUID NOT NULL REFERENCES bundles_funciones(id) ON DELETE CASCADE,
+    funcion_id UUID NOT NULL REFERENCES funciones(id) ON DELETE CASCADE,
+    
+    CONSTRAINT unique_bundle_funcion UNIQUE (bundle_id, funcion_id),
+    
+    -- Orden de display (opcional)
+    orden INTEGER
+);
+
+CREATE INDEX idx_bundle_func_bundle ON bundle_contiene_funciones(bundle_id);
+CREATE INDEX idx_bundle_func_funcion ON bundle_contiene_funciones(funcion_id);
+```
+
+#### Tabla: operaciones_masivas
+
+```sql
+CREATE TABLE operaciones_masivas (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    
+    -- Que operacion
+    tipo_operacion VARCHAR(100) NOT NULL,
+    
+    -- Archivo CSV
+    nombre_archivo VARCHAR(255) NOT NULL,
+    ruta_archivo TEXT NOT NULL,
+    tamano_bytes BIGINT,
+    
+    -- Contexto
+    contexto JSONB,  -- grupo_destino, etc
+    
+    -- Quien y cuando
+    iniciada_por UUID REFERENCES personas(id),
+    fecha_inicio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_fin TIMESTAMP,
+    
+    -- Estado
+    estado VARCHAR(50) DEFAULT 'pendiente',
+    
+    -- Resultados
+    total_registros INTEGER,
+    registros_exitosos INTEGER DEFAULT 0,
+    registros_fallidos INTEGER DEFAULT 0,
+    
+    -- Logs
+    log_proceso TEXT,
+    errores JSONB,
+    
+    -- Metadata
+    duracion_segundos INTEGER
+);
+
+CREATE INDEX idx_op_masivas_iniciada_por ON operaciones_masivas(iniciada_por);
+CREATE INDEX idx_op_masivas_estado ON operaciones_masivas(estado);
+CREATE INDEX idx_op_masivas_fecha ON operaciones_masivas(fecha_inicio DESC);
+CREATE INDEX idx_op_masivas_tipo ON operaciones_masivas(tipo_operacion);
+```
+
+#### Tabla: operaciones_masivas_detalle
+
+```sql
+CREATE TABLE operaciones_masivas_detalle (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    operacion_masiva_id UUID REFERENCES operaciones_masivas(id) ON DELETE CASCADE,
+    
+    -- Linea del CSV
+    numero_linea INTEGER,
+    
+    -- Datos de la linea
+    datos JSONB,
+    
+    -- Resultado
+    exitoso BOOLEAN,
+    error_mensaje TEXT,
+    
+    -- Timestamp
+    procesado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_op_detalle_operacion ON operaciones_masivas_detalle(operacion_masiva_id);
+CREATE INDEX idx_op_detalle_exitoso ON operaciones_masivas_detalle(exitoso);
+CREATE INDEX idx_op_detalle_linea ON operaciones_masivas_detalle(numero_linea);
+```
+
+#### Tabla: log_auditoria
+
+```sql
+CREATE TABLE log_auditoria (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    
+    -- Actor
+    persona_id UUID REFERENCES personas(id),
+    sesion_id UUID,
+    
+    -- Accion
+    accion_tipo VARCHAR(100) NOT NULL,
+    recurso_tipo VARCHAR(100),
+    recurso_id VARCHAR(255),
+    
+    -- Detalles
+    detalles JSONB,
+    
+    -- Resultado
+    exitosa BOOLEAN,
+    error_mensaje TEXT,
+    
+    -- Contexto
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    
+    -- Timestamp
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_log_persona ON log_auditoria(persona_id, timestamp DESC);
+CREATE INDEX idx_log_accion ON log_auditoria(accion_tipo, timestamp DESC);
+CREATE INDEX idx_log_timestamp ON log_auditoria(timestamp DESC);
+CREATE INDEX idx_log_recurso ON log_auditoria(recurso_tipo, recurso_id);
+CREATE INDEX idx_log_detalles ON log_auditoria USING GIN (detalles);
+CREATE INDEX idx_log_exitosa ON log_auditoria(exitosa);
+```
+
+---
+
+## Funciones Base del Sistema
+
+Las funciones base NO usan namespace porque son unicas en el dominio.
+
+### Capacidades Base
+
+```sql
+-- ============================================
+-- CAPACIDADES: FINANZAS
+-- ============================================
+
+INSERT INTO capacidades (recurso, operacion, descripcion) VALUES
+('facturas', 'crear', 'Crear nuevas facturas'),
+('facturas', 'leer', 'Ver facturas existentes'),
+('facturas', 'modificar', 'Editar facturas'),
+('facturas', 'aprobar', 'Aprobar facturas para pago'),
+('facturas', 'eliminar', 'Eliminar facturas'),
+('pagos', 'ejecutar', 'Ejecutar pagos'),
+('pagos', 'leer', 'Ver historial de pagos'),
+('proveedores', 'leer', 'Ver proveedores'),
+('cuentas_bancarias', 'leer', 'Ver cuentas bancarias'),
+('reportes_financieros', 'leer', 'Ver reportes financieros'),
+('metricas_financieras', 'leer', 'Ver metricas financieras');
+
+-- ============================================
+-- CAPACIDADES: DESARROLLO
+-- ============================================
+
+INSERT INTO capacidades (recurso, operacion, descripcion) VALUES
+('repositorios', 'push', 'Subir codigo a repositorios'),
+('repositorios', 'leer', 'Clonar y ver codigo'),
+('branches', 'crear', 'Crear branches'),
+('pull_requests', 'crear', 'Crear pull requests'),
+('pull_requests', 'revisar', 'Revisar pull requests'),
+('pull_requests', 'aprobar', 'Aprobar pull requests'),
+('deploys', 'ejecutar', 'Ejecutar deployments'),
+('servidores_staging', 'acceder', 'Acceder a servidores de staging'),
+('servidores_produccion', 'acceder', 'Acceder a servidores de produccion'),
+('logs_produccion', 'leer', 'Ver logs de produccion'),
+('metricas_produccion', 'leer', 'Ver metricas de produccion'),
+('configuracion_produccion', 'modificar', 'Modificar configuracion de produccion'),
+('servicios_produccion', 'reiniciar', 'Reiniciar servicios de produccion');
+
+-- ============================================
+-- CAPACIDADES: CONTENIDO
+-- ============================================
+
+INSERT INTO capacidades (recurso, operacion, descripcion) VALUES
+('contenido', 'crear', 'Crear nuevo contenido'),
+('contenido', 'leer', 'Ver contenido'),
+('contenido', 'modificar', 'Editar contenido'),
+('contenido', 'publicar', 'Publicar contenido a publico'),
+('contenido', 'eliminar', 'Eliminar contenido'),
+('medios', 'subir', 'Subir archivos multimedia'),
+('contenido_usuarios', 'leer', 'Ver contenido de usuarios'),
+('contenido_usuarios', 'ocultar', 'Ocultar contenido de usuarios'),
+('contenido_usuarios', 'eliminar', 'Eliminar contenido de usuarios');
+
+-- ============================================
+-- CAPACIDADES: CLIENTES
+-- ============================================
+
+INSERT INTO capacidades (recurso, operacion, descripcion) VALUES
+('clientes', 'leer', 'Ver informacion de clientes'),
+('clientes', 'modificar', 'Modificar informacion de clientes'),
+('ordenes', 'leer', 'Ver ordenes'),
+('reembolsos', 'crear', 'Crear reembolsos'),
+('reembolsos', 'ejecutar', 'Ejecutar reembolsos');
+
+-- ============================================
+-- CAPACIDADES: ADMINISTRACION
+-- ============================================
+
+INSERT INTO capacidades (recurso, operacion, descripcion) VALUES
+('usuarios', 'crear', 'Crear nuevos usuarios'),
+('usuarios', 'leer', 'Ver informacion de usuarios'),
+('usuarios', 'modificar', 'Modificar usuarios'),
+('usuarios', 'eliminar', 'Eliminar usuarios'),
+('asignaciones', 'crear', 'Crear asignaciones de funciones'),
+('asignaciones', 'eliminar', 'Eliminar asignaciones de funciones'),
+('funciones', 'leer', 'Ver funciones del sistema'),
+('configuracion_sistema', 'leer', 'Ver configuracion del sistema'),
+('configuracion_sistema', 'modificar', 'Modificar configuracion del sistema'),
+('logs_auditoria', 'leer', 'Ver logs de auditoria'),
+('reportes_auditoria', 'generar', 'Generar reportes de auditoria');
+```
+
+### Funciones Finanzas
+
+```sql
+-- ============================================
+-- FUNCIONES: FINANZAS
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel) VALUES
+(NULL, 'crea_facturas', 'Crea nuevas facturas en el sistema', 'finanzas', 'granular'),
+(NULL, 'aprueba_facturas', 'Aprueba facturas pendientes para pago', 'finanzas', 'granular'),
+(NULL, 'aprueba_gastos_grandes', 'Aprueba facturas mayores a $5,000', 'finanzas', 'granular'),
+(NULL, 'procesa_pagos', 'Ejecuta pagos de facturas aprobadas', 'finanzas', 'granular'),
+(NULL, 've_reportes_financieros', 'Consulta reportes financieros y metricas', 'finanzas', 'solo_lectura');
+
+-- Asignar capacidades
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'crea_facturas' AND f.namespace IS NULL
+  AND c.recurso IN ('facturas', 'proveedores')
+  AND c.operacion IN ('crear', 'leer');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'aprueba_facturas' AND f.namespace IS NULL
+  AND c.recurso = 'facturas'
+  AND c.operacion IN ('aprobar', 'leer');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'procesa_pagos' AND f.namespace IS NULL
+  AND ((c.recurso = 'pagos' AND c.operacion IN ('ejecutar', 'leer'))
+   OR (c.recurso = 'facturas' AND c.operacion = 'leer')
+   OR (c.recurso = 'cuentas_bancarias' AND c.operacion = 'leer'));
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 've_reportes_financieros' AND f.namespace IS NULL
+  AND c.recurso IN ('reportes_financieros', 'metricas_financieras')
+  AND c.operacion = 'leer';
+```
+
+### Funciones Desarrollo
+
+```sql
+-- ============================================
+-- FUNCIONES: DESARROLLO
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel) VALUES
+(NULL, 'modifica_codigo', 'Modifica codigo en repositorios', 'desarrollo', 'granular'),
+(NULL, 'revisa_codigo', 'Hace code review y aprueba PRs', 'desarrollo', 'granular'),
+(NULL, 'ejecuta_deploys_staging', 'Deploya a ambientes de staging/QA', 'desarrollo', 'granular'),
+(NULL, 'ejecuta_deploys_produccion', 'Deploya a produccion', 'desarrollo', 'granular'),
+(NULL, 'accede_logs_produccion', 'Ve logs de servidores de produccion', 'desarrollo', 'solo_lectura'),
+(NULL, 'modifica_configuracion_produccion', 'Cambia configuracion de produccion', 'desarrollo', 'granular');
+
+-- Asignar capacidades
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'modifica_codigo' AND f.namespace IS NULL
+  AND c.recurso IN ('repositorios', 'branches', 'pull_requests')
+  AND c.operacion IN ('push', 'leer', 'crear');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'revisa_codigo' AND f.namespace IS NULL
+  AND c.recurso IN ('pull_requests', 'repositorios')
+  AND c.operacion IN ('revisar', 'aprobar', 'leer');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'ejecuta_deploys_produccion' AND f.namespace IS NULL
+  AND ((c.recurso = 'deploys' AND c.operacion = 'ejecutar')
+   OR (c.recurso = 'servidores_produccion' AND c.operacion = 'acceder'));
+```
+
+### Funciones Contenido
+
+```sql
+-- ============================================
+-- FUNCIONES: CONTENIDO
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel) VALUES
+(NULL, 'crea_contenido', 'Crea nuevo contenido (posts, paginas)', 'contenido', 'granular'),
+(NULL, 'publica_contenido', 'Publica contenido a publico', 'contenido', 'granular'),
+(NULL, 'modera_contenido', 'Modera contenido de usuarios', 'contenido', 'granular');
+
+-- Asignar capacidades
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'crea_contenido' AND f.namespace IS NULL
+  AND c.recurso IN ('contenido', 'medios')
+  AND c.operacion IN ('crear', 'leer', 'subir');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'publica_contenido' AND f.namespace IS NULL
+  AND c.recurso = 'contenido'
+  AND c.operacion IN ('publicar', 'leer');
+```
+
+### Funciones Clientes
+
+```sql
+-- ============================================
+-- FUNCIONES: CLIENTES
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel) VALUES
+(NULL, 've_datos_clientes', 'Ve informacion de clientes', 'clientes', 'solo_lectura'),
+(NULL, 'modifica_datos_clientes', 'Modifica informacion de clientes', 'clientes', 'granular'),
+(NULL, 'procesa_reembolsos', 'Procesa reembolsos a clientes', 'clientes', 'granular');
+
+-- Asignar capacidades
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 've_datos_clientes' AND f.namespace IS NULL
+  AND c.recurso IN ('clientes', 'ordenes')
+  AND c.operacion = 'leer';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'modifica_datos_clientes' AND f.namespace IS NULL
+  AND c.recurso = 'clientes'
+  AND c.operacion IN ('modificar', 'leer');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'procesa_reembolsos' AND f.namespace IS NULL
+  AND c.recurso IN ('reembolsos', 'ordenes')
+  AND c.operacion IN ('crear', 'ejecutar', 'leer');
+```
+
+### Funciones Administracion
+
+```sql
+-- ============================================
+-- FUNCIONES: ADMINISTRACION
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel, critico) VALUES
+(NULL, 'gestiona_usuarios', 'Gestiona usuarios del sistema', 'administracion', 'granular', false),
+(NULL, 'asigna_funciones', 'Asigna funciones a personas', 'administracion', 'granular', true),
+(NULL, 'configura_sistema', 'Modifica configuracion del sistema', 'administracion', 'granular', false),
+(NULL, 've_auditoria', 'Ve logs de auditoria', 'administracion', 'solo_lectura', false);
+
+-- Asignar capacidades
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'gestiona_usuarios' AND f.namespace IS NULL
+  AND c.recurso = 'usuarios';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'asigna_funciones' AND f.namespace IS NULL
+  AND c.recurso IN ('asignaciones', 'funciones', 'usuarios')
+  AND c.operacion IN ('crear', 'eliminar', 'leer');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'configura_sistema' AND f.namespace IS NULL
+  AND c.recurso = 'configuracion_sistema';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 've_auditoria' AND f.namespace IS NULL
+  AND c.recurso IN ('logs_auditoria', 'reportes_auditoria')
+  AND c.operacion IN ('leer', 'generar');
+```
+
+---
+
+## Funciones Oracle Identity
+
+Las funciones de Oracle Identity usan namespace "identity" para evitar colisiones.
+
+### Capacidades Identity
+
+```sql
+-- ============================================
+-- CAPACIDADES: IDENTITY
+-- ============================================
+
+INSERT INTO capacidades (recurso, operacion, descripcion) VALUES
+-- Aplicaciones
+('aplicaciones', 'crear', 'Crear aplicaciones OAuth/OIDC'),
+('aplicaciones', 'leer', 'Ver aplicaciones'),
+('aplicaciones', 'modificar', 'Modificar aplicaciones'),
+('aplicaciones', 'eliminar', 'Eliminar aplicaciones'),
+('aplicaciones', 'configurar_oauth', 'Configurar parametros OAuth'),
+('aplicaciones', 'generar_secretos', 'Generar client secrets'),
+('aplicaciones', 'rotar_secretos', 'Rotar client secrets'),
+('aplicaciones', 'configurar_scopes', 'Configurar scopes OAuth'),
+('aplicaciones', 'asignar_usuarios', 'Asignar usuarios a aplicaciones'),
+('aplicaciones', 'remover_usuarios', 'Remover usuarios de aplicaciones'),
+
+-- Auditoria Identity
+('eventos_auditoria', 'leer', 'Ver eventos de auditoria'),
+('configuracion_auditoria', 'modificar', 'Configurar sistema de auditoria'),
+('politicas_retencion', 'configurar', 'Configurar retencion de logs'),
+
+-- Autenticacion
+('api', 'autenticar', 'Autenticar en API'),
+('tokens', 'obtener', 'Obtener tokens'),
+('tokens', 'validar', 'Validar tokens'),
+('tokens', 'introspect', 'Introspect tokens'),
+('credenciales', 'validar', 'Validar credenciales'),
+('sesiones', 'crear', 'Crear sesiones'),
+('factores_mfa', 'configurar', 'Configurar factores MFA'),
+('dispositivos_fido', 'registrar', 'Registrar dispositivos FIDO2'),
+
+-- Passwords
+('password_propia', 'modificar', 'Modificar password propia'),
+('passwords_usuarios', 'modificar', 'Modificar passwords de usuarios'),
+('passwords', 'resetear', 'Resetear passwords'),
+('password_temporal', 'generar', 'Generar password temporal'),
+('notificacion_reset', 'enviar', 'Enviar notificacion de reset'),
+('password_reset', 'iniciar', 'Iniciar proceso de reset'),
+('email_recuperacion', 'enviar', 'Enviar email de recuperacion'),
+('password_reset', 'completar', 'Completar reset de password'),
+('token_recuperacion', 'validar', 'Validar token de recuperacion'),
+
+-- Gestion de usuarios Identity
+('usuarios_identity', 'leer', 'Ver usuarios del dominio'),
+('usuarios_identity', 'activar', 'Activar usuarios'),
+('usuarios_identity', 'desactivar', 'Desactivar usuarios'),
+('cuentas', 'desbloquear', 'Desbloquear cuentas'),
+('sesiones', 'terminar', 'Terminar sesiones'),
+('mfa', 'resetear', 'Resetear MFA'),
+
+-- Dominio
+('dominio', 'configurar', 'Configurar dominio de identidad'),
+('dominio_configuracion', 'modificar', 'Modificar configuracion del dominio'),
+('branding', 'configurar', 'Configurar branding'),
+('notificaciones', 'configurar', 'Configurar notificaciones'),
+('integraciones', 'crear', 'Crear integraciones'),
+('conectores', 'configurar', 'Configurar conectores'),
+('sincronizacion', 'configurar', 'Configurar sincronizacion'),
+
+-- Kerberos
+('kerberos', 'configurar', 'Configurar autenticacion Kerberos'),
+('keytabs', 'gestionar', 'Gestionar keytabs'),
+('realms', 'configurar', 'Configurar realms'),
+
+-- Perfil propio
+('perfil_propio', 'leer', 'Ver perfil propio'),
+('perfil_propio', 'modificar', 'Modificar perfil propio'),
+('contacto_propio', 'modificar', 'Modificar contacto propio'),
+('mfa_propio', 'registrar', 'Registrar MFA propio'),
+('mfa_propio', 'eliminar', 'Eliminar MFA propio'),
+('mfa_propio', 'listar', 'Listar MFA propio'),
+
+-- MFA
+('mfa', 'validar', 'Validar factores MFA'),
+('totp', 'verificar', 'Verificar TOTP'),
+('sms_otp', 'verificar', 'Verificar SMS OTP'),
+
+-- Seguridad
+('politicas_password', 'configurar', 'Configurar politicas de password'),
+('politicas_sesion', 'configurar', 'Configurar politicas de sesion'),
+('politicas_mfa', 'configurar', 'Configurar politicas de MFA'),
+('certificados', 'subir', 'Subir certificados'),
+('certificados', 'renovar', 'Renovar certificados'),
+('certificados', 'eliminar', 'Eliminar certificados'),
+('oauth_settings', 'configurar', 'Configurar settings OAuth'),
+('token_lifetime', 'configurar', 'Configurar lifetime de tokens'),
+('scopes', 'gestionar', 'Gestionar scopes'),
+('eventos_seguridad', 'leer', 'Ver eventos de seguridad'),
+('alertas_seguridad', 'leer', 'Ver alertas de seguridad'),
+
+-- Registro
+('registro', 'iniciar', 'Iniciar auto-registro'),
+('email_verificacion', 'solicitar', 'Solicitar verificacion de email'),
+('registro', 'completar', 'Completar registro'),
+('token_registro', 'validar', 'Validar token de registro'),
+('cuenta', 'activar', 'Activar cuenta'),
+
+-- Verificacion email
+('token_verificacion', 'generar', 'Generar token de verificacion'),
+('email_verificacion', 'completar', 'Completar verificacion de email');
+```
+
+### Funciones Identity: Aplicaciones
+
+```sql
+-- ============================================
+-- IDENTITY: APLICACIONES
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel, oracle_role) VALUES
+('identity', 'gestiona_aplicaciones', 'Gestion completa de aplicaciones OAuth/OIDC', 'aplicaciones', 'completo', 'Application Administrator'),
+('identity', 've_aplicaciones', 'Ve aplicaciones (solo lectura)', 'aplicaciones', 'solo_lectura', NULL),
+('identity', 'gestiona_usuarios_aplicaciones', 'Gestiona usuarios asignados a aplicaciones', 'aplicaciones', 'granular', NULL),
+('identity', 'gestiona_secretos_aplicaciones', 'Gestiona secretos de aplicaciones', 'aplicaciones', 'granular', NULL);
+
+-- Asignar capacidades
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'gestiona_aplicaciones' AND f.namespace = 'identity'
+  AND c.recurso = 'aplicaciones';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 've_aplicaciones' AND f.namespace = 'identity'
+  AND c.recurso = 'aplicaciones'
+  AND c.operacion = 'leer';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'gestiona_usuarios_aplicaciones' AND f.namespace = 'identity'
+  AND ((c.recurso = 'aplicaciones' AND c.operacion IN ('leer', 'asignar_usuarios', 'remover_usuarios'))
+   OR (c.recurso = 'usuarios' AND c.operacion = 'leer'));
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'gestiona_secretos_aplicaciones' AND f.namespace = 'identity'
+  AND c.recurso = 'aplicaciones'
+  AND c.operacion IN ('leer', 'generar_secretos', 'rotar_secretos');
+```
+
+### Funciones Identity: Auditoria
+
+```sql
+-- ============================================
+-- IDENTITY: AUDITORIA
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel, oracle_role) VALUES
+('identity', 've_auditoria', 'Ve logs de auditoria (solo lectura)', 'auditoria', 'solo_lectura', 'Audit Administrator'),
+('identity', 'configura_auditoria', 'Configura sistema de auditoria', 'auditoria', 'granular', NULL);
+
+-- Asignar capacidades
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 've_auditoria' AND f.namespace = 'identity'
+  AND c.recurso IN ('logs_auditoria', 'eventos_auditoria', 'reportes_auditoria')
+  AND c.operacion IN ('leer', 'generar');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'configura_auditoria' AND f.namespace = 'identity'
+  AND c.recurso IN ('configuracion_auditoria', 'politicas_retencion')
+  AND c.operacion IN ('modificar', 'configurar');
+```
+
+### Funciones Identity: Autenticacion
+
+```sql
+-- ============================================
+-- IDENTITY: AUTENTICACION
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel, oracle_role) VALUES
+('identity', 'accede_api_autenticado', 'Aplicacion puede hacer llamadas autenticadas', 'autenticacion', 'servicio', 'Authenticated Client'),
+('identity', 'valida_autenticacion', 'Valida credenciales y tokens', 'autenticacion', 'servicio', 'Authenticator Client'),
+('identity', 'gestiona_factores_autenticacion', 'Gestiona metodos de autenticacion (MFA, FIDO2)', 'autenticacion', 'granular', NULL),
+('identity', 'inicia_sesion', 'Puede iniciar sesion en el sistema', 'autenticacion', 'publico', 'Signin'),
+('identity', 'valida_factores_mfa', 'Valida factores de autenticacion multifactor', 'autenticacion', 'servicio', 'MFA Client');
+
+-- Asignar capacidades
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'accede_api_autenticado' AND f.namespace = 'identity'
+  AND c.recurso IN ('api', 'tokens')
+  AND c.operacion IN ('autenticar', 'obtener');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'valida_autenticacion' AND f.namespace = 'identity'
+  AND ((c.recurso = 'credenciales' AND c.operacion = 'validar')
+   OR (c.recurso = 'tokens' AND c.operacion IN ('validar', 'introspect'))
+   OR (c.recurso = 'sesiones' AND c.operacion = 'crear'));
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'valida_factores_mfa' AND f.namespace = 'identity'
+  AND c.recurso IN ('mfa', 'totp', 'sms_otp')
+  AND c.operacion IN ('validar', 'verificar');
+```
+
+### Funciones Identity: Passwords
+
+```sql
+-- ============================================
+-- IDENTITY: PASSWORDS
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel, oracle_role, critico) VALUES
+('identity', 'cambia_password_propia', 'Usuario puede cambiar su propia password', 'autogestion', 'self', 'Change Password', false),
+('identity', 'cambia_passwords_usuarios', 'Puede cambiar passwords de otros usuarios', 'passwords', 'otros', NULL, true),
+('identity', 'resetea_passwords', 'Resetea passwords de usuarios', 'passwords', 'otros', 'Reset Password', true),
+('identity', 'inicia_recuperacion_password', 'Inicia proceso de recuperacion de password', 'passwords', 'publico', 'Forgot Password', false),
+('identity', 'completa_recuperacion_password', 'Completa recuperacion con token', 'passwords', 'publico', NULL, false);
+
+-- Asignar capacidades
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'cambia_password_propia' AND f.namespace = 'identity'
+  AND c.recurso = 'password_propia'
+  AND c.operacion = 'modificar';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'cambia_passwords_usuarios' AND f.namespace = 'identity'
+  AND ((c.recurso = 'usuarios' AND c.operacion = 'leer')
+   OR (c.recurso = 'passwords_usuarios' AND c.operacion = 'modificar'));
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'resetea_passwords' AND f.namespace = 'identity'
+  AND c.recurso IN ('usuarios', 'passwords', 'password_temporal', 'notificacion_reset')
+  AND c.operacion IN ('leer', 'resetear', 'generar', 'enviar');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'inicia_recuperacion_password' AND f.namespace = 'identity'
+  AND c.recurso IN ('password_reset', 'email_recuperacion')
+  AND c.operacion IN ('iniciar', 'enviar');
+```
+
+### Funciones Identity: Usuarios y Soporte
+
+```sql
+-- ============================================
+-- IDENTITY: USUARIOS Y SOPORTE
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel, oracle_role) VALUES
+('identity', 'asiste_usuarios', 'Asiste usuarios con problemas de acceso', 'soporte', 'granular', 'Help Desk Administrator'),
+('identity', 'gestiona_usuarios', 'Gestion completa de usuarios del dominio', 'usuarios', 'completo', 'User Administrator'),
+('identity', 'crea_usuarios', 'Crea nuevos usuarios en Identity', 'usuarios', 'granular', NULL),
+('identity', 'modifica_usuarios', 'Modifica usuarios existentes', 'usuarios', 'granular', NULL),
+('identity', 'elimina_usuarios', 'Elimina usuarios del dominio', 'usuarios', 'granular', NULL),
+('identity', 'gestiona_equipo_propio', 'Gestiona usuarios de su equipo', 'usuarios', 'granular', 'User Manager');
+
+-- Asignar capacidades
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'asiste_usuarios' AND f.namespace = 'identity'
+  AND ((c.recurso IN ('usuarios', 'usuarios_identity') AND c.operacion IN ('leer', 'desbloquear'))
+   OR (c.recurso = 'passwords' AND c.operacion = 'resetear')
+   OR (c.recurso = 'mfa' AND c.operacion = 'resetear')
+   OR (c.recurso = 'cuentas' AND c.operacion = 'desbloquear')
+   OR (c.recurso = 'sesiones' AND c.operacion = 'terminar'));
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'gestiona_usuarios' AND f.namespace = 'identity'
+  AND c.recurso IN ('usuarios', 'usuarios_identity');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'crea_usuarios' AND f.namespace = 'identity'
+  AND c.recurso = 'usuarios'
+  AND c.operacion IN ('crear', 'leer');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'elimina_usuarios' AND f.namespace = 'identity'
+  AND c.recurso = 'usuarios'
+  AND c.operacion IN ('eliminar', 'leer');
+```
+
+### Funciones Identity: Dominio y Seguridad
+
+```sql
+-- ============================================
+-- IDENTITY: DOMINIO Y SEGURIDAD
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel, oracle_role, critico) VALUES
+('identity', 'gestiona_dominio_completo', 'Administracion completa del dominio', 'administracion', 'super_admin', 'Identity Domain Administrator', true),
+('identity', 'gestiona_configuracion_dominio', 'Configura aspectos generales del dominio', 'administracion', 'granular', NULL, false),
+('identity', 'gestiona_integraciones', 'Gestiona integraciones con sistemas externos', 'administracion', 'granular', NULL, false),
+('identity', 'configura_kerberos', 'Configura autenticacion Kerberos', 'autenticacion', 'granular', 'Kerberos Administrator', false),
+('identity', 'configura_politicas_seguridad', 'Configura politicas de seguridad', 'seguridad', 'granular', 'Security Administrator', false),
+('identity', 'gestiona_certificados', 'Gestiona certificados SSL/TLS', 'seguridad', 'granular', NULL, false),
+('identity', 've_eventos_seguridad', 'Ve eventos de seguridad y alertas', 'seguridad', 'solo_lectura', NULL, false);
+
+-- Asignar capacidades - gestiona_dominio_completo
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'gestiona_dominio_completo' AND f.namespace = 'identity'
+  AND c.recurso IN ('dominio', 'usuarios', 'usuarios_identity', 'aplicaciones', 
+                    'dominio_configuracion', 'politicas_password', 'politicas_sesion', 'politicas_mfa');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'configura_politicas_seguridad' AND f.namespace = 'identity'
+  AND c.recurso IN ('politicas_password', 'politicas_sesion', 'politicas_mfa')
+  AND c.operacion = 'configurar';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'gestiona_certificados' AND f.namespace = 'identity'
+  AND c.recurso = 'certificados';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 've_eventos_seguridad' AND f.namespace = 'identity'
+  AND c.recurso IN ('eventos_seguridad', 'alertas_seguridad')
+  AND c.operacion = 'leer';
+```
+
+### Funciones Identity: Autogestion
+
+```sql
+-- ============================================
+-- IDENTITY: AUTOGESTION
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel, oracle_role) VALUES
+('identity', 've_perfil_propio', 'Ve su propia informacion de perfil', 'autogestion', 'self', 'Me'),
+('identity', 'modifica_perfil_propio', 'Modifica su propia informacion de perfil', 'autogestion', 'self', NULL),
+('identity', 'gestiona_mfa_propio', 'Gestiona sus propios factores de autenticacion', 'autogestion', 'self', NULL);
+
+-- Asignar capacidades
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 've_perfil_propio' AND f.namespace = 'identity'
+  AND c.recurso = 'perfil_propio'
+  AND c.operacion = 'leer';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'modifica_perfil_propio' AND f.namespace = 'identity'
+  AND c.recurso IN ('perfil_propio', 'contacto_propio')
+  AND c.operacion = 'modificar';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'gestiona_mfa_propio' AND f.namespace = 'identity'
+  AND c.recurso = 'mfa_propio'
+  AND c.operacion IN ('registrar', 'eliminar', 'listar');
+```
+
+### Funciones Identity: Registro
+
+```sql
+-- ============================================
+-- IDENTITY: REGISTRO
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel, oracle_role) VALUES
+('identity', 'registra_cuenta_nueva', 'Usuario puede auto-registrarse', 'registro', 'publico', 'Self Registration'),
+('identity', 'completa_registro', 'Completa proceso de registro con token', 'registro', 'publico', NULL),
+('identity', 'solicita_verificacion_email', 'Solicita verificacion de email', 'verificacion', 'self', 'Verify Email'),
+('identity', 'completa_verificacion_email', 'Completa verificacion con token', 'verificacion', 'publico', NULL);
+
+-- Asignar capacidades
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'registra_cuenta_nueva' AND f.namespace = 'identity'
+  AND c.recurso IN ('registro', 'email_verificacion')
+  AND c.operacion IN ('iniciar', 'solicitar');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'completa_registro' AND f.namespace = 'identity'
+  AND c.recurso IN ('registro', 'token_registro', 'cuenta')
+  AND c.operacion IN ('completar', 'validar', 'activar');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'solicita_verificacion_email' AND f.namespace = 'identity'
+  AND c.recurso IN ('email_verificacion', 'token_verificacion')
+  AND c.operacion IN ('solicitar', 'generar');
+```
+
+---
+
+## Funciones EPM Automate
+
+Las funciones de EPM usan namespace "epm" para evitar colisiones.
+
+### Capacidades EPM
+
+```sql
+-- ============================================
+-- CAPACIDADES: EPM
+-- ============================================
+
+INSERT INTO capacidades (recurso, operacion, descripcion) VALUES
+-- Grupos EPM
+('grupos_epm', 'crear', 'Crear nuevos grupos en EPM'),
+('grupos_epm', 'leer', 'Ver grupos en EPM'),
+('grupos_epm', 'modificar', 'Modificar propiedades de grupos EPM'),
+('grupos_epm', 'eliminar', 'Eliminar grupos de EPM'),
+('grupos_epm', 'agregar_miembros', 'Agregar usuarios a grupos EPM'),
+('grupos_epm', 'remover_miembros', 'Remover usuarios de grupos EPM'),
+('grupos_epm', 'listar_miembros', 'Listar miembros de un grupo EPM'),
+
+-- Archivos EPM
+('archivos_epm', 'subir', 'Subir archivos al ambiente EPM'),
+('archivos_epm', 'descargar', 'Descargar archivos del ambiente EPM'),
+('archivos_epm', 'eliminar', 'Eliminar archivos del ambiente EPM'),
+('archivos_epm', 'listar', 'Listar archivos en el ambiente EPM'),
+
+-- Comandos EPM
+('comandos_epm', 'ejecutar', 'Ejecutar comandos EPM Automate'),
+('comandos_epm', 'ver_logs', 'Ver logs de ejecucion de comandos EPM'),
+
+-- Ambiente EPM
+('ambiente_epm', 'administrar', 'Administrar ambiente EPM general'),
+('ambiente_epm', 'configurar', 'Configurar ambiente EPM'),
+('ambiente_epm', 'monitorear', 'Monitorear estado del ambiente EPM'),
+
+-- CSV
+('csv', 'procesar', 'Procesar archivos CSV'),
+('csv', 'importar', 'Importar datos desde CSV'),
+('csv', 'exportar', 'Exportar datos a CSV'),
+
+-- Operaciones masivas
+('operaciones_masivas', 'ejecutar', 'Ejecutar operaciones sobre multiples usuarios'),
+('operaciones_masivas', 'ver_resultados', 'Ver resultados de operaciones masivas');
+```
+
+### Funciones EPM: Ambiente
+
+```sql
+-- ============================================
+-- EPM: AMBIENTE
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel, oracle_role, critico) VALUES
+('epm', 'administra_ambiente', 'Administracion completa del ambiente EPM Cloud', 'administracion', 'super_admin', 'Service Administrator', true),
+('epm', 'configura_ambiente', 'Configura parametros del ambiente EPM', 'administracion', 'granular', NULL, false),
+('epm', 'monitorea_ambiente', 'Monitorea estado y salud del ambiente', 'administracion', 'solo_lectura', NULL, false);
+
+-- Asignar capacidades
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'administra_ambiente' AND f.namespace = 'epm'
+  AND c.recurso IN ('ambiente_epm', 'comandos_epm', 'archivos_epm', 'grupos_epm', 'csv', 'operaciones_masivas');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'configura_ambiente' AND f.namespace = 'epm'
+  AND c.recurso = 'ambiente_epm'
+  AND c.operacion IN ('configurar', 'leer');
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'monitorea_ambiente' AND f.namespace = 'epm'
+  AND c.recurso = 'ambiente_epm'
+  AND c.operacion = 'monitorear';
+```
+
+### Funciones EPM: Grupos
+
+```sql
+-- ============================================
+-- EPM: GRUPOS
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel, oracle_role, comando_epm) VALUES
+('epm', 'gestiona_grupos', 'Gestion completa de grupos en Access Control', 'grupos', 'completo', 'Access Control - Manage', NULL),
+('epm', 've_grupos', 'Ve grupos y miembros (solo lectura)', 'grupos', 'solo_lectura', NULL, 'listGroups'),
+('epm', 'crea_grupos', 'Crea nuevos grupos en Access Control', 'grupos', 'granular', NULL, 'createGroup'),
+('epm', 'modifica_grupos', 'Modifica propiedades de grupos', 'grupos', 'granular', NULL, 'modifyGroup'),
+('epm', 'elimina_grupos', 'Elimina grupos de Access Control', 'grupos', 'granular', NULL, 'deleteGroup'),
+('epm', 'agrega_miembros', 'Agrega usuarios a grupos mediante CSV', 'grupos', 'granular', NULL, 'addUsersToGroup'),
+('epm', 'remueve_miembros', 'Remueve usuarios de grupos', 'grupos', 'granular', NULL, 'removeUsersFromGroup'),
+('epm', 'lista_miembros', 'Lista miembros de un grupo especifico', 'grupos', 'granular', NULL, 'listGroupMembers');
+
+-- Asignar capacidades - gestiona_grupos (completo)
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'gestiona_grupos' AND f.namespace = 'epm'
+  AND c.recurso = 'grupos_epm';
+
+-- ve_grupos (solo lectura)
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 've_grupos' AND f.namespace = 'epm'
+  AND c.recurso = 'grupos_epm'
+  AND c.operacion IN ('leer', 'listar_miembros');
+
+-- crea_grupos
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'crea_grupos' AND f.namespace = 'epm'
+  AND c.recurso = 'grupos_epm'
+  AND c.operacion IN ('crear', 'leer');
+
+-- modifica_grupos
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'modifica_grupos' AND f.namespace = 'epm'
+  AND c.recurso = 'grupos_epm'
+  AND c.operacion IN ('modificar', 'leer');
+
+-- elimina_grupos
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'elimina_grupos' AND f.namespace = 'epm'
+  AND c.recurso = 'grupos_epm'
+  AND c.operacion IN ('eliminar', 'leer');
+
+-- agrega_miembros (incluye capacidades necesarias para CSV)
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'agrega_miembros' AND f.namespace = 'epm'
+  AND ((c.recurso = 'grupos_epm' AND c.operacion IN ('agregar_miembros', 'leer', 'listar_miembros'))
+   OR (c.recurso = 'archivos_epm' AND c.operacion = 'subir')
+   OR (c.recurso = 'csv' AND c.operacion = 'procesar')
+   OR (c.recurso = 'usuarios' AND c.operacion = 'leer')
+   OR (c.recurso = 'operaciones_masivas' AND c.operacion IN ('ejecutar', 'ver_resultados')));
+
+-- remueve_miembros
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'remueve_miembros' AND f.namespace = 'epm'
+  AND ((c.recurso = 'grupos_epm' AND c.operacion IN ('remover_miembros', 'leer'))
+   OR (c.recurso = 'usuarios' AND c.operacion = 'leer'));
+
+-- lista_miembros
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'lista_miembros' AND f.namespace = 'epm'
+  AND c.recurso = 'grupos_epm'
+  AND c.operacion = 'listar_miembros';
+```
+
+### Funciones EPM: Archivos
+
+```sql
+-- ============================================
+-- EPM: ARCHIVOS
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel, comando_epm) VALUES
+('epm', 'sube_archivos', 'Sube archivos al ambiente EPM', 'archivos', 'granular', 'uploadFile'),
+('epm', 'descarga_archivos', 'Descarga archivos del ambiente EPM', 'archivos', 'granular', 'downloadFile'),
+('epm', 'elimina_archivos', 'Elimina archivos del ambiente EPM', 'archivos', 'granular', 'deleteFile'),
+('epm', 'lista_archivos', 'Lista archivos disponibles en el ambiente', 'archivos', 'granular', 'listFiles');
+
+-- Asignar capacidades
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'sube_archivos' AND f.namespace = 'epm'
+  AND c.recurso = 'archivos_epm'
+  AND c.operacion = 'subir';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'descarga_archivos' AND f.namespace = 'epm'
+  AND c.recurso = 'archivos_epm'
+  AND c.operacion = 'descargar';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'elimina_archivos' AND f.namespace = 'epm'
+  AND c.recurso = 'archivos_epm'
+  AND c.operacion = 'eliminar';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'lista_archivos' AND f.namespace = 'epm'
+  AND c.recurso = 'archivos_epm'
+  AND c.operacion = 'listar';
+```
+
+### Funciones EPM: Comandos y Operaciones
+
+```sql
+-- ============================================
+-- EPM: COMANDOS Y OPERACIONES
+-- ============================================
+
+INSERT INTO funciones (namespace, nombre, descripcion_corta, categoria, nivel, comando_epm) VALUES
+('epm', 'ejecuta_comandos', 'Ejecuta comandos EPM Automate generales', 'operaciones', 'granular', 'executeCommand'),
+('epm', 've_logs', 'Ve logs de operaciones EPM', 'operaciones', 'solo_lectura', 'viewLogs'),
+('epm', 'procesa_csv', 'Procesa archivos CSV para operaciones masivas', 'operaciones', 'granular', NULL),
+('epm', 'importa_usuarios', 'Importa usuarios mediante CSV', 'operaciones', 'granular', 'importUsers'),
+('epm', 'exporta_datos', 'Exporta datos a CSV', 'operaciones', 'granular', 'exportData');
+
+-- Asignar capacidades
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'ejecuta_comandos' AND f.namespace = 'epm'
+  AND c.recurso = 'comandos_epm'
+  AND c.operacion = 'ejecutar';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 've_logs' AND f.namespace = 'epm'
+  AND c.recurso = 'comandos_epm'
+  AND c.operacion = 'ver_logs';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'procesa_csv' AND f.namespace = 'epm'
+  AND c.recurso = 'csv'
+  AND c.operacion = 'procesar';
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'importa_usuarios' AND f.namespace = 'epm'
+  AND ((c.recurso = 'csv' AND c.operacion = 'importar')
+   OR (c.recurso = 'usuarios' AND c.operacion IN ('crear', 'leer'))
+   OR (c.recurso = 'operaciones_masivas' AND c.operacion = 'ejecutar'));
+
+INSERT INTO asignaciones_capacidad_funcion (capacidad_id, funcion_id)
+SELECT c.id, f.id
+FROM capacidades c, funciones f
+WHERE f.nombre = 'exporta_datos' AND f.namespace = 'epm'
+  AND c.recurso = 'csv'
+  AND c.operacion = 'exportar';
+```
+
+---
+
+## Operaciones Masivas
+
+### Proceso addUsersToGroup Completo
+
+Proceso para agregar usuarios a un grupo mediante CSV usando epm:agrega_miembros.
+
+#### Paso 1: Validar Precondiciones
+
+```sql
+-- Verificar que usuario tiene la funcion epm:agrega_miembros
+SELECT * FROM asignaciones_persona_funcion apf
+JOIN funciones f ON apf.funcion_id = f.id
+WHERE apf.persona_id = 'user-uuid'
+  AND f.namespace = 'epm'
+  AND f.nombre = 'agrega_miembros'
+  AND apf.activa = true;
+
+-- Verificar que archivo CSV existe
+SELECT * FROM archivos_epm 
+WHERE nombre = 'users_to_add.csv' 
+  AND subido_por = 'user-uuid';
+
+-- Verificar que grupo existe
+SELECT * FROM grupos_epm 
+WHERE LOWER(nombre) = LOWER('Planning_Users');
+```
+
+#### Paso 2: Procesar CSV
+
+Pseudocodigo del procesamiento:
+
+```
+function procesarAddUsersToGroup(archivoCSV, grupoNombre, usuarioActualId) {
+    
+    // 1. Crear registro de operacion masiva
+    operacionId = db.insert('operaciones_masivas', {
+        tipo_operacion: 'agregar_usuarios_grupo',
+        nombre_archivo: archivoCSV.nombre,
+        ruta_archivo: archivoCSV.ruta,
+        tamano_bytes: archivoCSV.tamano,
+        contexto: JSON.stringify({ grupo_destino: grupoNombre }),
+        iniciada_por: usuarioActualId,
+        estado: 'procesando'
+    });
+    
+    // 2. Parsear CSV (columna "User Login" requerida)
+    usuarios = parseCSV(archivoCSV, {
+        columnas: ['User Login'],
+        skipEmptyRows: true,
+        trim: true
+    });
+    
+    db.update('operaciones_masivas', {
+        total_registros: usuarios.length
+    }, { id: operacionId });
+    
+    // 3. Obtener grupo
+    grupo = db.query('SELECT id FROM grupos_epm WHERE LOWER(nombre) = LOWER(?)', [grupoNombre]);
+    
+    if (!grupo) {
+        db.update('operaciones_masivas', { estado: 'fallido', error_mensaje: 'Grupo no existe' });
+        throw Error('Grupo ' + grupoNombre + ' no existe');
+    }
+    
+    // 4. Procesar cada usuario
+    exitosos = 0;
+    fallidos = 0;
+    
+    for (index = 0; index < usuarios.length; index++) {
+        userLogin = usuarios[index]['User Login'];
+        numeroLinea = index + 2;  // +2 porque linea 1 es header
+        
+        try {
+            // 4a. Validar usuario existe
+            usuario = db.query(
+                'SELECT id FROM personas WHERE LOWER(email) = LOWER(?)',
+                [userLogin]
+            );
+            
+            if (!usuario) {
+                throw Error('Usuario no existe en el dominio de identidad');
+            }
+            
+            // 4b. Validar usuario tiene rol predefinido
+            tieneRolPredefinido = db.query(
+                'SELECT COUNT(*) > 0 as tiene_rol ' +
+                'FROM asignaciones_persona_funcion apf ' +
+                'JOIN funciones f ON apf.funcion_id = f.id ' +
+                'WHERE apf.persona_id = ? AND f.categoria = "predefinido" AND apf.activa = true',
+                [usuario.id]
+            );
+            
+            if (!tieneRolPredefinido.tiene_rol) {
+                throw Error('Usuario no tiene rol predefinido asignado');
+            }
+            
+            // 4c. Validar usuario no esta ya en el grupo
+            yaEnGrupo = db.query(
+                'SELECT COUNT(*) > 0 as ya_existe ' +
+                'FROM miembros_grupo_epm ' +
+                'WHERE grupo_id = ? AND persona_id = ?',
+                [grupo.id, usuario.id]
+            );
+            
+            if (yaEnGrupo.ya_existe) {
+                throw Error('Usuario ya es miembro del grupo');
+            }
+            
+            // 4d. Agregar usuario al grupo
+            db.insert('miembros_grupo_epm', {
+                grupo_id: grupo.id,
+                persona_id: usuario.id,
+                agregado_por: usuarioActualId,
+                fecha_agregado: NOW()
+            });
+            
+            // 4e. Log de auditoria
+            db.insert('log_auditoria', {
+                persona_id: usuarioActualId,
+                accion_tipo: 'agregar_usuario_grupo_epm',
+                recurso_tipo: 'grupo_epm',
+                recurso_id: grupo.id,
+                detalles: JSON.stringify({
+                    usuario_agregado: userLogin,
+                    grupo: grupoNombre,
+                    via: 'operacion_masiva',
+                    operacion_id: operacionId
+                }),
+                exitosa: true
+            });
+            
+            // 4f. Registro exitoso en detalle
+            db.insert('operaciones_masivas_detalle', {
+                operacion_masiva_id: operacionId,
+                numero_linea: numeroLinea,
+                datos: JSON.stringify({ user_login: userLogin }),
+                exitoso: true
+            });
+            
+            exitosos++;
+            
+        } catch (error) {
+            // Registro fallido en detalle
+            db.insert('operaciones_masivas_detalle', {
+                operacion_masiva_id: operacionId,
+                numero_linea: numeroLinea,
+                datos: JSON.stringify({ user_login: userLogin }),
+                exitoso: false,
+                error_mensaje: error.message
+            });
+            
+            fallidos++;
+            
+            // Log error a consola
+            console.error('Linea ' + numeroLinea + ': Error al agregar "' + userLogin + '" - ' + error.message);
+        }
+    }
+    
+    // 5. Finalizar operacion
+    duracion = DATEDIFF_SECONDS(NOW(), fecha_inicio);
+    
+    db.update('operaciones_masivas', {
+        estado: 'completado',
+        fecha_fin: NOW(),
+        registros_exitosos: exitosos,
+        registros_fallidos: fallidos,
+        duracion_segundos: duracion
+    }, { id: operacionId });
+    
+    // 6. Resumen
+    console.log('Operacion completada:');
+    console.log('- Total: ' + usuarios.length + ' usuarios');
+    console.log('- Exitosos: ' + exitosos);
+    console.log('- Fallidos: ' + fallidos);
+    console.log('- Duracion: ' + duracion + ' segundos');
+    
+    if (fallidos > 0) {
+        console.log('Revisa la tabla operaciones_masivas_detalle para detalles de errores');
+    }
+    
+    return operacionId;
+}
+```
+
+#### Paso 3: Reportar Resultados
+
+```sql
+-- Resumen de la operacion
+SELECT 
+    om.tipo_operacion,
+    om.nombre_archivo,
+    om.contexto->>'grupo_destino' as grupo_destino,
+    p.nombre_completo as iniciada_por,
+    om.fecha_inicio,
+    om.fecha_fin,
+    om.estado,
+    om.total_registros,
+    om.registros_exitosos,
+    om.registros_fallidos,
+    om.duracion_segundos
+FROM operaciones_masivas om
+JOIN personas p ON om.iniciada_por = p.id
+WHERE om.id = 'operacion-uuid';
+
+-- Ver errores especificos
+SELECT 
+    numero_linea,
+    datos->>'user_login' as user_login,
+    error_mensaje
+FROM operaciones_masivas_detalle
+WHERE operacion_masiva_id = 'operacion-uuid'
+  AND exitoso = false
+ORDER BY numero_linea;
+```
+
+### Ejemplo Completo de Uso
+
+Escenario: Agregar 50 usuarios a grupo "Planning_Users"
+
+```sql
+-- PASO 1: Usuario carga archivo CSV
+-- Usuario tiene funcion: epm:sube_archivos
+-- Ejecuta: epmautomate uploadFile users_to_add.csv
+
+INSERT INTO archivos_epm (
+    nombre_archivo,
+    ruta_archivo,
+    subido_por,
+    tamano_bytes
+) VALUES (
+    'users_to_add.csv',
+    '/archivos_epm/users_to_add.csv',
+    'user-uuid',
+    1024
+);
+
+-- PASO 2: Usuario ejecuta addUsersToGroup
+-- Usuario tiene funcion: epm:agrega_miembros
+-- Ejecuta: epmautomate addUsersToGroup users_to_add.csv Planning_Users
+
+-- Validacion de permisos (automatica en sistema)
+SELECT puede_realizar_accion(
+    'user-uuid',
+    'grupos_epm',
+    'agregar_miembros'
+) AS puede_agregar;
+-- Resultado: true
+
+-- Sistema procesa operacion masiva (ver pseudocodigo arriba)
+-- ...
+
+-- PASO 3: Ver resultados
+
+-- Resumen
+SELECT * FROM operaciones_masivas WHERE id = 'operacion-uuid';
+
+/*
+Resultado:
+tipo_operacion: agregar_usuarios_grupo
+nombre_archivo: users_to_add.csv
+contexto: {"grupo_destino": "Planning_Users"}
+total_registros: 50
+registros_exitosos: 47
+registros_fallidos: 3
+estado: completado
+duracion_segundos: 12
+*/
+
+-- Errores especificos
+SELECT numero_linea, datos->>'user_login' as user_login, error_mensaje
+FROM operaciones_masivas_detalle
+WHERE operacion_masiva_id = 'operacion-uuid'
+  AND exitoso = false;
+
+/*
+Resultado:
+Linea 5: jdoe123 - Usuario no existe en el dominio de identidad
+Linea 12: admin@example.com - Usuario ya es miembro del grupo
+Linea 23: newuser@example.com - Usuario no tiene rol predefinido asignado
+*/
+```
+
+---
+
+## Restricciones SSD
+
+### Concepto
+
+Las restricciones SSD (Static Separation of Duties) previenen que un usuario tenga ciertas combinaciones de funciones que juntas podrian representar un riesgo de seguridad o conflicto de interes.
+
+### Restricciones Base del Sistema
+
+```sql
+-- ============================================
+-- SSD: FUNCIONES BASE
+-- ============================================
+
+INSERT INTO restricciones_ssd (nombre, descripcion, funciones_exclusivas, cardinalidad) VALUES
+
+-- SSD-001: Separacion Crear/Aprobar Facturas
+(
+    'ssd_crea_aprueba_facturas',
+    'Usuario no puede crear Y aprobar facturas (prevencion de fraude)',
+    ARRAY[
+        (SELECT id FROM funciones WHERE namespace IS NULL AND nombre = 'crea_facturas'),
+        (SELECT id FROM funciones WHERE namespace IS NULL AND nombre = 'aprueba_facturas')
+    ],
+    1
+),
+
+-- SSD-002: Separacion Aprobar/Procesar Pagos
+(
+    'ssd_aprueba_procesa_pagos',
+    'Usuario no puede aprobar Y procesar pagos (separacion autorizacion/ejecucion)',
+    ARRAY[
+        (SELECT id FROM funciones WHERE namespace IS NULL AND nombre = 'aprueba_facturas'),
+        (SELECT id FROM funciones WHERE namespace IS NULL AND nombre = 'procesa_pagos')
+    ],
+    1
+),
+
+-- SSD-003: Separacion Codigo/Deploy Produccion
+(
+    'ssd_codigo_deploy_prod',
+    'Quien escribe codigo no deberia deployar a produccion (cambios no revisados)',
+    ARRAY[
+        (SELECT id FROM funciones WHERE namespace IS NULL AND nombre = 'modifica_codigo'),
+        (SELECT id FROM funciones WHERE namespace IS NULL AND nombre = 'ejecuta_deploys_produccion')
+    ],
+    1
+),
+
+-- SSD-004: Separacion Crear/Publicar Contenido
+(
+    'ssd_crea_publica_contenido',
+    'Quien crea contenido no deberia publicarlo (revision independiente)',
+    ARRAY[
+        (SELECT id FROM funciones WHERE namespace IS NULL AND nombre = 'crea_contenido'),
+        (SELECT id FROM funciones WHERE namespace IS NULL AND nombre = 'publica_contenido')
+    ],
+    1
+);
+```
+
+### Restricciones Oracle Identity
+
+```sql
+-- ============================================
+-- SSD: IDENTITY
+-- ============================================
+
+INSERT INTO restricciones_ssd (nombre, descripcion, funciones_exclusivas, cardinalidad) VALUES
+
+-- SSD-OI-001: Separacion Configura/Ve Auditoria
+(
+    'ssd_identity_configura_ve_auditoria',
+    'Quien configura auditoria no debe ver logs (prevenir ocultar evidencia)',
+    ARRAY[
+        (SELECT id FROM funciones WHERE namespace = 'identity' AND nombre = 've_auditoria'),
+        (SELECT id FROM funciones WHERE namespace = 'identity' AND nombre = 'configura_auditoria')
+    ],
+    1
+),
+
+-- SSD-OI-002: Separacion Crear/Eliminar Usuarios
+(
+    'ssd_identity_crea_elimina_usuarios',
+    'Quien crea usuarios no deberia poder eliminarlos',
+    ARRAY[
+        (SELECT id FROM funciones WHERE namespace = 'identity' AND nombre = 'crea_usuarios'),
+        (SELECT id FROM funciones WHERE namespace = 'identity' AND nombre = 'elimina_usuarios')
+    ],
+    1
+),
+
+-- SSD-OI-003: Dominio Completo es Exclusivo
+(
+    'ssd_identity_dominio_completo_exclusivo',
+    'Gestion completa de dominio no se combina con funciones granulares',
+    ARRAY[
+        (SELECT id FROM funciones WHERE namespace = 'identity' AND nombre = 'gestiona_dominio_completo'),
+        (SELECT id FROM funciones WHERE namespace = 'identity' AND nombre = 'gestiona_usuarios'),
+        (SELECT id FROM funciones WHERE namespace = 'identity' AND nombre = 'gestiona_aplicaciones'),
+        (SELECT id FROM funciones WHERE namespace = 'identity' AND nombre = 'configura_politicas_seguridad')
+    ],
+    1
+);
+```
+
+### Restricciones EPM
+
+```sql
+-- ============================================
+-- SSD: EPM
+-- ============================================
+
+INSERT INTO restricciones_ssd (nombre, descripcion, funciones_exclusivas, cardinalidad) VALUES
+
+-- SSD-EPM-001: Separacion Crear/Eliminar Grupos
+(
+    'ssd_epm_crea_elimina_grupos',
+    'Quien crea grupos NO puede eliminarlos (prevencion)',
+    ARRAY[
+        (SELECT id FROM funciones WHERE namespace = 'epm' AND nombre = 'crea_grupos'),
+        (SELECT id FROM funciones WHERE namespace = 'epm' AND nombre = 'elimina_grupos')
+    ],
+    1
+),
+
+-- SSD-EPM-002: Separacion Agregar/Remover Miembros
+(
+    'ssd_epm_agrega_remueve_miembros',
+    'Quien agrega miembros NO puede removerlos (alta seguridad)',
+    ARRAY[
+        (SELECT id FROM funciones WHERE namespace = 'epm' AND nombre = 'agrega_miembros'),
+        (SELECT id FROM funciones WHERE namespace = 'epm' AND nombre = 'remueve_miembros')
+    ],
+    1
+),
+
+-- SSD-EPM-003: Service Admin es Exclusivo
+(
+    'ssd_epm_service_admin_exclusivo',
+    'Service Administrator NO se combina con funciones especificas',
+    ARRAY[
+        (SELECT id FROM funciones WHERE namespace = 'epm' AND nombre = 'administra_ambiente'),
+        (SELECT id FROM funciones WHERE namespace = 'epm' AND nombre = 'gestiona_grupos'),
+        (SELECT id FROM funciones WHERE namespace = 'epm' AND nombre = 'sube_archivos')
+    ],
+    1
+);
+```
+
+### Validacion de SSD
+
+```sql
+-- Funcion para validar SSD antes de asignar funcion
+CREATE OR REPLACE FUNCTION validar_ssd_antes_asignar(
+    p_persona_id UUID,
+    p_funcion_id UUID
+)
+RETURNS TABLE (
+    valido BOOLEAN,
+    restriccion_violada VARCHAR(255),
+    mensaje TEXT
+) AS $$
+DECLARE
+    r RECORD;
+    funciones_actuales UUID[];
+    funciones_propuestas UUID[];
+    intersection UUID[];
+BEGIN
+    -- Obtener funciones actuales de la persona
+    SELECT array_agg(funcion_id)
+    INTO funciones_actuales
+    FROM asignaciones_persona_funcion
+    WHERE persona_id = p_persona_id
+      AND activa = true;
+    
+    -- Agregar la funcion propuesta
+    IF funciones_actuales IS NULL THEN
+        funciones_propuestas := ARRAY[p_funcion_id];
+    ELSE
+        funciones_propuestas := array_append(funciones_actuales, p_funcion_id);
+    END IF;
+    
+    -- Verificar cada restriccion SSD
+    FOR r IN 
+        SELECT id, nombre, funciones_exclusivas, cardinalidad
+        FROM restricciones_ssd
+        WHERE activa = true
+    LOOP
+        -- Calcular interseccion
+        SELECT array_agg(elem)
+        INTO intersection
+        FROM unnest(funciones_propuestas) elem
+        WHERE elem = ANY(r.funciones_exclusivas);
+        
+        -- Verificar cardinalidad
+        IF intersection IS NOT NULL AND array_length(intersection, 1) > r.cardinalidad THEN
+            RETURN QUERY SELECT 
+                false,
+                r.nombre,
+                format('Restriccion SSD violada: maximo %s funciones del conjunto permitidas, tiene %s', 
+                       r.cardinalidad, 
+                       array_length(intersection, 1));
+            RETURN;
+        END IF;
+    END LOOP;
+    
+    -- Todo OK
+    RETURN QUERY SELECT true, NULL::VARCHAR, NULL::TEXT;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+---
+
+## Bundles de Funciones
+
+Los bundles simplifican la asignacion de multiples funciones relacionadas.
+
+### Bundles Base del Sistema
+
+```sql
+-- ============================================
+-- BUNDLES: FINANZAS
+-- ============================================
+
+INSERT INTO bundles_funciones (nombre, display_name, descripcion, categoria) VALUES
+('bundle_ingresa_facturas', 
+ 'Ingresa Facturas', 
+ 'Usuario que ingresa facturas recibidas', 
+ 'finanzas'),
+
+('bundle_aprueba_gastos', 
+ 'Aprueba Gastos', 
+ 'Usuario autorizado para aprobar gastos', 
+ 'finanzas'),
+
+('bundle_procesa_tesoreria', 
+ 'Procesa Tesoreria', 
+ 'Usuario que ejecuta pagos', 
+ 'finanzas');
+
+-- Contenido de bundles
+INSERT INTO bundle_contiene_funciones (bundle_id, funcion_id, orden)
+SELECT 
+    (SELECT id FROM bundles_funciones WHERE nombre = 'bundle_ingresa_facturas'),
+    id,
+    1
+FROM funciones WHERE namespace IS NULL AND nombre = 'crea_facturas';
+
+INSERT INTO bundle_contiene_funciones (bundle_id, funcion_id, orden)
+SELECT 
+    (SELECT id FROM bundles_funciones WHERE nombre = 'bundle_aprueba_gastos'),
+    id,
+    ROW_NUMBER() OVER (ORDER BY nombre)
+FROM funciones WHERE namespace IS NULL AND nombre IN ('aprueba_facturas', 've_reportes_financieros');
+
+INSERT INTO bundle_contiene_funciones (bundle_id, funcion_id, orden)
+SELECT 
+    (SELECT id FROM bundles_funciones WHERE nombre = 'bundle_procesa_tesoreria'),
+    id,
+    ROW_NUMBER() OVER (ORDER BY nombre)
+FROM funciones WHERE namespace IS NULL AND nombre IN ('procesa_pagos', 've_reportes_financieros');
+
+-- ============================================
+-- BUNDLES: DESARROLLO
+-- ============================================
+
+INSERT INTO bundles_funciones (nombre, display_name, descripcion, categoria) VALUES
+('bundle_desarrollador', 
+ 'Desarrollador', 
+ 'Usuario que escribe y revisa codigo', 
+ 'desarrollo'),
+
+('bundle_devops_staging', 
+ 'DevOps Staging', 
+ 'Usuario que deploya a staging', 
+ 'desarrollo'),
+
+('bundle_sre_produccion', 
+ 'SRE Produccion', 
+ 'Usuario que monitorea y gestiona produccion', 
+ 'desarrollo');
+
+-- Contenido de bundles
+INSERT INTO bundle_contiene_funciones (bundle_id, funcion_id, orden)
+SELECT 
+    (SELECT id FROM bundles_funciones WHERE nombre = 'bundle_desarrollador'),
+    id,
+    ROW_NUMBER() OVER (ORDER BY nombre)
+FROM funciones WHERE namespace IS NULL AND nombre IN ('modifica_codigo', 'revisa_codigo');
+
+INSERT INTO bundle_contiene_funciones (bundle_id, funcion_id, orden)
+SELECT 
+    (SELECT id FROM bundles_funciones WHERE nombre = 'bundle_devops_staging'),
+    id,
+    ROW_NUMBER() OVER (ORDER BY nombre)
+FROM funciones WHERE namespace IS NULL AND nombre IN ('ejecuta_deploys_staging', 'modifica_codigo', 'accede_logs_produccion');
+
+INSERT INTO bundle_contiene_funciones (bundle_id, funcion_id, orden)
+SELECT 
+    (SELECT id FROM bundles_funciones WHERE nombre = 'bundle_sre_produccion'),
+    id,
+    ROW_NUMBER() OVER (ORDER BY nombre)
+FROM funciones WHERE namespace IS NULL AND nombre IN ('accede_logs_produccion', 'modifica_configuracion_produccion');
+```
+
+### Bundles Identity
+
+```sql
+-- ============================================
+-- BUNDLES: IDENTITY
+-- ============================================
+
+INSERT INTO bundles_funciones (nombre, display_name, descripcion, categoria) VALUES
+('bundle_identity_help_desk', 
+ 'Identity Help Desk', 
+ 'Soporte para problemas de acceso', 
+ 'identity'),
+
+('bundle_identity_admin_usuarios', 
+ 'Identity Admin Usuarios', 
+ 'Administrador de usuarios del dominio', 
+ 'identity'),
+
+('bundle_identity_security_admin', 
+ 'Identity Security Admin', 
+ 'Administrador de seguridad del dominio', 
+ 'identity');
+
+-- Contenido de bundles
+INSERT INTO bundle_contiene_funciones (bundle_id, funcion_id, orden)
+SELECT 
+    (SELECT id FROM bundles_funciones WHERE nombre = 'bundle_identity_help_desk'),
+    id,
+    ROW_NUMBER() OVER (ORDER BY nombre)
+FROM funciones WHERE namespace = 'identity' AND nombre IN (
+    'asiste_usuarios',
+    'resetea_passwords',
+    've_auditoria'
+);
+
+INSERT INTO bundle_contiene_funciones (bundle_id, funcion_id, orden)
+SELECT 
+    (SELECT id FROM bundles_funciones WHERE nombre = 'bundle_identity_admin_usuarios'),
+    id,
+    ROW_NUMBER() OVER (ORDER BY nombre)
+FROM funciones WHERE namespace = 'identity' AND nombre IN (
+    'crea_usuarios',
+    'modifica_usuarios',
+    'gestiona_equipo_propio',
+    'resetea_passwords',
+    've_auditoria'
+);
+
+INSERT INTO bundle_contiene_funciones (bundle_id, funcion_id, orden)
+SELECT 
+    (SELECT id FROM bundles_funciones WHERE nombre = 'bundle_identity_security_admin'),
+    id,
+    ROW_NUMBER() OVER (ORDER BY nombre)
+FROM funciones WHERE namespace = 'identity' AND nombre IN (
+    'configura_politicas_seguridad',
+    'gestiona_certificados',
+    've_eventos_seguridad',
+    've_auditoria'
+);
+```
+
+### Bundles EPM
+
+```sql
+-- ============================================
+-- BUNDLES: EPM
+-- ============================================
+
+INSERT INTO bundles_funciones (nombre, display_name, descripcion, categoria) VALUES
+('bundle_epm_help_desk', 
+ 'EPM Help Desk', 
+ 'Soporte que agrega usuarios a grupos', 
+ 'epm'),
+
+('bundle_epm_admin_grupos', 
+ 'EPM Admin Grupos', 
+ 'Administrador de grupos EPM', 
+ 'epm'),
+
+('bundle_epm_power_user', 
+ 'EPM Power User', 
+ 'Usuario avanzado con gestion de archivos y grupos', 
+ 'epm');
+
+-- Contenido de bundles
+INSERT INTO bundle_contiene_funciones (bundle_id, funcion_id, orden)
+SELECT 
+    (SELECT id FROM bundles_funciones WHERE nombre = 'bundle_epm_help_desk'),
+    id,
+    ROW_NUMBER() OVER (ORDER BY nombre)
+FROM funciones WHERE namespace = 'epm' AND nombre IN (
+    've_grupos',
+    'agrega_miembros',
+    'sube_archivos'
+);
+
+INSERT INTO bundle_contiene_funciones (bundle_id, funcion_id, orden)
+SELECT 
+    (SELECT id FROM bundles_funciones WHERE nombre = 'bundle_epm_admin_grupos'),
+    id,
+    ROW_NUMBER() OVER (ORDER BY nombre)
+FROM funciones WHERE namespace = 'epm' AND nombre IN (
+    'crea_grupos',
+    'modifica_grupos',
+    'agrega_miembros',
+    'remueve_miembros',
+    've_grupos',
+    'lista_miembros',
+    'sube_archivos'
+);
+
+INSERT INTO bundle_contiene_funciones (bundle_id, funcion_id, orden)
+SELECT 
+    (SELECT id FROM bundles_funciones WHERE nombre = 'bundle_epm_power_user'),
+    id,
+    ROW_NUMBER() OVER (ORDER BY nombre)
+FROM funciones WHERE namespace = 'epm' AND nombre IN (
+    'crea_grupos',
+    'modifica_grupos',
+    'agrega_miembros',
+    'sube_archivos',
+    'descarga_archivos',
+    'lista_archivos',
+    'procesa_csv',
+    've_logs'
+);
+```
+
+### Funcion para Asignar Bundle
+
+```sql
+-- Funcion para asignar bundle completo a una persona
+CREATE OR REPLACE FUNCTION asignar_bundle(
+    p_persona_id UUID,
+    p_bundle_id UUID,
+    p_razon TEXT DEFAULT NULL
+)
+RETURNS TABLE (
+    funciones_asignadas INTEGER,
+    errores TEXT[]
+) AS $$
+DECLARE
+    v_bundle_nombre VARCHAR(100);
+    v_funciones_count INTEGER := 0;
+    v_errores TEXT[] := ARRAY[]::TEXT[];
+    r RECORD;
+    v_validacion RECORD;
+BEGIN
+    -- Obtener nombre del bundle
+    SELECT nombre INTO v_bundle_nombre
+    FROM bundles_funciones
+    WHERE id = p_bundle_id AND activo = true;
+    
+    IF v_bundle_nombre IS NULL THEN
+        RAISE EXCEPTION 'Bundle no existe o no esta activo';
+    END IF;
+    
+    -- Procesar cada funcion del bundle
+    FOR r IN 
+        SELECT f.id, f.nombre_completo
+        FROM bundle_contiene_funciones bcf
+        JOIN funciones f ON bcf.funcion_id = f.id
+        WHERE bcf.bundle_id = p_bundle_id
+        ORDER BY bcf.orden
+    LOOP
+        -- Validar SSD
+        SELECT * INTO v_validacion
+        FROM validar_ssd_antes_asignar(p_persona_id, r.id);
+        
+        IF v_validacion.valido THEN
+            -- Asignar funcion
+            INSERT INTO asignaciones_persona_funcion (
+                persona_id, 
+                funcion_id, 
+                razon,
+                via_bundle
+            )
+            VALUES (
+                p_persona_id,
+                r.id,
+                COALESCE(p_razon, 'Asignado via bundle: ' || v_bundle_nombre),
+                v_bundle_nombre
+            )
+            ON CONFLICT (persona_id, funcion_id) DO NOTHING;
+            
+            v_funciones_count := v_funciones_count + 1;
+        ELSE
+            -- Registrar error
+            v_errores := array_append(v_errores, 
+                format('Funcion %s: %s', r.nombre_completo, v_validacion.mensaje));
+        END IF;
+    END LOOP;
+    
+    RETURN QUERY SELECT v_funciones_count, v_errores;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+---
+
+## Implementacion SQL
+
+### Funciones SQL Utiles
+
+#### Obtener Capacidades de una Persona
+
+```sql
+CREATE OR REPLACE FUNCTION obtener_capacidades_persona(p_persona_id UUID)
+RETURNS TABLE (
+    recurso VARCHAR(100),
+    operacion VARCHAR(50),
+    scope JSONB,
+    a_traves_de_funcion VARCHAR(200)
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT DISTINCT
+        c.recurso,
+        c.operacion,
+        c.scope,
+        f.nombre_completo
+    FROM capacidades c
+    JOIN asignaciones_capacidad_funcion acf ON c.id = acf.capacidad_id
+    JOIN asignaciones_persona_funcion apf ON acf.funcion_id = apf.funcion_id
+    JOIN funciones f ON apf.funcion_id = f.id
+    WHERE apf.persona_id = p_persona_id
+      AND apf.activa = true
+      AND acf.activa = true
+      AND c.activa = true
+      AND (apf.valida_hasta IS NULL OR apf.valida_hasta > NOW())
+    ORDER BY c.recurso, c.operacion;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+#### Verificar si Persona Puede Realizar Accion
+
+```sql
+CREATE OR REPLACE FUNCTION puede_realizar_accion(
+    p_persona_id UUID,
+    p_recurso VARCHAR(100),
+    p_operacion VARCHAR(50)
+)
+RETURNS BOOLEAN AS $$
+DECLARE
+    tiene_capacidad BOOLEAN;
+BEGIN
+    SELECT EXISTS(
+        SELECT 1
+        FROM capacidades c
+        JOIN asignaciones_capacidad_funcion acf ON c.id = acf.capacidad_id
+        JOIN asignaciones_persona_funcion apf ON acf.funcion_id = apf.funcion_id
+        WHERE apf.persona_id = p_persona_id
+          AND c.recurso = p_recurso
+          AND c.operacion = p_operacion
+          AND apf.activa = true
+          AND acf.activa = true
+          AND c.activa = true
+          AND (apf.valida_hasta IS NULL OR apf.valida_hasta > NOW())
+    ) INTO tiene_capacidad;
+    
+    RETURN tiene_capacidad;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+#### Trigger: Log Automatico
+
+```sql
+CREATE OR REPLACE FUNCTION log_auditoria_automatico()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_persona_id UUID;
+BEGIN
+    -- Intentar obtener persona_id de diferentes campos
+    IF TG_OP = 'DELETE' THEN
+        v_persona_id := OLD.persona_id;
+    ELSE
+        v_persona_id := COALESCE(
+            NEW.modificada_por, 
+            NEW.creada_por, 
+            NEW.asignada_por,
+            NEW.persona_id
+        );
+    END IF;
+    
+    INSERT INTO log_auditoria (
+        persona_id,
+        accion_tipo,
+        recurso_tipo,
+        recurso_id,
+        detalles,
+        exitosa
+    ) VALUES (
+        v_persona_id,
+        TG_OP || '_' || TG_TABLE_NAME,
+        TG_TABLE_NAME,
+        COALESCE(NEW.id::TEXT, OLD.id::TEXT),
+        CASE 
+            WHEN TG_OP = 'DELETE' THEN row_to_json(OLD)
+            ELSE row_to_json(NEW)
+        END,
+        true
+    );
+    
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    ELSE
+        RETURN NEW;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Aplicar trigger a tablas relevantes
+CREATE TRIGGER trigger_audit_funciones
+AFTER INSERT OR UPDATE OR DELETE ON funciones
+FOR EACH ROW EXECUTE FUNCTION log_auditoria_automatico();
+
+CREATE TRIGGER trigger_audit_asignaciones_pf
+AFTER INSERT OR UPDATE OR DELETE ON asignaciones_persona_funcion
+FOR EACH ROW EXECUTE FUNCTION log_auditoria_automatico();
+
+CREATE TRIGGER trigger_audit_personas
+AFTER INSERT OR UPDATE OR DELETE ON personas
+FOR EACH ROW EXECUTE FUNCTION log_auditoria_automatico();
+```
+
+---
+
+## Queries Utiles
+
+### Ver Funciones de una Persona
+
+```sql
+SELECT 
+    p.nombre_completo,
+    p.email,
+    f.nombre_completo as funcion,
+    f.descripcion_corta,
+    f.categoria,
+    apf.fecha_asignacion,
+    apf.razon,
+    apf.via_bundle
+FROM personas p
+JOIN asignaciones_persona_funcion apf ON p.id = apf.persona_id
+JOIN funciones f ON apf.funcion_id = f.id
+WHERE p.email = 'usuario@empresa.com'
+  AND apf.activa = true
+ORDER BY f.namespace, f.categoria, f.nombre;
+```
+
+### Ver Capacidades Efectivas de una Persona
+
+```sql
+SELECT DISTINCT
+    p.nombre_completo,
+    c.recurso,
+    c.operacion,
+    c.descripcion,
+    f.nombre_completo as a_traves_de_funcion
+FROM personas p
+JOIN asignaciones_persona_funcion apf ON p.id = apf.persona_id
+JOIN funciones f ON apf.funcion_id = f.id
+JOIN asignaciones_capacidad_funcion acf ON f.id = acf.funcion_id
+JOIN capacidades c ON acf.capacidad_id = c.id
+WHERE p.email = 'usuario@empresa.com'
+  AND apf.activa = true
+  AND acf.activa = true
+  AND c.activa = true
+ORDER BY c.recurso, c.operacion;
+```
+
+### Ver Quien Tiene Cierta Capacidad
+
+```sql
+SELECT 
+    p.nombre_completo,
+    p.email,
+    p.departamento,
+    f.nombre_completo as a_traves_de_funcion
+FROM personas p
+JOIN asignaciones_persona_funcion apf ON p.id = apf.persona_id
+JOIN funciones f ON apf.funcion_id = f.id
+JOIN asignaciones_capacidad_funcion acf ON f.id = acf.funcion_id
+JOIN capacidades c ON acf.capacidad_id = c.id
+WHERE c.recurso = 'facturas'
+  AND c.operacion = 'aprobar'
+  AND apf.activa = true
+ORDER BY p.nombre_completo;
+```
+
+### Verificar Violaciones de SSD
+
+```sql
+SELECT 
+    r.nombre as restriccion,
+    r.descripcion,
+    p.nombre_completo,
+    p.email,
+    array_agg(f.nombre_completo) as funciones_conflictivas
+FROM personas p
+JOIN asignaciones_persona_funcion apf ON p.id = apf.persona_id
+JOIN funciones f ON apf.funcion_id = f.id
+CROSS JOIN restricciones_ssd r
+WHERE apf.activa = true
+  AND r.activa = true
+  AND f.id = ANY(r.funciones_exclusivas)
+GROUP BY r.id, r.nombre, r.descripcion, r.cardinalidad, p.id, p.nombre_completo, p.email
+HAVING COUNT(DISTINCT f.id) > (
+    SELECT cardinalidad 
+    FROM restricciones_ssd 
+    WHERE id = r.id
+);
+```
+
+### Auditoria: Quien Asigno Que a Quien
+
+```sql
+SELECT 
+    p_asignado.nombre_completo as persona_asignada,
+    f.nombre_completo as funcion_asignada,
+    f.categoria,
+    p_asigno.nombre_completo as asignado_por,
+    apf.fecha_asignacion,
+    apf.razon,
+    apf.via_bundle
+FROM asignaciones_persona_funcion apf
+JOIN personas p_asignado ON apf.persona_id = p_asignado.id
+JOIN funciones f ON apf.funcion_id = f.id
+LEFT JOIN personas p_asigno ON apf.asignada_por = p_asigno.id
+WHERE apf.activa = true
+ORDER BY apf.fecha_asignacion DESC
+LIMIT 50;
+```
+
+### Funciones Mas Asignadas
+
+```sql
+SELECT 
+    f.nombre_completo,
+    f.namespace,
+    f.categoria,
+    COUNT(DISTINCT apf.persona_id) as num_personas,
+    f.descripcion_corta
+FROM funciones f
+JOIN asignaciones_persona_funcion apf ON f.id = apf.funcion_id
+WHERE apf.activa = true
+GROUP BY f.id, f.nombre_completo, f.namespace, f.categoria, f.descripcion_corta
+ORDER BY num_personas DESC
+LIMIT 20;
+```
+
+### Funciones por Namespace
+
+```sql
+SELECT 
+    COALESCE(namespace, 'base') as dominio,
+    COUNT(*) as total_funciones,
+    COUNT(*) FILTER (WHERE activa = true) as activas,
+    COUNT(*) FILTER (WHERE critico = true) as criticas
+FROM funciones
+GROUP BY namespace
+ORDER BY total_funciones DESC;
+```
+
+### Personas sin Funciones Asignadas
+
+```sql
+SELECT 
+    p.nombre_completo,
+    p.email,
+    p.departamento,
+    p.fecha_creacion
+FROM personas p
+WHERE p.activa = true
+  AND NOT EXISTS (
+      SELECT 1 
+      FROM asignaciones_persona_funcion apf 
+      WHERE apf.persona_id = p.id 
+        AND apf.activa = true
+  )
+ORDER BY p.fecha_creacion DESC;
+```
+
+### Ver Resultados de Operaciones Masivas
+
+```sql
+-- Resumen de operaciones recientes
+SELECT 
+    om.tipo_operacion,
+    om.nombre_archivo,
+    om.contexto->>'grupo_destino' as grupo_destino,
+    p.nombre_completo as iniciada_por,
+    om.fecha_inicio,
+    om.total_registros,
+    om.registros_exitosos,
+    om.registros_fallidos,
+    ROUND((om.registros_fallidos::NUMERIC / om.total_registros) * 100, 2) as porcentaje_error,
+    om.estado
+FROM operaciones_masivas om
+JOIN personas p ON om.iniciada_por = p.id
+WHERE om.fecha_inicio > NOW() - INTERVAL '30 days'
+ORDER BY om.fecha_inicio DESC
+LIMIT 20;
+
+-- Operaciones con alta tasa de error
+SELECT 
+    om.tipo_operacion,
+    om.nombre_archivo,
+    om.total_registros,
+    om.registros_fallidos,
+    ROUND((om.registros_fallidos::NUMERIC / om.total_registros) * 100, 2) as porcentaje_error
+FROM operaciones_masivas om
+WHERE om.estado = 'completado'
+  AND om.registros_fallidos > 0
+  AND om.total_registros > 0
+ORDER BY porcentaje_error DESC
+LIMIT 20;
+```
+
+### Bundles Mas Usados
+
+```sql
+SELECT 
+    bf.nombre,
+    bf.display_name,
+    bf.categoria,
+    COUNT(DISTINCT apf.persona_id) as personas_con_bundle,
+    (SELECT COUNT(*) FROM bundle_contiene_funciones WHERE bundle_id = bf.id) as num_funciones
+FROM bundles_funciones bf
+JOIN bundle_contiene_funciones bcf ON bf.id = bcf.bundle_id
+JOIN asignaciones_persona_funcion apf ON bcf.funcion_id = apf.funcion_id
+WHERE bf.activo = true
+  AND apf.activa = true
+  AND apf.via_bundle = bf.nombre
+GROUP BY bf.id, bf.nombre, bf.display_name, bf.categoria
+ORDER BY personas_con_bundle DESC;
+```
+
+---
+
+## Guia de Uso
+
+### Proceso de Implementacion
+
+#### Fase 1: Diseno
+
+1. Identificar recursos del sistema (sustantivos)
+2. Identificar operaciones posibles (verbos)
+3. Crear lista de capacidades (recurso:operacion)
+4. Identificar dominios que necesitan namespace
+5. Nombrar funciones segun patron verbo_sustantivo con namespace
+6. Identificar procesos criticos que requieren SSD
+7. Documentar cada funcion claramente
+
+#### Fase 2: Implementacion Base de Datos
+
+1. Crear extension UUID
+2. Crear tablas core (personas, funciones con namespace, capacidades)
+3. Crear tablas de asignacion
+4. Crear tablas de bundles
+5. Crear tabla de restricciones SSD
+6. Crear tablas de operaciones masivas
+7. Crear tabla de auditoria
+8. Crear indices apropiados
+9. Implementar funciones SQL utiles
+10. Implementar triggers de auditoria
+
+#### Fase 3: Carga Inicial
+
+1. Cargar capacidades base del sistema
+2. Cargar capacidades identity
+3. Cargar capacidades epm
+4. Crear funciones iniciales (base, identity, epm)
+5. Asignar capacidades a funciones
+6. Definir restricciones SSD
+7. Crear bundles comunes
+8. Cargar usuarios existentes como personas
+9. Migrar permisos legacy a nuevo modelo
+
+#### Fase 4: Logica de Aplicacion
+
+1. Implementar funcion: obtener_capacidades_usuario()
+2. Implementar funcion: puede_realizar_accion()
+3. Implementar funcion: validar_ssd()
+4. Implementar funcion: asignar_bundle()
+5. Integrar con sistema de autenticacion
+6. Agregar verificacion en cada endpoint/accion
+7. Implementar logging de acciones
+8. Implementar procesamiento de operaciones masivas
+
+#### Fase 5: UI de Administracion
+
+1. Pantalla: Gestion de personas
+2. Pantalla: Gestion de funciones (filtro por namespace)
+3. Pantalla: Asignacion persona-funcion
+4. Pantalla: Asignacion via bundles (simplificada)
+5. Pantalla: Ver capacidades efectivas de persona
+6. Pantalla: Auditoria de cambios
+7. Pantalla: Gestion de restricciones SSD
+8. Pantalla: Monitoreo de operaciones masivas
+
+#### Fase 6: Testing
+
+1. Test: Usuario puede hacer accion permitida
+2. Test: Usuario NO puede hacer accion no permitida
+3. Test: SSD bloquea asignaciones incorrectas
+4. Test: Auditoria se registra correctamente
+5. Test: Performance con 1000+ usuarios
+6. Test: Operaciones masivas CSV funcionan correctamente
+7. Test: Bundles asignan funciones correctamente
+8. Test: Namespace evita colisiones
+
+### Ejemplos de Asignacion
+
+#### Ejemplo 1: Usuario de Finanzas (Base)
+
+```sql
+-- Ana - Ingresa facturas
+INSERT INTO asignaciones_persona_funcion (persona_id, funcion_id, razon)
+SELECT 
+    (SELECT id FROM personas WHERE email = 'ana@empresa.com'),
+    id,
+    'Usuario del departamento de finanzas'
+FROM funciones
+WHERE namespace IS NULL 
+  AND nombre = 'crea_facturas';
+```
+
+#### Ejemplo 2: Identity Help Desk (Bundle)
+
+```sql
+-- Carlos - Soporte Identity usando bundle
+SELECT asignar_bundle(
+    (SELECT id FROM personas WHERE email = 'carlos@empresa.com'),
+    (SELECT id FROM bundles_funciones WHERE nombre = 'bundle_identity_help_desk'),
+    'Usuario de help desk para Identity'
+);
+```
+
+#### Ejemplo 3: EPM Administrator (Granular)
+
+```sql
+-- Laura - Admin de grupos EPM
+INSERT INTO asignaciones_persona_funcion (persona_id, funcion_id, razon)
+SELECT 
+    (SELECT id FROM personas WHERE email = 'laura@empresa.com'),
+    id,
+    'Administradora de grupos en EPM'
+FROM funciones
+WHERE namespace = 'epm'
+  AND nombre IN ('crea_grupos', 'modifica_grupos', 'agrega_miembros', 'remueve_miembros', 've_grupos');
+```
+
+#### Ejemplo 4: Service Administrator EPM (Super Admin)
+
+```sql
+-- Juan - Service Admin EPM
+INSERT INTO asignaciones_persona_funcion (persona_id, funcion_id, razon)
+VALUES (
+    (SELECT id FROM personas WHERE email = 'juan@empresa.com'),
+    (SELECT id FROM funciones WHERE namespace = 'epm' AND nombre = 'administra_ambiente'),
+    'Service Administrator de EPM Cloud'
+);
+```
+
+#### Ejemplo 5: Desarrollador (Base + Bundle)
+
+```sql
+-- Maria - Desarrolladora
+SELECT asignar_bundle(
+    (SELECT id FROM personas WHERE email = 'maria@empresa.com'),
+    (SELECT id FROM bundles_funciones WHERE nombre = 'bundle_desarrollador'),
+    'Desarrolladora del equipo de producto'
+);
+```
+
+### Buenas Practicas
+
+#### Principio de Menor Privilegio
+
+Asignar solo las funciones necesarias. No dar accesos innecesarios.
+
+```sql
+-- MAL: Dar acceso completo cuando solo necesita lectura
+INSERT INTO asignaciones_persona_funcion (persona_id, funcion_id)
+VALUES (user_id, (SELECT id FROM funciones WHERE nombre = 'gestiona_usuarios'));
+
+-- BIEN: Dar solo lectura
+INSERT INTO asignaciones_persona_funcion (persona_id, funcion_id)
+VALUES (user_id, (SELECT id FROM funciones WHERE nombre = 've_usuarios'));
+```
+
+#### Usar Bundles para Simplificar
+
+Para usuarios comunes, usar bundles predefinidos.
+
+```sql
+-- En vez de asignar 5 funciones manualmente
+-- Usar bundle que las incluye todas
+SELECT asignar_bundle(
+    user_id,
+    (SELECT id FROM bundles_funciones WHERE nombre = 'bundle_epm_help_desk'),
+    'Help desk EPM'
+);
+```
+
+#### Revision Periodica
+
+Revisar trimestralmente las asignaciones.
+
+```sql
+-- Funciones asignadas hace mas de 1 ano
+SELECT 
+    p.nombre_completo,
+    f.nombre_completo,
+    apf.fecha_asignacion,
+    age(CURRENT_DATE, apf.fecha_asignacion::date) as antiguedad
+FROM asignaciones_persona_funcion apf
+JOIN personas p ON apf.persona_id = p.id
+JOIN funciones f ON apf.funcion_id = f.id
+WHERE apf.activa = true
+  AND apf.fecha_asignacion < CURRENT_DATE - INTERVAL '1 year'
+ORDER BY apf.fecha_asignacion;
+```
+
+#### Validar SSD Siempre
+
+```sql
+-- SIEMPRE validar antes de asignar
+SELECT * FROM validar_ssd_antes_asignar('persona-uuid', 'funcion-uuid');
+
+-- Solo asignar si pasa validacion
+INSERT INTO asignaciones_persona_funcion (persona_id, funcion_id, razon)
+SELECT 'persona-uuid', 'funcion-uuid', 'Razon'
+WHERE (SELECT valido FROM validar_ssd_antes_asignar('persona-uuid', 'funcion-uuid'));
+```
+
+#### Documentar Razones
+
+Siempre llenar el campo razon.
+
+```sql
+-- MAL: Sin razon
+INSERT INTO asignaciones_persona_funcion (persona_id, funcion_id)
+VALUES (user_id, function_id);
+
+-- BIEN: Con razon clara
+INSERT INTO asignaciones_persona_funcion (persona_id, funcion_id, razon)
+VALUES (
+    user_id, 
+    function_id,
+    'Nuevo miembro del equipo de soporte - necesita agregar usuarios a grupos EPM'
+);
+```
+
+#### Monitorear Operaciones Masivas
+
+```sql
+-- Revisar operaciones con errores
+SELECT 
+    om.nombre_archivo,
+    om.total_registros,
+    om.registros_fallidos,
+    ROUND((om.registros_fallidos::NUMERIC / om.total_registros) * 100, 2) as porcentaje_error
+FROM operaciones_masivas om
+WHERE om.estado = 'completado'
+  AND om.registros_fallidos > 0
+  AND om.fecha_inicio > NOW() - INTERVAL '7 days'
+ORDER BY porcentaje_error DESC;
+```
+
+---
+
+## Resumen Ejecutivo
+
+### Modelo Completo
+
+Este modelo RBAC granular ofrece:
+
+1. Claridad: Los nombres de funciones describen exactamente que pueden hacer
+2. Granularidad Maxima: Funciones atomicas que se componen segun necesidad
+3. Namespace: Evita colisiones entre dominios (base, identity, epm)
+4. Seguridad: Restricciones SSD previenen combinaciones peligrosas
+5. Auditoria: Registro completo de quien hizo que y cuando
+6. Escalabilidad: Facil agregar nuevas funciones
+7. Mantenibilidad: Cambios organizacionales no afectan permisos
+8. Usabilidad: Bundles simplifican asignaciones comunes
+9. Flexibilidad: Componible como LEGO
+
+### Total de Funciones Documentadas
+
+Funciones Base: 25
+Funciones Identity: 30
+Funciones EPM: 20
+Total: 75 funciones granulares
+
+### Recursos del Sistema
+
+14 recursos base definidos:
+- facturas, pagos, repositorios, pull_requests, deploys
+- usuarios, clientes, contenido
+- configuracion_sistema, logs_auditoria
+
+Identity: 20+ recursos adicionales
+EPM: 5 recursos adicionales
+
+### Operaciones Estandar
+
+15+ operaciones definidas:
+- crear, leer, modificar, eliminar
+- aprobar, rechazar
+- ejecutar, procesar
+- subir, descargar
+- agregar, remover
+- listar, monitorear, configurar
+
+### Restricciones SSD
+
+10 restricciones SSD definidas:
+- 4 del sistema base
+- 3 de Oracle Identity
+- 3 de EPM
+
+### Bundles Predefinidos
+
+10 bundles listos para usar:
+- 3 de finanzas
+- 3 de desarrollo
+- 3 de identity
+- 3 de epm
+
+Mas capacity para crear bundles personalizados.
+
+### Listo para Produccion
+
+El modelo incluye:
+- Schema SQL completo
+- Funciones SQL utiles
+- Triggers de auditoria
+- Validacion de SSD
+- Procesamiento de operaciones masivas
+- Bundles para simplificar asignaciones
+- Queries de monitoreo
+- Guia de implementacion
+
+---
+
+Fin del Documento
+
+Version 4.0 FINAL - Octubre 2025
+Modelo RBAC Granular con Namespace
+80+ Funciones | 40+ Recursos | 10 Restricciones SSD | 10 Bundles
+ENDOFFILE

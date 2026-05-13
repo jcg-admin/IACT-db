@@ -1,0 +1,160 @@
+.. meta::
+   :artefacto: FR-011.02
+   :tipo: Requisito Funcional
+   :dominio: requisitos
+   :subdominio: funcionales/access
+   :estado: Aprobado
+   :version: 1.0.0
+   :fecha: 2026-01-07
+   :autor: Equipo IACT
+
+.. _fr-011-02:
+
+=========================================
+FR-011.02: Eliminar asignación de función
+=========================================
+
+
+1. Identificación
+-----------------
+
+.. list-table::
+   :widths: 25 75
+
+   * - **ID**
+     - FR-011.02
+   * - **Nombre**
+     - Eliminar registro de asignación usuario-función
+   * - **UC Origen**
+     - UC_011: Revocar Funciones a Usuario
+   * - **Paso UC**
+     - Paso 6-7 del flujo normal
+   * - **Módulo**
+     - MOD_Access
+   * - **Prioridad**
+     - Alta
+   * - **Tipo**
+     - Datos
+
+----
+
+2. Especificación
+-----------------
+
+**Declaración:**
+
+   El sistema DEBE eliminar los registros de asignación seleccionados
+   CUANDO el admin confirma la revocación de funciones.
+
+**Descripción:**
+
+   Proceso de revocación:
+   
+   1. Valida que funciones seleccionadas pueden revocarse
+   2. Para cada función: marca registro como revocado
+   3. Registra metadata de revocación
+   4. Registra evento en auditoría
+   5. Actualiza permisos efectivos del usuario
+   
+   **Baja Lógica vs Física:**
+   
+   Opción 1 (Recomendada): Baja lógica
+   - Actualiza ``revoked_at = NOW()``
+   - Actualiza ``revoked_by = ID admin``
+   - Mantiene historial completo
+   
+   Opción 2: DELETE físico
+   - Solo si no se requiere histórico
+   - Auditoría mantiene el registro
+
+----
+
+3. Criterio de Aceptación
+-------------------------
+
+::
+
+   DADO funciones seleccionadas para revocar
+   CUANDO admin confirma la revocación
+   ENTONCES se eliminan/marcan las asignaciones
+   
+   Escenario 1: Revocación simple
+   DADO función ACC-003 seleccionada
+   CUANDO se confirma revocación
+   ENTONCES el registro tiene revoked_at = NOW()
+   Y revoked_by = ID del admin
+   Y función ya no está activa para el usuario
+   
+   Escenario 2: Revocación de agrupador
+   DADO usuario con AGR-003 (4 funciones)
+   CUANDO se revoca el agrupador completo
+   ENTONCES las 4 funciones se revocan juntas
+   Y auditoría indica "Revocación de AGR-003"
+   
+   Escenario 3: Revocación múltiple
+   DADO 3 funciones seleccionadas
+   CUANDO se confirma
+   ENTONCES las 3 se revocan en la misma transacción
+   Y auditoría lista las 3 funciones
+   
+   Escenario 4: Efecto inmediato
+   DADO usuario con sesión activa
+   CUANDO se le revocan funciones
+   ENTONCES los permisos se actualizan inmediatamente
+   Y siguiente request usa permisos actualizados
+
+----
+
+4. Reglas y Restricciones
+-------------------------
+
+- **BR aplicables:**
+  - BR_009: Bajas lógicas (si aplica)
+  
+- **CNST aplicables:**
+  - CNST-002: Gestión de datos
+  - CNST-009: Auditoría obligatoria
+
+**Atomicidad:**
+
+Todas las revocaciones de una operación deben ser atómicas.
+Si falla una, no se revoca ninguna.
+
+----
+
+5. Trazabilidad
+---------------
+
+.. list-table::
+   :widths: 20 80
+
+   * - **BReq**
+     - BReq-004: Cumplimiento de Seguridad
+   * - **UC**
+     - UC_011: Revocar Funciones
+   * - **Depende de**
+     - FR-011.01
+   * - **Requerido por**
+     - FR-011.03
+   * - **BR**
+     - BR_009
+   * - **CNST**
+     - CNST-002, CNST-009
+   * - **TEST**
+     - TST-FR-011.02 (pendiente)
+
+----
+
+6. Historial
+------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - Versión
+     - Fecha
+     - Cambio
+   * - 1.0.0
+     - 2026-01-07
+     - Versión inicial derivada de UC_011

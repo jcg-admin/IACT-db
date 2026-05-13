@@ -1,0 +1,92 @@
+@startuml sistema_iact_contexto
+!define SYSTEM_COLOR #3498DB
+!define EXTERNAL_COLOR #95A5A6
+!define USER_COLOR #E74C3C
+
+skinparam rectangle {
+  BackgroundColor<<Sistema>> SYSTEM_COLOR
+  BackgroundColor<<Externo>> EXTERNAL_COLOR
+  BorderColor #2C3E50
+}
+
+skinparam actor {
+  BackgroundColor USER_COLOR
+  BorderColor #C0392B
+}
+
+title Diagrama de Contexto - Sistema IACT
+
+left to right direction
+
+' Actores humanos
+actor "Agente de\nServicio" as Agente <<Usuario>>
+actor "Analista de\nNegocio" as Analista <<Usuario>>
+actor "Cliente" as Cliente <<Usuario>>
+actor "Supervisor" as Supervisor <<Usuario>>
+
+' Sistema central
+rectangle "Sistema IACT\n(Interactive Analytics & Call Tracking)" as IACT <<Sistema>> {
+  component "Frontend Web" as FE
+  component "API Backend" as API
+  component "Base de Datos" as DB
+  component "Motor de Reportes" as Reportes
+  component "Motor de Métricas" as Metricas
+}
+
+' Sistemas externos
+rectangle "Sistema\nTelefónico\n(PBX/IVR)" as PBX <<Externo>>
+rectangle "CRM\nExterno" as CRM <<Externo>>
+rectangle "Sistema de\nEnvíos" as Envios <<Externo>>
+rectangle "Servicio de\nEmail/SMS" as Notif <<Externo>>
+
+' Relaciones: Usuarios -> Sistema IACT
+Agente --> FE : Registra llamadas\nConsulta información
+Analista --> FE : Genera reportes\nAnaliza métricas
+Cliente --> FE : Consulta pedidos\nAutoservicio
+Supervisor --> FE : Revisa dashboards\nAprueba reportes
+
+' Relaciones: Sistema IACT <-> Sistemas Externos
+PBX <--> API : Datos de llamadas\n(ANI, DNIS, duración)
+IACT <--> CRM : Sincroniza\ninteracciones
+API --> Envios : Consulta tracking
+API --> Notif : Envía notificaciones
+
+' Relaciones internas IACT
+FE --> API
+API --> DB
+API --> Reportes
+API --> Metricas
+Reportes --> DB
+Metricas --> DB
+
+note right of IACT
+  **Sistema Central**
+
+  Responsabilidades:
+  - Registro de llamadas
+  - Generación de reportes
+  - Análisis de métricas
+  - Consulta de pedidos
+  - Gestión de notificaciones
+end note
+
+note left of PBX
+  **Sistema Telefónico**
+
+  Proporciona:
+  - Datos de llamadas entrantes
+  - Identificación de números
+  - Duración de llamadas
+  - Estado de conexión
+end note
+
+note bottom of CRM
+  **CRM Externo**
+
+  Sincronización:
+  - Interacciones de clientes
+  - Historial de contactos
+  - Actualización bidireccional
+end note
+
+@enduml

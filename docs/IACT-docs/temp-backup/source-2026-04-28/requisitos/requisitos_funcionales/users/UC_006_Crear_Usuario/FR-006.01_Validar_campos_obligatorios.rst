@@ -1,0 +1,165 @@
+.. meta::
+   :artefacto: FR-006.01
+   :tipo: Requisito Funcional
+   :dominio: requisitos
+   :subdominio: funcionales/users
+   :estado: Aprobado
+   :version: 1.0.0
+   :fecha: 2026-01-07
+   :autor: Equipo IACT
+
+.. _fr-006-01:
+
+======================================
+FR-006.01: Validar campos obligatorios
+======================================
+
+
+1. Identificación
+-----------------
+
+.. list-table::
+   :widths: 25 75
+
+   * - **ID**
+     - FR-006.01
+   * - **Nombre**
+     - Validar campos obligatorios del formulario de usuario
+   * - **UC Origen**
+     - UC_006: Crear Usuario
+   * - **Paso UC**
+     - Paso 3-5 del flujo normal
+   * - **Módulo**
+     - MOD_Users
+   * - **Prioridad**
+     - Alta
+   * - **Tipo**
+     - Validación
+
+----
+
+2. Especificación
+-----------------
+
+**Declaración:**
+
+   El sistema DEBE validar que todos los campos obligatorios estén
+   completos y con formato correcto CUANDO el administrador envía
+   el formulario de creación de usuario.
+
+**Descripción:**
+
+   Campos obligatorios y sus validaciones:
+   
+   **Username:**
+   
+   - Obligatorio
+   - 3-50 caracteres
+   - Solo alfanuméricos, guion bajo, punto
+   - No inicia con número
+   
+   **Nombre completo:**
+   
+   - Obligatorio
+   - 2-100 caracteres
+   - Letras, espacios, tildes permitidos
+   
+   **Email interno:**
+   
+   - Obligatorio
+   - Formato email válido
+   - Dominio debe ser @empresa.com (configurable)
+   
+   **Pregunta de seguridad:**
+   
+   - Obligatorio
+   - Selección de lista predefinida
+   
+   **Respuesta de seguridad:**
+   
+   - Obligatorio
+   - Mínimo 3 caracteres
+
+----
+
+3. Criterio de Aceptación
+-------------------------
+
+::
+
+   DADO un administrador en formulario de crear usuario
+   CUANDO envía el formulario
+   ENTONCES el sistema valida todos los campos obligatorios
+   
+   Escenario 1: Todos los campos válidos
+   DADO formulario con todos los campos correctos
+   CUANDO se envía
+   ENTONCES la validación pasa y continúa el proceso
+   
+   Escenario 2: Campo faltante
+   DADO formulario sin nombre completo
+   CUANDO se envía
+   ENTONCES se muestra "El campo Nombre es obligatorio"
+   Y el foco va al campo faltante
+   
+   Escenario 3: Formato inválido de email
+   DADO email = "usuario@otrodominio.com"
+   CUANDO se envía
+   ENTONCES se muestra "Email debe ser del dominio @empresa.com"
+   
+   Escenario 4: Username con caracteres inválidos
+   DADO username = "juan@perez"
+   CUANDO se envía
+   ENTONCES se muestra "Username solo permite letras, números, _ y ."
+
+----
+
+4. Reglas y Restricciones
+-------------------------
+
+- **BR aplicables:** Ninguna específica
+  
+- **CNST aplicables:**
+  - CNST-005: Seguridad (sanitización de inputs)
+
+**Validación en Frontend y Backend:**
+
+Todas las validaciones se ejecutan tanto en cliente como en servidor
+para mejorar UX y garantizar seguridad.
+
+----
+
+5. Trazabilidad
+---------------
+
+.. list-table::
+   :widths: 20 80
+
+   * - **BReq**
+     - BReq-004: Cumplimiento de Seguridad
+   * - **UC**
+     - UC_006: Crear Usuario
+   * - **Depende de**
+     - Ninguno
+   * - **Requerido por**
+     - FR-006.02
+   * - **CNST**
+     - CNST-005
+   * - **TEST**
+     - TST-FR-006.01 (pendiente)
+
+----
+
+6. Historial
+------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - Versión
+     - Fecha
+     - Cambio
+   * - 1.0.0
+     - 2026-01-07
+     - Versión inicial derivada de UC_006

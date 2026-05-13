@@ -1,0 +1,13 @@
+{
+  "name": "thyrox-local",
+  "owner": {
+    "name": "NestorMonroy"
+  },
+  "plugins": [
+    {
+      "name": "thyrox",
+      "source": "./.claude",
+      "description": "THYROX — Sistema agentic de gestión de proyectos con 12 stages propios"
+    }
+  ]
+}

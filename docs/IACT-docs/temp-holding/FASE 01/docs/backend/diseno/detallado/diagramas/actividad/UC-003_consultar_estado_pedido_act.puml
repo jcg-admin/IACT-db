@@ -1,0 +1,132 @@
+@startuml UC-003_consultar_estado_pedido_actividad
+!define PRIMARY_COLOR #2C3E50
+!define SUCCESS_COLOR #27AE60
+!define ERROR_COLOR #E74C3C
+!define INFO_COLOR #3498DB
+
+skinparam activityBackgroundColor #ECF0F1
+skinparam activityBorderColor PRIMARY_COLOR
+skinparam activityDiamondBackgroundColor #BDC3C7
+
+|Cliente|
+start
+
+:Accede al portal web;
+:Selecciona opción\n"Consultar estado de pedido";
+
+|Portal Web|
+:Muestra formulario de consulta;
+
+|Cliente|
+:Ingresa número de pedido\n(ej: PED-2024-5678);
+
+|Portal Web|
+:Valida formato del número;
+
+if (Formato válido?) then (sí)
+
+  |Sistema IACT|
+  :Busca pedido en base de datos;
+
+  if (Pedido existe?) then (sí)
+    :Recupera datos del pedido:
+    - Fecha de pedido
+    - Cliente
+    - Items
+    - Estado actual;
+
+    :Obtiene número de guía de envío;
+
+    |Sistema de Envíos|
+    :Consulta tracking actual;
+    :Retorna estado de entrega;
+
+    |Sistema IACT|
+    :Combina datos de pedido + tracking;
+
+    |Portal Web|
+    :Renderiza estado actual:
+    - Estado: "En tránsito"
+    - Última actualización
+    - Ubicación actual
+    - Fecha estimada de entrega;
+
+    :Muestra resumen al cliente;
+
+    |Cliente|
+    if (Solicita historial completo?) then (sí)
+
+      |Sistema IACT|
+      :Consulta historial de eventos;
+      :Retorna línea de tiempo:
+      - Pedido creado
+      - Pago confirmado
+      - Pedido enviado
+      - En tránsito
+      - (Pendiente: Entregado);
+
+      |Portal Web|
+      :Muestra línea de tiempo detallada;
+
+    endif
+
+    |Cliente|
+    if (Solicita notificación SMS?) then (sí)
+      :Proporciona número de teléfono;
+
+      |Sistema IACT|
+      :Valida número de teléfono;
+
+      if (Número válido?) then (sí)
+        :Configura notificación SMS\npara evento "Entregado";
+        :Confirma activación;
+
+        |Portal Web|
+        #INFO_COLOR:Recibirá SMS al momento de entrega;
+      else (no)
+        |Portal Web|
+        :Muestra error de validación;
+      endif
+    endif
+
+    |Portal Web|
+    #SUCCESS_COLOR:Consulta exitosa;
+    stop
+
+  else (no - pedido no existe)
+    :Muestra mensaje:\n"Número de pedido no encontrado";
+
+    |Cliente|
+    if (Desea reintentar?) then (sí)
+      :Ingresa nuevo número;
+
+      |Portal Web|
+      :Valida formato del número;
+      note right
+        Retorna a validación
+      end note
+    else (no)
+      #ERROR_COLOR:Pedido no encontrado;
+      stop
+    endif
+  endif
+
+else (no - formato inválido)
+  :Muestra error:\n"Formato inválido. Use PED-YYYY-NNNN";
+
+  |Cliente|
+  if (Desea corregir?) then (sí)
+    :Corrige número de pedido;
+
+    |Portal Web|
+    :Valida formato del número;
+    note right
+      Retorna a validación
+    end note
+  else (no)
+    #ERROR_COLOR:Formato inválido;
+    stop
+  endif
+endif
+
+@enduml

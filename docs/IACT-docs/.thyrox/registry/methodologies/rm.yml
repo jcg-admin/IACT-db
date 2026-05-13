@@ -1,0 +1,64 @@
+# RM — Requirements Management
+# type: conditional
+# Flujo secuencial con retornos condicionales: si la validación falla vuelve al análisis,
+# si se detectan gaps durante el análisis vuelve a la elicitación,
+# si hay un change request durante la gestión vuelve al análisis.
+
+id: rm
+type: conditional
+display: "RM — Requirements Management"
+note: >
+  Proceso iterativo de gestión de requisitos. Los retornos son condicionales:
+  gaps en análisis → elicitación adicional; validación fallida → re-análisis;
+  change request → re-análisis desde el cambio.
+
+native_phase_count: 5
+produces:
+  - Requirements List (raw)
+  - Refined + Prioritized Requirements
+  - SRS/BRD/User Stories Document
+  - Approved Requirements Baseline
+  - Requirements Traceability Matrix
+consumes:
+  - stakeholder-needs
+  - business-context
+  - system-scope
+
+steps:
+  - id: rm:elicitation
+    display: "Elicitation — Recopilar requisitos de stakeholders"
+    techniques: ["Entrevistas", "Talleres", "Observación", "Prototipos", "Encuestas"]
+    output: "Lista inicial de necesidades y expectativas de stakeholders"
+    next:
+      on_complete: [rm:analysis]
+
+  - id: rm:analysis
+    display: "Analysis — Analizar completitud, consistencia y conflictos"
+    checks: ["Completitud", "Consistencia", "Sin ambigüedades", "Sin conflictos entre requisitos"]
+    output: "Requisitos refinados y priorizados"
+    next:
+      on_success: [rm:specification]
+      on_gaps_found: [rm:elicitation]
+
+  - id: rm:specification
+    display: "Specification — Documentar en formato formal (SRS/BRD/User Stories)"
+    formats: ["IEEE 830 SRS", "BRD (Business Requirements Document)", "User Stories + Acceptance Criteria"]
+    output: "Documento de requisitos formal y trazable"
+    next:
+      on_complete: [rm:validation]
+
+  - id: rm:validation
+    display: "Validation — Verificar con stakeholders que los requisitos son correctos y completos"
+    techniques: ["Revisión formal", "Prototipado", "Test cases de aceptación", "Inspección"]
+    output: "Requisitos aprobados o lista de correcciones"
+    next:
+      on_approved: [rm:management]
+      on_corrections_needed: [rm:analysis]
+
+  - id: rm:management
+    display: "Management — Control de cambios, trazabilidad y baseline"
+    activities: ["Change Control Board", "Trazabilidad requisito→diseño→test", "Versionado de baseline", "Impact analysis"]
+    output: "Baseline de requisitos con trazabilidad completa"
+    next:
+      on_change_request: [rm:analysis]
+      on_stable: []

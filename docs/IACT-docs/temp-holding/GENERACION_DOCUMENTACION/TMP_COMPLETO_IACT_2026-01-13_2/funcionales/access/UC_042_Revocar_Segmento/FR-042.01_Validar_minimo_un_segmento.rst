@@ -1,0 +1,150 @@
+.. meta::
+   :artefacto: FR-042.01
+   :tipo: Requisito Funcional
+   :dominio: requisitos
+   :subdominio: funcionales/access
+   :estado: Aprobado
+   :version: 1.0.0
+   :fecha: 2026-01-07
+   :autor: Equipo IACT
+
+.. _fr-042-01:
+
+==============================================================================
+FR-042.01: Validar mínimo un segmento
+==============================================================================
+
+----
+
+1. Identificación
+-----------------
+
+.. list-table::
+   :widths: 25 75
+
+   * - **ID**
+     - FR-042.01
+   * - **Nombre**
+     - Validar que el usuario mantenga al menos un segmento
+   * - **UC Origen**
+     - UC_042: Revocar Segmento de Datos
+   * - **Paso UC**
+     - Paso 4 del flujo normal
+   * - **Módulo**
+     - MOD_Access
+   * - **Prioridad**
+     - Alta
+   * - **Tipo**
+     - Validación
+
+----
+
+2. Especificación
+-----------------
+
+**Declaración:**
+
+   El sistema DEBE validar que el usuario mantenga al menos un segmento
+   asignado CUANDO se intenta revocar segmentos, impidiendo dejarlo
+   sin acceso a datos.
+
+**Descripción:**
+
+   Proceso de validación:
+   
+   1. Cuenta segmentos actuales del usuario
+   2. Resta segmentos seleccionados para revocar
+   3. Si resultado < 1, bloquea operación
+   4. Muestra mensaje indicando el problema
+   
+   **Justificación:**
+   
+   Un usuario sin segmentos no puede ver ningún dato segmentado,
+   lo que efectivamente lo dejaría sin acceso útil al sistema.
+
+----
+
+3. Criterio de Aceptación
+-------------------------
+
+::
+
+   DADO admin intentando revocar segmentos
+   CUANDO la revocación dejaría al usuario sin segmentos
+   ENTONCES se bloquea la operación
+   
+   Escenario 1: Revocación parcial permitida
+   DADO usuario con 3 segmentos
+   CUANDO se intenta revocar 2
+   ENTONCES la operación se permite
+   Y queda 1 segmento asignado
+   
+   Escenario 2: Revocación total bloqueada
+   DADO usuario con 2 segmentos
+   CUANDO se intenta revocar los 2
+   ENTONCES se muestra "El usuario debe mantener al menos un segmento"
+   Y la operación se bloquea
+   
+   Escenario 3: Único segmento
+   DADO usuario con 1 solo segmento
+   CUANDO se intenta revocar ese segmento
+   ENTONCES checkbox está deshabilitado
+   Y tooltip indica "No se puede revocar el único segmento"
+   
+   Escenario 4: Validación preventiva
+   DADO lista de segmentos para revocar
+   CUANDO el admin selecciona
+   ENTONCES se actualiza contador en tiempo real
+   Y se deshabilita botón si quedaría en 0
+
+----
+
+4. Reglas y Restricciones
+-------------------------
+
+- **BR aplicables:**
+  - BR_012: Segmentación Usuario-Centro
+  
+- **CNST aplicables:** Ninguna específica
+
+**Excepción:**
+
+Si se desea remover todos los segmentos, primero debe darse
+de baja al usuario (UC_008) en lugar de revocar segmentos.
+
+----
+
+5. Trazabilidad
+---------------
+
+.. list-table::
+   :widths: 20 80
+
+   * - **BReq**
+     - BReq-003: Segmentación de Datos
+   * - **UC**
+     - UC_042: Revocar Segmento
+   * - **Depende de**
+     - Ninguno
+   * - **Requerido por**
+     - FR-042.02
+   * - **BR**
+     - BR_012
+   * - **TEST**
+     - TST-FR-042.01 (pendiente)
+
+----
+
+6. Historial
+------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - Versión
+     - Fecha
+     - Cambio
+   * - 1.0.0
+     - 2026-01-07
+     - Versión inicial derivada de UC_042

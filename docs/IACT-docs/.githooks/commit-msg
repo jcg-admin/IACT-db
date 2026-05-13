@@ -1,0 +1,86 @@
+#!/bin/bash
+#
+# Git Hook: commit-msg
+# Purpose: Validate Tim Pope commit style (subject + body).
+#
+# Rules enforced (subject line):
+#   1. Length 1..72 characters
+#   2. Starts with uppercase letter
+#   3. Does NOT end with a period
+#   4. Imperative mood (heuristic: not ending in "ed", "ing", "s")
+#
+# Body is NOT validated (too heuristic) — author's responsibility.
+#
+# Bypass: git commit --no-verify
+#
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Strip comment lines (git's # COMMENTS)
+CLEANED=$(echo "$COMMIT_MSG" | grep -v "^#" | sed -e 's/[[:space:]]*$//')
+
+# Skip merge / revert / fixup / squash auto-generated commits
+SUBJECT=$(echo "$CLEANED" | head -1)
+case "$SUBJECT" in
+  "Merge "*|"Revert "*|"fixup! "*|"squash! "*|"amend! "*)
+    exit 0
+    ;;
+esac
+
+# Reject empty subject
+if [ -z "$SUBJECT" ]; then
+  echo "ERROR: Empty commit subject." >&2
+  exit 1
+fi
+
+err() {
+  echo "" >&2
+  echo "ERROR: $1" >&2
+  echo "" >&2
+  echo "Subject was: $SUBJECT" >&2
+  echo "" >&2
+  echo "Tim Pope style required:" >&2
+  echo "  1. Subject \xe2\x89\xa4 72 chars, capitalized, no trailing period, imperative." >&2
+  echo "  2. Blank line after subject." >&2
+  echo "  3. Body wrapped at 72 chars (explains WHAT and WHY, not HOW)." >&2
+  echo "" >&2
+  echo "See .claude/rules/commit-conventions.md for full spec." >&2
+  echo "Bypass with: git commit --no-verify" >&2
+  exit 1
+}
+
+# Rule 1: length
+LEN=${#SUBJECT}
+if [ "$LEN" -gt 72 ]; then
+  err "Subject is $LEN chars; max 72."
+fi
+
+# Rule 2: starts with uppercase letter
+FIRST=$(printf '%s' "$SUBJECT" | cut -c1)
+case "$FIRST" in
+  [A-Z]) ;;
+  *) err "Subject must start with an uppercase letter (got '$FIRST')." ;;
+esac
+
+# Rule 3: no trailing period
+case "$SUBJECT" in
+  *.) err "Subject must not end with a period." ;;
+esac
+
+# Rule 4: imperative mood (heuristic — first word should not end in ed/ing/s)
+FIRST_WORD=$(printf '%s' "$SUBJECT" | awk '{print $1}')
+LOWER=$(printf '%s' "$FIRST_WORD" | tr '[:upper:]' '[:lower:]')
+case "$LOWER" in
+  *ed|*ing)
+    err "First word '$FIRST_WORD' looks past/progressive. Use imperative (Add/Fix/Refactor)."
+    ;;
+esac
+# Allow common imperatives ending in -s (Pass) but warn on plurals like "Adds"
+case "$LOWER" in
+  adds|fixes|updates|removes|refactors|adds:|fixes:|changes|builds)
+    err "First word '$FIRST_WORD' is 3rd-person singular. Use base form: 'Add' not 'Adds'."
+    ;;
+esac
+
+exit 0

@@ -1,0 +1,144 @@
+@startuml UC-PERM-001_asignar_grupo
+' Diagrama de Casos de Uso - Asignar Grupo de Permisos
+' Fecha: 2025-11-09
+' Referencia: docs/casos_de_uso/UC-PERM-001_asignar_grupo_a_usuario.md
+
+left to right direction
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+
+' Actores
+actor "Administrador\nde Sistema" as Admin <<actor>>
+actor "Sistema de\nAuditoría" as AuditSys <<system>>
+database "PostgreSQL" as DB <<database>>
+
+' Sistema principal
+rectangle "Sistema IACT\n(Permisos Granular)" {
+
+  ' Caso de uso principal
+  usecase (Asignar Grupo\nde Permisos\na Usuario) as UC001 <<primary>>
+
+  ' Sub-casos de uso incluidos (include)
+  usecase (Autenticar\nAdministrador) as UC101 <<include>>
+  usecase (Verificar\nPermisos Admin) as UC102 <<include>>
+  usecase (Validar Usuario\nObjetivo) as UC103 <<include>>
+  usecase (Validar Grupos\nExisten) as UC104 <<include>>
+  usecase (Crear Relación\nUsuarioGrupo) as UC105 <<include>>
+  usecase (Registrar\nAuditoría) as UC106 <<include>>
+
+  ' Sub-casos de uso extendidos (extend)
+  usecase (Definir Fecha\nde Expiración) as UC201 <<extend>>
+  usecase (Ingresar Motivo\nde Asignación) as UC202 <<extend>>
+  usecase (Reactivar Grupo\nDesactivado) as UC203 <<extend>>
+
+  ' Casos de excepción
+  usecase (Manejo:\nPermiso Denegado) as EX001 <<exception>>
+  usecase (Manejo:\nGrupo No Existe) as EX002 <<exception>>
+  usecase (Manejo:\nUsuario Inactivo) as EX003 <<exception>>
+  usecase (Manejo:\nError Base Datos) as EX004 <<exception>>
+
+  ' Relaciones INCLUDE (obligatorias)
+  UC001 .> UC101 : <<include>>
+  UC001 .> UC102 : <<include>>
+  UC001 .> UC103 : <<include>>
+  UC001 .> UC104 : <<include>>
+  UC001 .> UC105 : <<include>>
+  UC001 .> UC106 : <<include>>
+
+  ' Relaciones EXTEND (opcionales)
+  UC201 .> UC001 : <<extend>>\n[asignación temporal]
+  UC202 .> UC001 : <<extend>>\n[motivo especificado]
+  UC203 .> UC001 : <<extend>>\n[grupo previamente revocado]
+
+  ' Relaciones de excepción
+  EX001 .> UC102 : <<exception>>\n[sin capacidad requerida]
+  EX002 .> UC104 : <<exception>>\n[grupo inactivo/inexistente]
+  EX003 .> UC103 : <<exception>>\n[usuario inactivo]
+  EX004 .> UC105 : <<exception>>\n[error transacción]
+}
+
+' Relaciones actor principal
+Admin --> UC001 : inicia
+
+' Relaciones actores secundarios
+UC106 --> AuditSys : notifica evento
+UC105 --> DB : persiste datos
+UC103 --> DB : consulta
+UC104 --> DB : consulta
+
+' Notas explicativas
+note right of Admin
+  **Precondición**:
+  - Autenticado
+  - Tiene capacidad:
+    sistema.administracion.
+    usuarios.asignar_grupos
+end note
+
+note bottom of UC001
+  **Objetivo**: Otorgar permisos necesarios
+  a un usuario asignándole uno o más grupos
+
+  **Frecuencia**: 50-100/día
+  **Criticidad**: Alta
+  **Performance**: < 500ms (p95)
+end note
+
+note right of UC201
+  **Extensión**: Asignación Temporal
+
+  Si se define fecha_expiracion:
+  - Sistema valida fecha futura
+  - Almacena en campo fecha_expiracion
+  - Vista SQL excluye automáticamente
+    grupos expirados
+end note
+
+note right of EX001
+  **Manejo de Permisos Denegados**
+
+  Si administrador sin capacidad:
+  1. Sistema detecta falta de permisos
+  2. Registra en auditoría (acceso_denegado)
+  3. Muestra error HTTP 403
+  4. No modifica datos
+end note
+
+note bottom of DB
+  **Tablas involucradas**:
+  - usuarios_grupos (escritura)
+  - grupos_permisos (lectura)
+  - auth_user (lectura)
+  - auditoria_permisos (escritura)
+
+  **Constraints aplicados**:
+  - UNIQUE (usuario_id, grupo_id)
+  - FK validation
+  - CHECK activo
+end note
+
+note right of AuditSys
+  **Auditoría Completa**
+
+  Registra:
+  - accion: asignacion_grupo
+  - resultado: exito | fallo
+  - usuario_id
+  - capacidad_codigo
+  - ip_address
+  - user_agent
+  - contexto_adicional (JSONB)
+end note
+
+' Leyenda
+legend right
+  |= Símbolo |= Significado |
+  | <&person> | Actor humano |
+  | <&cog> | Sistema externo |
+  | ( ) | Caso de uso |
+  | <<include>> | Obligatorio |
+  | <<extend>> | Opcional |
+  | <<exception>> | Manejo de error |
+endlegend
+
+@enduml

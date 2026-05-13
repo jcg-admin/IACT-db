@@ -1,0 +1,54 @@
+RESUMEN DE TEMPLATES GENERADOS
+================================
+
+SESION ANTERIOR (9 Enero 2026, 05:53):
+---------------------------------------
+✓ 1. TPL_BR_Decision_Tipo_1_3_0.rst
+     Ubicacion: /outputs/
+     Fecha: Jan 9, 05:53
+
+SESION ACTUAL (11 Enero 2026, 06:10-06:50):
+--------------------------------------------
+✓ 2. TPL_UC_Construccion_7_Pasos_1_3_0.rst
+     Fecha: Jan 11, 06:10
+     
+✓ 3. TPL_FR_Documentacion_10_Componentes_1_3_0.rst
+     Fecha: Jan 11, 06:16
+     
+✓ 4. TPL_UC_UI_Driven_1_3_0.rst
+     Fecha: Jan 11, 06:20
+     
+✓ 5. TPL_UC_Temporal_Schedulers_1_3_0.rst
+     Fecha: Jan 11, 06:24
+     
+✓ 6. TPL_UC_Stakeholder_Driven_1_3_0.rst
+     Fecha: Jan 11, 06:30
+     
+✓ 7. TPL_UC_Actor_Secundario_1_3_0.rst
+     Fecha: Jan 11, 06:39
+     
+✓ 8. TPL_FR_Query_SQL_1_3_0.rst (NUEVO)
+     Fecha: Jan 11, 06:43
+     
+✓ 9. TPL_FR_Validacion_Reglas_1_3_0.rst (NUEVO)
+     Fecha: Jan 11, 06:47
+     
+✓ 10. TPL_TRZ_Matriz_RTM_1_3_0.rst (NUEVO)
+      Fecha: Jan 11, 06:50
+
+TEMPLATES MANTENIDOS (no regenerados):
+---------------------------------------
+✓ 11. TPL_UC_CRUD_Operaciones_1_2_0.rst (BUENO desde v1.2.0)
+✓ 12. TPL_UC_Larman_Contratos_1_2_0.rst (BUENO desde v1.2.0)
+
+TOTAL: 12 templates validos
+  - 1 generado en sesion anterior (Jan 9)
+  - 9 generados en sesion actual (Jan 11, ~40 minutos)
+  - 2 mantenidos de v1.2.0
+
+TIEMPO DE GENERACION SESION ACTUAL:
+  Inicio: 06:10
+  Final: 06:50
+  Duracion: ~40 minutos
+  Templates: 9
+  Promedio: ~4.4 minutos por template

@@ -1,0 +1,128 @@
+---
+
+## 5. LOS 8 MÓDULOS FUNCIONALES
+
+### 5.1 Catálogo de Módulos
+
+| Código | Nombre | App Django | UC Asociados | Funciones RBAC |
+|--------|--------|------------|--------------|----------------|
+| MOD_Auth | Auth | apps.auth | UC-001 a UC-005 | AUT-001 a AUT-004 |
+| MOD_Users | Users | apps.users | UC-006 a UC-009 | USR-001 a USR-010 |
+| MOD_Access | Access | apps.access | UC-010, UC-011, UC-041-047 | ACC-001 a ACC-006 |
+| MOD_Pipeline | Pipeline | apps.pipeline | UC-050 a UC-053 | PIP-001 a PIP-004 |
+| MOD_Reports | Reports | apps.reports | UC-017 a UC-029 | RPT-001 a RPT-008 |
+| MOD_Alerts | Alerts | apps.alerts | UC-036 a UC-040 | ALR-001 a ALR-006 |
+| MOD_Audit | Audit | apps.audit | UC-060 a UC-063 | AUD-001 a AUD-004 |
+| MOD_Logs | Logs | apps.logs | UC-070 a UC-072 | LOG-001 a LOG-002 |
+
+### 5.2 Estructura de cada MOD_xxx.rst
+
+```rst
+============================
+MOD_xxx - Nombre del Módulo
+============================
+
+1. Propósito
+2. Responsabilidades (PUEDE hacer)
+3. Límites (NO PUEDE hacer)
+4. Casos de Uso Asociados
+5. Funciones RBAC del Módulo
+6. Restricciones Aplicables (CNST)
+7. Business Rules Aplicables (BR)
+8. Dependencias con otros Módulos
+9. Componentes Internos (si aplica)
+10. Diagrama PlantUML
+```
+
+### 5.3 SEC_RULES (Integrado en MOD_Access)
+
+SEC_RULES NO es módulo separado. Es subcapa interna de MOD_Access:
+
+| Componente | Visibilidad | Descripción |
+|------------|-------------|-------------|
+| RBAC_CORE | Usuario ve UI | Administración roles/permisos |
+| SEC_RULES | Automático | Enforcement middleware/decoradores |
+
+---
+
+## 6. MÉTRICAS DE COBERTURA RTM (MTM_02)
+
+### 6.1 Umbrales Mínimos IACT
+
+| Cobertura | Umbral | Fórmula |
+|-----------|--------|---------|
+| BR → UC | 100% | BR con impacto / Total BR |
+| UC → FR | 100% | UC con FR derivados / Total UC |
+| FR → CODE | 90% | FR implementados / Total FR |
+| FR → TEST | 80% | FR con test / Total FR |
+
+### 6.2 Estado Actual v2.0.4
+
+| Métrica | Valor | Estado |
+|---------|-------|--------|
+| BR identificadas | 20 | ✅ Completo |
+| UC identificados | 49 | ✅ Listo para documentar |
+| FR derivados | 0 | ❌ Pendiente |
+| Cobertura BR→UC | -- | ⏳ Pendiente RTM |
+| Cobertura UC→FR | 0% | ❌ Pendiente derivar |
+| Cobertura FR→TEST | 0% | ❌ Pendiente |
+| Cobertura CNST→BR | 100% | ✅ Completo v2.0.4 |
+
+---
+
+## 7. MAPEO CNST → BR (ACTUALIZADO v2.0.4)
+
+### 7.1 Matriz de Cobertura Completa
+
+| CNST | Descripción | BR Derivada | Tipo BR | Estado |
+|------|-------------|-------------|---------|--------|
+| CNST_001 | Sin email | BR_004 | Restricción | ✅ |
+| CNST_002 | Sesiones BD | BR_005 | Restricción | ✅ |
+| CNST_003 | BD readonly | BR_001 | Restricción | ✅ |
+| CNST_004 | ETL batch | BR_002 | Desencadenador | ✅ |
+| CNST_005 | RBAC/Seguridad | BR_006, BR_007, BR_008, BR_009, BR_015 | Varios | ✅ |
+| CNST_006 | Antipatrones | ➖ NO genera BR | N/A | ➖ Va a STD_001 |
+| CNST_007 | Límites/Performance | BR_011, **BR_020** | Restricción | ✅ |
+| CNST_008 | Infraestructura | ➖ NO genera BR | N/A | ➖ Va a PROC_004 |
+| CNST_009 | Auditoría | BR_010 | Restricción | ✅ |
+| CNST_010 | Clasificación datos | **BR_019** | Hecho | ✅ 🆕 |
+
+### 7.2 CNST que NO Generan BR
+
+| CNST | Razón | Destino Correcto |
+|------|-------|------------------|
+| CNST_006 | Es estándar de código, no regla de negocio | STD_001_Suite_Calidad_Codigo.rst |
+| CNST_008 | Es restricción de infraestructura técnica | PROC_004_Deployment.rst |
+
+### 7.3 Resumen de Cobertura
+
+```
+CNST Cubiertos por BR:     8/10 (80%)
+CNST que no aplican a BR:  2/10 (20%) → Van a normativa/
+Cobertura efectiva:        100%
+```
+
+---
+
+## 8. MAPEO BR → FUNCIONES RBAC v5.1.1
+
+| BR | Funciones RBAC Afectadas |
+|----|--------------------------|
+| BR_001 | PIP-001 (ve_estado_etl), RPT-001 (ve_reportes) |
+| BR_002 | PIP-001, PIP-002, PIP-003, PIP-004 |
+| BR_003 | USR-009 (reactiva_usuarios) |
+| BR_004 | AUT-003 (resetea_password), ALR-002 (configura_alertas) |
+| BR_005 | AUT-001 (gestiona_sesiones), AUT-002, AUT-004 |
+| BR_006 | ACC-001 a ACC-006 (todas las de acceso) |
+| BR_007 | ACC-005 (gestiona_sod) |
+| BR_008 | ACC-001 (asigna_funciones) |
+| BR_009 | USR-004 (elimina_usuarios) |
+| BR_010 | AUD-001 a AUD-004 (todas las de auditoría) |
+| BR_011 | RPT-004, RPT-005, RPT-006 (exportaciones) |
+| BR_012 | USR-010 (asigna_segmento), ACC-006 (gestiona_segmentos) |
+| BR_013 | USR-001 (crea_usuarios) |
+| BR_014 | ALR-002 (configura_alertas) |
+| BR_015 | AUT-001 (gestiona_sesiones) |
+| BR_016-018 | RPT-007 (ve_kpis) |
+| BR_019 | ACC-006 (gestiona_segmentos) |
+| BR_020 | RPT-001 (ve_reportes), RPT-003 (filtra_reportes) |

@@ -1,0 +1,391 @@
+```yml
+session_started_at: [YYYY-MM-DD HH:MM:SS]
+session_ended_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+version: [1.0]
+executor: [Nombre]
+issues_handled_today: [N]
+resolved_issues: [N]
+in_progress_issues: [N]
+delayed_issues: [N]
+Problemas encontrados: [N]
+total_session_time: [horas]
+next_session: [YYYY-MM-DD HH:MM:SS]
+```
+
+# Log de Ejecución - [Nombre del Proyecto/Tarea]
+
+## Propósito
+
+Documentar el progreso diario durante la corrección de issues. Dashboard vivo con estado actual.
+
+> Objetivo: Objetivo: Crear registro actualizable del progreso, bloqueadores y métricas en tiempo real.
+
+---
+
+Basado en: categorization-plan.md ([fecha del plan])
+
+---
+
+## Estado General
+
+**Progreso global**: [X]% completado
+
+**Lotes completados**: [X] de [Y]
+
+**Issues resueltos**: [X] de [Y total]
+
+**Tiempo invertido**: [Xh] de [Yh estimadas]
+
+**Estado actual**: [En progreso / Pausado / Completado / Bloqueado]
+
+**Próximo lote**: [Lote #X - Nombre]
+
+---
+
+## Tabla de Tracking General
+
+| Lote | Estado | Issues Resueltos | Tiempo | Build Status | Fecha Completado |
+|------|--------|------------------|--------|--------------|------------------|
+| 1 | [✓ Completado / ⏸ En progreso / ⏱ Pendiente] | [X/Y] | [Xh] | [✓ Pass / ✗ Fail] | [YYYY-MM-DD HH:MM:SS] |
+| 2 | [Estado] | [X/Y] | [Xh] | [Status] | [Fecha] |
+| 3 | [Estado] | [X/Y] | [Xh] | [Status] | [Fecha] |
+| 4 | [Estado] | [X/Y] | [Xh] | [Status] | [Fecha] |
+| 5 | [Estado] | [X/Y] | [Xh] | [Status] | [Fecha] |
+
+**Leyenda de Estados**:
+- ✓ Completado: Lote terminado y validado
+- ⏸ En progreso: Actualmente trabajando en este lote
+- ⏱ Pendiente: No iniciado
+- ⏹ Pausado: Iniciado pero detenido temporalmente
+- ✗ Bloqueado: No se puede continuar por issue externo
+
+---
+
+## Lote 1: [Nombre del Lote]
+
+**Estado**: [Completado / En progreso / Pendiente]
+
+**Fecha inicio**: [YYYY-MM-DD-HH-MM-SS HH:MM]
+
+**Fecha fin**: [YYYY-MM-DD-HH-MM-SS HH:MM]
+
+**Duración real**: [Xh] (estimado: [Yh])
+
+### Issues Abordados
+
+| # | Archivo | Línea | Issue | Estado | Tiempo | Notas |
+|---|---------|-------|-------|--------|--------|-------|
+| 1 | [archivo.rst] | [#] | [Descripción breve] | [✓ / ⏸ / ✗] | [min] | [Notas si aplica] |
+| 2 | [archivo.rst] | [#] | [Descripción] | [Estado] | [min] | [Notas] |
+| 3 | [archivo.rst] | [#] | [Descripción] | [Estado] | [min] | [Notas] |
+[... continuar para todos los issues del lote]
+
+**Issues resueltos**: [X] de [Y]
+
+**Issues bloqueados**: [X] ([Razón del bloqueo si aplica])
+
+### Archivos Modificados
+
+```
+[archivo1.rst] - [Descripción de cambios]
+[archivo2.rst] - [Descripción de cambios]
+[archivo3.rst] - [Descripción de cambios]
+```
+
+### Comandos Ejecutados
+
+```bash
+# [Descripción de qué se hizo]
+[comando 1]
+
+# [Descripción]
+[comando 2]
+
+# Build validation
+make clean
+make html
+
+# [Output relevante del build]
+```
+
+### Checkpoint de Validación
+
+**Build status**: [✓ Pass / ✗ Fail]
+
+**Build output**:
+```
+[Output relevante del build - errores/warnings]
+```
+
+**Linkcheck** (si aplica): [✓ Pass / ✗ Fail / N/A]
+
+**Validación manual**:
+- [ ] Issues del lote resueltos
+- [ ] No se introdujeron nuevos errores
+- [ ] Funcionalidad preservada
+- [ ] Cambios commiteados
+
+### Problemas Encontrados
+
+**Problema 1: [Descripción del problema]**
+- Contexto: [Cuándo/dónde ocurrió]
+- Impacto: [Cómo afecta]
+- Solución aplicada: [Qué se hizo]
+- Tiempo adicional: [Xmin]
+
+**Problema 2: [Descripción]**
+[Misma estructura]
+
+### Decisiones Tomadas
+
+**Decisión 1: [Título de la decisión]**
+- Contexto: [Por qué surgió]
+- Opciones consideradas: [A, B, C]
+- Decisión: [Qué se eligió]
+- Razón: [Por qué]
+- Impacto: [Consecuencias]
+
+**Decisión 2: [Título]**
+[Misma estructura]
+
+### Commit
+
+```bash
+git add [archivos modificados]
+git commit -m "fix([scope]): resolve lote-1 issues - [breve descripción]"
+
+# Commit hash: [hash si ya se hizo]
+```
+
+### Notas del Lote
+
+[Cualquier observación, aprendizaje o comentario relevante sobre este lote]
+
+- [Nota 1]
+- [Nota 2]
+- [Nota 3]
+
+---
+
+## Lote 2: [Nombre del Lote]
+
+[Misma estructura que Lote 1]
+
+---
+
+## Lote 3: [Nombre del Lote]
+
+[Misma estructura que Lote 1]
+
+---
+
+[Continuar para todos los lotes]
+
+---
+
+## Problemas Globales Encontrados
+
+[Problemas que afectan múltiples lotes o el proyecto en general]
+
+**Problema Global 1: [Título]**
+- Descripción: [Qué es el problema]
+- Lotes afectados: [Lista de lotes]
+- Impacto: [Cómo afecta la ejecución]
+- Solución/Workaround: [Qué se está haciendo]
+- Estado: [Resuelto / En investigación / Bloqueado]
+
+**Problema Global 2: [Título]**
+[Misma estructura]
+
+---
+
+## Desviaciones del Plan
+
+[Cambios respecto al categorization-plan.md original]
+
+### Desviación 1: [Título]
+
+**Plan original**: [Qué se había planificado]
+
+**Realidad**: [Qué ocurrió realmente]
+
+**Razón del cambio**: [Por qué se desvió]
+
+**Impacto**: [Cómo afecta al resto del plan]
+
+**Ajuste realizado**: [Qué se modificó en el plan]
+
+### Desviación 2: [Título]
+
+[Misma estructura]
+
+---
+
+## Métricas de Progreso
+
+### Progreso por Tipo de Issue
+
+| Tipo | Total | Resueltos | Pendientes | % Completado |
+|------|-------|-----------|------------|--------------|
+| [Tipo 1] | [#] | [#] | [#] | [%] |
+| [Tipo 2] | [#] | [#] | [#] | [%] |
+| [Tipo 3] | [#] | [#] | [#] | [%] |
+| [Tipo 4] | [#] | [#] | [#] | [%] |
+| **Total** | [#] | [#] | [#] | [%] |
+
+### Progreso Temporal
+
+**Gráfico de progreso** (representación textual):
+```
+Semana 1: [###########___________] 50% - [X] issues resueltos
+Semana 2: [##################____] 85% - [X] issues resueltos
+Semana 3: [######################] 100% - [X] issues resueltos
+```
+
+### Tiempo Invertido vs Estimado
+
+| Lote | Estimado | Real | Diferencia | Variación % |
+|------|----------|------|------------|-------------|
+| 1 | [Xh] | [Yh] | [+/-Zh] | [+/-%] |
+| 2 | [Xh] | [Yh] | [+/-Zh] | [+/-%] |
+| 3 | [Xh] | [Yh] | [+/-Zh] | [+/-%] |
+| 4 | [Xh] | [Yh] | [+/-Zh] | [+/-%] |
+| **Total** | [Xh] | [Yh] | [+/-Zh] | [+/-%] |
+
+**Análisis de variación**:
+[Explicación de por qué hay diferencias entre estimado y real]
+
+---
+
+## Build Status Evolution
+
+### Warnings/Errors Reduction
+
+**Estado inicial** (antes de comenzar):
+- Total warnings: [#]
+- Total errors: [#]
+
+**Estado actual**:
+- Total warnings: [#]
+- Total errors: [#]
+- **Reducción**: [#] warnings ([%])
+
+**Evolución por lote**:
+```
+Lote 0 (inicial): [###########################] [#] warnings
+Lote 1:           [####################_______] [#] warnings
+Lote 2:           [##############_____________] [#] warnings
+Lote 3:           [########___________________] [#] warnings
+Lote 4:           [###________________________] [#] warnings
+```
+
+---
+
+## Aprendizajes y Observaciones
+
+### Lecciones Aprendidas
+
+1. [Lección 1 sobre cómo mejorar el proceso]
+2. [Lección 2 sobre qué funcionó bien]
+3. [Lección 3 sobre qué se debe evitar]
+4. [Lección 4]
+
+### Mejores Prácticas Identificadas
+
+- [Práctica 1 que resultó muy efectiva]
+- [Práctica 2 que aceleró el trabajo]
+- [Práctica 3 que previno errores]
+
+### Anti-Patterns a Evitar
+
+- [Anti-pattern 1 que causó problemas]
+- [Anti-pattern 2 que retrasó trabajo]
+- [Anti-pattern 3 que introdujo bugs]
+
+---
+
+## Bloqueos y Dependencias
+
+### Bloqueos Actuales
+
+[Si hay algo que impide continuar]
+
+**Bloqueo 1: [Título]**
+- Descripción: [Qué está bloqueado]
+- Razón: [Por qué está bloqueado]
+- Impacto: [Qué no se puede hacer]
+- Plan de resolución: [Cómo se va a desbloquear]
+- ETA: [Cuándo se espera resolver]
+
+### Dependencias Pendientes
+
+[Si hay dependencias externas que se necesitan]
+
+- [Dependencia 1]: [Estado / ETA]
+- [Dependencia 2]: [Estado / ETA]
+
+---
+
+## Próximos Pasos
+
+### Lote Actual
+
+[Si hay un lote en progreso]
+
+**Lote en progreso**: [Lote #X - Nombre]
+
+**Issues restantes**: [X]
+
+**Tiempo estimado para completar**: [Xh]
+
+**Próximas acciones**:
+1. [Acción inmediata 1]
+2. [Acción inmediata 2]
+3. [Acción inmediata 3]
+
+### Lotes Pendientes
+
+[Lista de lotes que faltan]
+
+1. **Lote [#]**: [Nombre] - [X issues] - [Xh estimadas]
+2. **Lote [#]**: [Nombre] - [X issues] - [Xh estimadas]
+3. **Lote [#]**: [Nombre] - [X issues] - [Xh estimadas]
+
+### Validación Final
+
+[Una vez completados todos los lotes]
+
+Pasos para validación completa:
+1. [ ] Build completo limpio (make clean && make html)
+2. [ ] Linkcheck sin errores
+3. [ ] Revisión manual de cambios
+4. [ ] Crear final-report.md
+5. [ ] Commit final y merge
+
+---
+
+## Recursos Utilizados
+
+**Documentación consultada**:
+- [Documento 1]
+- [Documento 2]
+- [Skill consultado]
+
+**Herramientas usadas**:
+- [Herramienta 1]
+- [Herramienta 2]
+
+**Personas consultadas** (si aplica):
+- [Persona]: [Para qué se consultó]
+
+---
+
+## Registro de Cambios del Log
+
+| Fecha | Cambio | Autor |
+|-------|--------|-------|
+| [YYYY-MM-DD HH:MM:SS] | Log creado | [Nombre] |
+| [YYYY-MM-DD HH:MM:SS] | Lote 1 completado | [Nombre] |
+| [YYYY-MM-DD HH:MM:SS] | Lote 2 completado | [Nombre] |
+| [YYYY-MM-DD HH:MM:SS] | Actualización de métricas | [Nombre] |

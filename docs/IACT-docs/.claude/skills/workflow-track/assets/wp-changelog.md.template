@@ -1,0 +1,57 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+feature: [nombre-del-wp]
+wp: [YYYY-MM-DD-HH-MM-SS-nombre-del-wp]
+fase: FASE [N]
+commits: [N commits en este WP]
+```
+
+# WP Changelog — {nombre-wp}
+
+> Registro de cambios producidos por este work package.
+> Solo incluye commits de este WP (desde que se creó el branch hasta merge).
+> Tipos: `Added` (nuevo), `Changed` (modificado), `Fixed` (corregido), `Removed` (eliminado).
+
+---
+
+## Cambios producidos
+
+### Added
+
+- [Descripción de qué se agregó] ([hash])
+
+### Changed
+
+- [Descripción de qué cambió en funcionalidad existente] ([hash])
+
+### Fixed
+
+- [Descripción del bug o deuda técnica corregida] ([hash])
+
+### Removed
+
+- [Descripción de qué se eliminó o archivó] ([hash])
+
+---
+
+## Commits de este WP
+
+```bash
+# Listar commits del WP (desde main hasta HEAD)
+git log main..HEAD --oneline --no-merges
+```
+
+| Hash | Tipo | Descripción |
+|------|------|-------------|
+| [hash] | [feat/fix/refactor/docs/chore] | [descripción] |
+
+---
+
+## Notas de release
+
+> Si este WP genera una nueva versión, documentar aquí:
+> - Versión: vX.Y.Z
+> - Tipo de cambio: [MAJOR / MINOR / PATCH]
+> - Razón: [justificación del bump de versión]
+>
+> Si no genera release, eliminar esta sección.

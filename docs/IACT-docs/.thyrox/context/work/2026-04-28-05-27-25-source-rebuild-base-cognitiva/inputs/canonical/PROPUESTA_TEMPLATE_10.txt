@@ -1,0 +1,42 @@
+PROPUESTA REGENERACION - Template 10 de 10
+==========================================
+
+TEMPLATE A GENERAR (NUEVO):
+TPL_TRZ_Matriz_RTM_1_3_0.rst
+
+PRIORIDAD: ALTA (Template para matriz de trazabilidad)
+
+VERSION: 1.3.0 (primera version)
+
+OBJETIVO:
+Template para documentar matriz de trazabilidad completa (RTM - Requirements
+Traceability Matrix), con trazabilidad bidireccional desde BReq hasta Tests.
+
+CONTENIDO:
+
+Introduccion (40 lineas)
+- Que es RTM
+- Por que es importante
+- Tipos de trazabilidad
+
+Trazabilidad Backward (100 lineas)
+- De FR/UC hacia BReq/BR
+- Tabla completa
+- Justificacion de origen
+
+Trazabilidad Forward (100 lineas)
+- De BReq/BR hacia UC/FR/Codigo
+- Tabla completa
+- Coverage analysis
+
+Trazabilidad Horizontal (80 lineas)
+- UC <-> UC
+- FR <-> FR
+- Dependencias entre componentes
+
+Matriz Completa (150 lineas)
+- Tabla RTM master
+- Todas las relaciones
+- Estado de implementacion
+
+Ejemplo: RTM completo para UC-RPT-01 y relacionados

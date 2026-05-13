@@ -1,0 +1,385 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+categorization_version: [1.0]
+planner: [Nombre]
+total_issues: [N]
+Categorías definidas: [N]
+Prioridades definidas: [N]
+started_at: [YYYY-MM-DD HH:MM:SS]
+planned_end: [YYYY-MM-DD HH:MM:SS]
+phase: 5 - DECOMPOSE
+activate_if: >50 issues que necesitan categorización antes de descomponer en tasks
+owner: [Nombre/equipo]
+tools: [Sistema de tracking usado]
+```
+
+# Plan de Categorización - [Nombre del Proyecto/Tarea]
+
+## Propósito
+
+Documentar el plan de categorización de issues en lotes prioritarios. Estrategia de ejecución incremental.
+
+> Objetivo: Objetivo: Convertir 100+ issues caóticas en lotes ordenados y ejecutables.
+
+---
+
+Basado en: analysis-phase.md ([fecha del análisis])
+
+---
+
+## Resumen Ejecutivo
+
+**Estrategia elegida**: [Nombre de la estrategia, ej: Por tipo de issue, Por archivo, Por severidad]
+
+**Número de lotes**: [Número]
+
+**Tamaño promedio por lote**: [Número de issues por lote]
+
+**Orden de ejecución**: [Criterio de priorización, ej: Severidad descendente, Por dependencies]
+
+**Estimación total**: [Horas totales estimadas]
+
+**Fecha inicio estimada**: [YYYY-MM-DD HH:MM:SS]
+
+**Fecha fin estimada**: [YYYY-MM-DD HH:MM:SS]
+
+---
+
+## Estrategia de Categorización
+
+### Criterio Principal
+
+**Estrategia seleccionada**: [Nombre]
+
+**Razones de la elección**:
+1. [Razón 1 por la que esta estrategia es la mejor]
+2. [Razón 2]
+3. [Razón 3]
+
+**Alternativas consideradas**:
+- [Alternativa 1]: Rechazada porque [razón]
+- [Alternativa 2]: Rechazada porque [razón]
+
+### Criterios de Agrupación
+
+**Lotes se crearán basándose en**:
+1. [Criterio primario, ej: Tipo de issue]
+2. [Criterio secundario, ej: Severidad]
+3. [Criterio terciario, ej: Archivo afectado]
+
+**Lógica de agrupación**:
+[Explicación detallada de cómo se determina qué issues van en qué lote]
+
+---
+
+## Criterios de Priorización
+
+### Prioridad de Lotes
+
+**Orden de ejecución** (de mayor a menor prioridad):
+
+**Nivel 1 - Crítico** (ejecutar primero):
+- [Lote X]: [Razón de criticidad]
+- [Lote Y]: [Razón de criticidad]
+
+**Nivel 2 - Alto** (ejecutar después de críticos):
+- [Lote A]: [Razón de prioridad alta]
+- [Lote B]: [Razón de prioridad alta]
+
+**Nivel 3 - Medio** (ejecutar después de altos):
+- [Lote C]: [Razón de prioridad media]
+- [Lote D]: [Razón de prioridad media]
+
+**Nivel 4 - Bajo** (ejecutar al final):
+- [Lote E]: [Razón de prioridad baja]
+
+### Factores de Priorización
+
+| Factor | Peso | Descripción |
+|--------|------|-------------|
+| [Severidad] | [Alto/Medio/Bajo] | [Cómo afecta la priorización] |
+| [Impacto en build] | [Alto/Medio/Bajo] | [Cómo afecta] |
+| [Complejidad] | [Alto/Medio/Bajo] | [Cómo afecta] |
+| [Dependencies] | [Alto/Medio/Bajo] | [Cómo afecta] |
+
+---
+
+## Definición de Lotes
+
+### Lote 1: [Nombre descriptivo del lote]
+
+**Prioridad**: [Crítico/Alto/Medio/Bajo]
+
+**Tipo de issues**: [Descripción del tipo]
+
+**Cantidad de issues**: [Número]
+
+**Archivos afectados**: [Número de archivos, o lista si son pocos]
+
+**Issues incluidos**:
+1. [Archivo.rst:línea] - [Descripción breve]
+2. [Archivo.rst:línea] - [Descripción breve]
+3. [Archivo.rst:línea] - [Descripción breve]
+[... listar todos o indicar "ver anexo" si son muchos]
+
+**Estrategia de solución**:
+[Descripción de cómo se abordarán estos issues]
+
+**Criterios de éxito**:
+- [Criterio 1: Build pasa sin estos warnings]
+- [Criterio 2: Funcionalidad preservada]
+- [Criterio 3: Otro criterio específico]
+
+**Estimación de tiempo**: [Horas]
+
+**Dependencias**: [Ninguna / Requiere que Lote X esté completo]
+
+**Riesgos**:
+- [Riesgo 1]: [Descripción y mitigación]
+- [Riesgo 2]: [Descripción y mitigación]
+
+---
+
+### Lote 2: [Nombre descriptivo del lote]
+
+[Misma estructura que Lote 1]
+
+---
+
+### Lote 3: [Nombre descriptivo del lote]
+
+[Misma estructura que Lote 1]
+
+---
+
+[Continuar para todos los lotes planificados]
+
+---
+
+## Tabla Resumen de Lotes
+
+| Lote | Tipo | Prioridad | Issues | Archivos | Estimación | Dependencias |
+|------|------|-----------|--------|----------|------------|--------------|
+| 1 | [Tipo] | [P] | [#] | [#] | [Xh] | Ninguna |
+| 2 | [Tipo] | [P] | [#] | [#] | [Xh] | Ninguna |
+| 3 | [Tipo] | [P] | [#] | [#] | [Xh] | Lote 1 |
+| 4 | [Tipo] | [P] | [#] | [#] | [Xh] | Ninguna |
+| 5 | [Tipo] | [P] | [#] | [#] | [Xh] | Lote 2, 3 |
+| **Total** | | | [#] | [#] | [Xh] | |
+
+---
+
+## Estimación de Tiempo por Lote
+
+### Método de Estimación
+
+**Base de cálculo**:
+[Explicar cómo se calcularon las estimaciones, ej: "Promedio de 5 minutos por issue de tipo X"]
+
+**Factores considerados**:
+- [Factor 1: Complejidad de cada tipo de issue]
+- [Factor 2: Tiempo de validación entre lotes]
+- [Factor 3: Buffer para imprevistos]
+
+### Desglose Detallado
+
+**Lote 1**: [Xh]
+- Corrección de issues: [Xh]
+- Validación (build + verificación): [Xh]
+- Buffer (20%): [Xh]
+
+**Lote 2**: [Xh]
+- Corrección de issues: [Xh]
+- Validación: [Xh]
+- Buffer: [Xh]
+
+[Continuar para todos los lotes]
+
+**Total estimado**: [Suma de todos los lotes]
+
+**Buffer global adicional**: [X%] = [Xh]
+
+**Estimación final**: [Total + buffer global]
+
+---
+
+## Cronograma Tentativo
+
+| Fecha | Lote | Actividades | Duración |
+|-------|------|-------------|----------|
+| [YYYY-MM-DD HH:MM:SS] | Setup | Preparación, backups | [Xh] |
+| [YYYY-MM-DD HH:MM:SS] | Lote 1 | Ejecución + validación | [Xh] |
+| [YYYY-MM-DD HH:MM:SS] | Lote 2 | Ejecución + validación | [Xh] |
+| [YYYY-MM-DD HH:MM:SS] | Lote 3 | Ejecución + validación | [Xh] |
+| [YYYY-MM-DD HH:MM:SS] | Lote 4 | Ejecución + validación | [Xh] |
+| [YYYY-MM-DD HH:MM:SS] | Final | Validación completa, reporte | [Xh] |
+
+**Duración total**: [Días de trabajo]
+
+---
+
+## Plan de Validación
+
+### Checkpoints entre Lotes
+
+Después de cada lote, ejecutar:
+
+1. **Build validation**:
+   ```bash
+   make clean
+   make html
+   ```
+   Criterio: Build debe pasar sin errores críticos
+
+2. **Linkcheck** (si aplica):
+   ```bash
+   make linkcheck
+   ```
+   Criterio: No nuevos enlaces rotos
+
+3. **Validación específica**:
+   [Comando o checklist específico según tipo de lote]
+
+4. **Commit**:
+   ```bash
+   git add .
+   git commit -m "fix([scope]): resolve [lote-name] issues"
+   ```
+
+### Criterios de Continuación
+
+**Proceder al siguiente lote SI**:
+- [ ] Build pasa exitosamente
+- [ ] Issues del lote están resueltos (verificados manualmente)
+- [ ] No se introdujeron nuevos errores
+- [ ] Cambios están commiteados
+
+**DETENER SI**:
+- [ ] Build falla con nuevos errores
+- [ ] Se detectan regresiones
+- [ ] Más de [X]% de issues del lote no se pueden resolver
+
+---
+
+## Estrategias por Tipo de Issue
+
+### [Tipo 1: Nombre, ej: Referencias Rotas]
+
+**Abordaje**:
+[Descripción de cómo resolver este tipo de issues]
+
+**Pasos**:
+1. [Paso 1]
+2. [Paso 2]
+3. [Paso 3]
+
+**Validación**:
+[Cómo verificar que se resolvió correctamente]
+
+**Casos especiales**:
+[Situaciones que requieren tratamiento diferente]
+
+---
+
+### [Tipo 2: Nombre]
+
+[Misma estructura]
+
+---
+
+[Continuar para cada tipo de issue]
+
+---
+
+## Gestión de Riesgos
+
+### Riesgos Identificados
+
+**Riesgo 1: [Nombre del riesgo]**
+- Probabilidad: [Alta/Media/Baja]
+- Impacto: [Alto/Medio/Bajo]
+- Descripción: [Qué podría salir mal]
+- Mitigación: [Cómo prevenirlo]
+- Plan B: [Qué hacer si ocurre]
+
+**Riesgo 2: [Nombre del riesgo]**
+[Misma estructura]
+
+**Riesgo 3: [Nombre del riesgo]**
+[Misma estructura]
+
+### Plan de Rollback
+
+Si un lote falla críticamente:
+
+1. [Paso 1 para revertir, ej: git reset --hard HEAD~1]
+2. [Paso 2: Revisar logs de error]
+3. [Paso 3: Documentar problema]
+4. [Paso 4: Ajustar estrategia si necesario]
+5. [Paso 5: Re-intentar con ajustes]
+
+---
+
+## Métricas de Éxito
+
+### Métricas Cuantitativas
+
+- **Reducción de warnings**: De [#inicial] a [#objetivo] ([%] reducción)
+- **Build success rate**: [%] (actualmente [%])
+- **Coverage de issues**: [%] de issues resueltos
+- **Tiempo invertido**: ≤ [Xh] estimadas
+
+### Métricas Cualitativas
+
+- [ ] Build más estable
+- [ ] Documentación más clara
+- [ ] Fácil mantenimiento futuro
+- [ ] Equipo puede trabajar sin warnings constantes
+
+---
+
+## Recursos Necesarios
+
+**Herramientas**:
+- [Herramienta 1, ej: Editor de texto con soporte RST]
+- [Herramienta 2, ej: Sphinx build system]
+- [Herramienta 3, ej: Git para control de versiones]
+
+**Referencias**:
+- [Documento de referencia 1]
+- [Documento de referencia 2]
+- [Skill relevante para consulta]
+
+**Tiempo dedicado**:
+- [Xh] de trabajo enfocado
+- [Xh] de validación
+- [Xh] de buffer
+
+---
+
+## Notas y Consideraciones
+
+**Notas importantes**:
+- [Nota 1 que afecta la ejecución]
+- [Nota 2]
+- [Nota 3]
+
+**Suposiciones**:
+- [Suposición 1 bajo la cual se basa este plan]
+- [Suposición 2]
+
+**Limitaciones**:
+- [Limitación 1 que podría afectar resultados]
+- [Limitación 2]
+
+---
+
+## Aprobación
+
+**Plan revisado por**: [Nombre]
+
+**Fecha de aprobación**: [YYYY-MM-DD HH:MM:SS]
+
+**Comentarios**:
+[Cualquier comentario del revisor]

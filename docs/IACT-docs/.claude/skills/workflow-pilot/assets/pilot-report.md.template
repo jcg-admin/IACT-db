@@ -1,0 +1,91 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+work_package: [YYYY-MM-DD-HH-MM-SS-nombre]
+current_phase: Phase 9 — PILOT/VALIDATE
+author: [Nombre]
+status: Borrador
+hypotheses_count: [N]
+hypotheses_validated: [N]
+hypotheses_invalidated: [N]
+```
+
+# Pilot Report: [Nombre del Work Package]
+
+## Propósito
+
+Validar supuestos técnicos críticos ANTES de ejecutar el WP completo.
+Un piloto responde preguntas de alto riesgo con el mínimo código posible.
+
+> Regla: Un supuesto no validado antes de Phase 10 es una deuda técnica anticipada.
+
+---
+
+## Supuestos validados
+
+### H-001: [Enunciado del supuesto]
+
+**Riesgo si no se valida**: [Qué pasaría si el supuesto es falso durante Phase 10]
+
+**Experimento realizado**:
+- Scope del PoC: [qué se construyó y qué NO se construyó]
+- Duración: [tiempo invertido]
+- Código/configuración: `[path/al/poc]` o inline:
+
+```
+[código relevante — solo lo necesario para reproducir el resultado]
+```
+
+**Resultado**: ✓ Validado / ✗ Invalidado / ⚠ Parcial
+
+**Evidencia**:
+```
+[output, log, o dato concreto que respalda el resultado]
+```
+
+**Implicación para Phase 10**:
+- Si validado: [qué cambia en el task-plan]
+- Si invalidado: [alternativa a adoptar]
+
+---
+
+### H-002: [Enunciado del supuesto]
+
+[Repetir estructura]
+
+---
+
+## Supuestos invalidados — Decisiones de rediseño
+
+| Supuesto | Resultado | Alternativa adoptada | Impacto en scope |
+|----------|-----------|---------------------|-----------------|
+| H-NNN: [enunciado] | ✗ Invalidado | [nueva dirección] | [cambio en plan] |
+
+---
+
+## Artefactos del piloto
+
+| Artefacto | Path | Estado |
+|-----------|------|--------|
+| PoC code | `[path]` | temporal / permanente |
+| Config de prueba | `[path]` | eliminado tras validación |
+
+> Los PoC temporales se eliminan antes de Phase 10. Solo permanecen los fragmentos que serán la base de la implementación real.
+
+---
+
+## Decisión de avance
+
+☐ **AVANZAR a Phase 10** — todos los supuestos críticos validados
+☐ **REVISAR PLAN** — supuestos invalidados requieren cambios en Phase 8
+☐ **ESCALAR** — riesgo no resuelto requiere decisión humana
+
+**Justificación**: [2-3 líneas: por qué se toma esta decisión]
+
+---
+
+## Stopping Point Manifest
+
+| SP | Descripción | Estado |
+|----|-------------|--------|
+| SP-01 | Gate 9→10: usuario valida resultados del piloto y decide avanzar | pendiente |

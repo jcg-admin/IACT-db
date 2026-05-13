@@ -1,0 +1,255 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+analysis_version: [1.0]
+owner: [Nombre]
+total_issues_found: [N]
+Severidad Critical: [N]
+Severidad High: [N]
+Severidad Medium: [N]
+Severidad Low: [N]
+phase: 1 - ANALYZE
+activate_if: análisis de >20 issues o diagnóstico técnico complejo que requiere sub-análisis por categorías
+Categorías identificadas: [N]
+Análisis completado: [SI/NO]
+approved_by: [Nombre]
+```
+
+# Análisis Inicial de Issues - [Nombre del Proyecto/Tarea]
+
+## Propósito
+
+Documentar el análisis inicial de 100+ issues encontrados. Crear inventario completo y categorizado.
+
+> Objetivo: Objetivo: Crear BASELINE de qué estaba roto ANTES de empezar a corregir.
+
+---
+
+---
+
+## Resumen Ejecutivo
+
+**Total de issues detectados**: [Número total]
+
+**Categorías principales**:
+- [Categoría 1]: [Número] issues ([Porcentaje]%)
+- [Categoría 2]: [Número] issues ([Porcentaje]%)
+- [Categoría 3]: [Número] issues ([Porcentaje]%)
+
+**Severidad**:
+- Críticos: [Número] ([Porcentaje]%)
+- Altos: [Número] ([Porcentaje]%)
+- Medios: [Número] ([Porcentaje]%)
+- Bajos: [Número] ([Porcentaje]%)
+
+**Estimación de esfuerzo total**: [Horas estimadas]
+
+---
+
+## Build Output Completo
+
+```
+[Pegar aquí el output completo del build]
+[Incluir todos los warnings, errores, y mensajes relevantes]
+[Mantener formato original para referencia futura]
+```
+
+---
+
+## Categorización de Issues
+
+### Por Tipo
+
+| Tipo | Cantidad | % del Total | Ejemplos |
+|------|----------|-------------|----------|
+| [Tipo 1, ej: Referencias rotas] | [#] | [%] | [Archivo1.rst, Archivo2.rst] |
+| [Tipo 2, ej: Metadata faltante] | [#] | [%] | [Archivo3.rst, Archivo4.rst] |
+| [Tipo 3, ej: Sintaxis RST] | [#] | [%] | [Archivo5.rst] |
+| [Tipo 4] | [#] | [%] | [Ejemplos] |
+| **TOTAL** | [#] | 100% | |
+
+### Por Severidad
+
+| Severidad | Cantidad | % del Total | Criterio |
+|-----------|----------|-------------|----------|
+| Crítico | [#] | [%] | [Build falla, funcionalidad rota] |
+| Alto | [#] | [%] | [Build con warnings graves] |
+| Medio | [#] | [%] | [Warnings que afectan calidad] |
+| Bajo | [#] | [%] | [Warnings menores, cosméticos] |
+| **TOTAL** | [#] | 100% | |
+
+### Por Archivo/Sección Afectada
+
+| Archivo/Sección | Issues | Tipos | Prioridad |
+|-----------------|--------|-------|-----------|
+| [Archivo1.rst] | [#] | [Tipos separados por comas] | [Alta/Media/Baja] |
+| [Archivo2.rst] | [#] | [Tipos] | [Prioridad] |
+| [Sección X] | [#] | [Tipos] | [Prioridad] |
+| [Archivo3.rst] | [#] | [Tipos] | [Prioridad] |
+
+---
+
+## Análisis de Patterns
+
+### Patterns Identificados
+
+**Pattern 1: [Nombre del pattern]**
+- Descripción: [Qué se repite]
+- Frecuencia: [Número de ocurrencias]
+- Archivos afectados: [Lista o cantidad]
+- Causa probable: [Por qué ocurre]
+- Solución propuesta: [Cómo resolverlo en batch]
+
+**Pattern 2: [Nombre del pattern]**
+- Descripción: [Qué se repite]
+- Frecuencia: [Número de ocurrencias]
+- Archivos afectados: [Lista o cantidad]
+- Causa probable: [Por qué ocurre]
+- Solución propuesta: [Cómo resolverlo]
+
+**Pattern 3: [Nombre del pattern]**
+- Descripción: [Qué se repite]
+- Frecuencia: [Número de ocurrencias]
+- Archivos afectados: [Lista o cantidad]
+- Causa probable: [Por qué ocurre]
+- Solución propuesta: [Cómo resolverlo]
+
+### Anti-Patterns Detectados
+
+[Si hay prácticas incorrectas recurrentes, documentar aquí]
+
+- [Anti-pattern 1]: [Descripción y frecuencia]
+- [Anti-pattern 2]: [Descripción y frecuencia]
+
+---
+
+## Métricas
+
+### Distribución de Issues
+
+**Por categoría**:
+```
+[Categoría 1]: [#####################] [Número] issues
+[Categoría 2]: [############] [Número] issues
+[Categoría 3]: [#######] [Número] issues
+[Categoría 4]: [###] [Número] issues
+```
+
+**Por severidad**:
+```
+Crítico: [#####] [Número] issues
+Alto:    [##########] [Número] issues
+Medio:   [###############] [Número] issues
+Bajo:    [########] [Número] issues
+```
+
+### Archivos Más Afectados (Top 10)
+
+| Posición | Archivo | Issues | % del Total |
+|----------|---------|--------|-------------|
+| 1 | [archivo1.rst] | [#] | [%] |
+| 2 | [archivo2.rst] | [#] | [%] |
+| 3 | [archivo3.rst] | [#] | [%] |
+| 4 | [archivo4.rst] | [#] | [%] |
+| 5 | [archivo5.rst] | [#] | [%] |
+| 6 | [archivo6.rst] | [#] | [%] |
+| 7 | [archivo7.rst] | [#] | [%] |
+| 8 | [archivo8.rst] | [#] | [%] |
+| 9 | [archivo9.rst] | [#] | [%] |
+| 10 | [archivo10.rst] | [#] | [%] |
+
+---
+
+## Issues Detallados por Tipo
+
+### [Tipo 1: Nombre del tipo, ej: Referencias Rotas]
+
+**Cantidad total**: [Número]
+
+**Archivos afectados**: [Número de archivos]
+
+**Lista de issues**:
+1. [Archivo.rst:línea] - [Descripción específica del issue]
+2. [Archivo.rst:línea] - [Descripción específica del issue]
+3. [Archivo.rst:línea] - [Descripción específica del issue]
+[... continuar para todos los issues de este tipo]
+
+**Estrategia de solución**:
+[Descripción de cómo abordar este tipo de issues en batch]
+
+---
+
+### [Tipo 2: Nombre del tipo]
+
+**Cantidad total**: [Número]
+
+**Archivos afectados**: [Número de archivos]
+
+**Lista de issues**:
+1. [Issue detallado]
+2. [Issue detallado]
+3. [Issue detallado]
+[... continuar]
+
+**Estrategia de solución**:
+[Descripción]
+
+---
+
+[Repetir para cada tipo de issue identificado]
+
+---
+
+## Casos Especiales
+
+[Documentar issues que no encajan en patterns o requieren atención especial]
+
+**Issue especial 1**:
+- Archivo: [archivo.rst]
+- Descripción: [Qué es especial de este issue]
+- Por qué es especial: [Razón]
+- Solución propuesta: [Cómo abordarlo]
+
+**Issue especial 2**:
+[Similar estructura]
+
+---
+
+## Conclusiones del Análisis
+
+### Observaciones Principales
+
+1. [Observación 1 sobre los issues encontrados]
+2. [Observación 2 sobre patterns o causas raíz]
+3. [Observación 3 sobre complejidad o riesgos]
+
+### Recomendaciones
+
+1. [Recomendación 1 para abordaje estratégico]
+2. [Recomendación 2 para priorización]
+3. [Recomendación 3 para prevención futura]
+
+### Riesgos Identificados
+
+- [Riesgo 1]: [Descripción y probabilidad/impacto]
+- [Riesgo 2]: [Descripción y probabilidad/impacto]
+- [Riesgo 3]: [Descripción y probabilidad/impacto]
+
+---
+
+## Próximos Pasos
+
+1. [Siguiente paso: Crear categorization-plan.md basado en este análisis]
+2. [Definir estrategia de lotes]
+3. [Estimar tiempo por lote]
+4. [Comenzar ejecución]
+
+---
+
+## Notas Adicionales
+
+[Cualquier información adicional relevante que no encaje en secciones anteriores]
+
+- [Nota 1]
+- [Nota 2]
+- [Nota 3]

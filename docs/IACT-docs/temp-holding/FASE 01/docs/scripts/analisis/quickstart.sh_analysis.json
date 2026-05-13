@@ -1,0 +1,158 @@
+{
+  "script_name": "quickstart.sh",
+  "script_path": "scripts/coding/ai/examples/quickstart.sh",
+  "analysis_timestamp": "2025-11-13T09:06:18.955916",
+  "analysis_mode": "standard",
+  "overall_score": 79.0,
+  "constitutional": {
+    "overall_compliance": true,
+    "compliance_score": 100.0,
+    "rule_results": {
+      "1": {
+        "rule_number": 1,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "2": {
+        "rule_number": 2,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "3": {
+        "rule_number": 3,
+        "compliant": true,
+        "score": 100,
+        "violations": [],
+        "recommendations": []
+      },
+      "4": {
+        "rule_number": 4,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "5": {
+        "rule_number": 5,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "6": {
+        "rule_number": 6,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "7": {
+        "rule_number": 7,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "8": {
+        "rule_number": 8,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      }
+    },
+    "total_violations": 0
+  },
+  "quality": {
+    "metrics": {
+      "lines_of_code": 229,
+      "lines_of_comments": 18,
+      "number_of_functions": 7,
+      "max_function_length": 0,
+      "average_function_length": 0.0,
+      "cyclomatic_complexity": 0.0,
+      "comment_ratio": 0.07860262008733625
+    },
+    "code_smells": [],
+    "refactoring_opportunities": [],
+    "quality_score": 100.0
+  },
+  "security": {
+    "issues": [
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 50",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 54",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 62",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 71",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 79",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 87",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 96",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      }
+    ],
+    "severity_counts": {
+      "critical": 0,
+      "high": 7,
+      "medium": 0,
+      "low": 0
+    },
+    "security_score": 30
+  }
+}

@@ -1,0 +1,516 @@
+' =============================================================================
+' PlantUML Consolidated Style System
+' =============================================================================
+' IACT Call Center Analytics - Unified Style & Color Management
+' Created: 2026-04-26 (OPTION B: Merge of plantuml-styles.puml + plantuml_styles.iuml)
+' Version: 2.0.0
+'
+' USAGE PATTERNS:
+'   !include ../../../_static/plantuml-styles.puml          (from casos_uso/)
+'   !include ../../_static/plantuml-styles.puml             (from plantuml-guide/)
+'   !include ../../../_static/plantuml-styles.puml          (from arquitectura/)
+'
+' SPEC REFERENCE:
+'   - Phase A: plantuml-java-integration-impl-requirements-spec.md SPEC-002
+'   - Phase C: plantuml-mapping-consolidation-analysis.md OPTION B
+' =============================================================================
+
+' =============================================================================
+' SECTION 1: GLOBAL SKINPARAM (Foundation)
+' =============================================================================
+skinparam backgroundColor white
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 11
+skinparam shadowing false
+skinparam roundCorner 8
+skinparam defaultTextAlignment left
+skinparam padding 10
+skinparam fontSize 12
+skinparam linetype ortho
+skinparam responseMessageBelowArrow true
+
+' =============================================================================
+' SECTION 2: CORE COLOR DEFINITIONS (POSIX _private convention)
+' =============================================================================
+' Private color definitions (internal use, denoted by POSIX _prefix)
+' Diagrammers should reference public parameters (without _prefix)
+
+' --- Base Corporate Colors ---
+!define _coreCorporateBlue #0066CC
+!define _coreCorporateGreen #00CC66
+!define _coreCorporateOrange #FF9900
+!define _coreCorporateRed #CC0000
+!define _coreCorporatePurple #9933CC
+!define _coreCorporateGray #666666
+
+' --- Blue Variants (Lightest to Darkest) ---
+!define _lightBlueT1 #E6F0FF
+!define _lightBlueT2 #99CCFF
+!define _lightBlueT3 #3399FF
+!define _darkBlueT4 #003399
+
+' --- Green Variants ---
+!define _lightGreenT1 #E6F9F3
+!define _lightGreenT2 #99EED9
+!define _lightGreenT3 #33CC99
+!define _darkGreenT4 #006633
+
+' --- Orange Variants ---
+!define _lightOrangeT1 #FFF5E6
+!define _lightOrangeT2 #FFCC99
+!define _mediumOrangeT3 #FFAA33
+!define _darkOrangeT4 #CC6600
+
+' --- Red Variants ---
+!define _lightRedT1 #FFE6E6
+!define _lightRedT2 #FF9999
+!define _mediumRedT3 #FF3333
+!define _darkRedT4 #990000
+
+' --- Purple Variants ---
+!define _lightPurpleT1 #F5E6FF
+!define _lightPurpleT2 #CC99FF
+!define _mediumPurpleT3 #9966FF
+!define _darkPurpleT4 #663399
+
+' --- Gray Variants ---
+!define _lightGrayT1 #F5F5F5
+!define _lightGrayT2 #CCCCCC
+!define _mediumGrayT3 #999999
+!define _darkGrayT4 #333333
+
+' =============================================================================
+' SECTION 3: PUBLIC COLOR PARAMETERS (Safe for Diagrammers)
+' =============================================================================
+' Generic corporate colors - use when diagram isn't module-specific
+!define coreBlue _coreCorporateBlue
+!define coreGreen _coreCorporateGreen
+!define coreOrange _coreCorporateOrange
+!define coreRed _coreCorporateRed
+!define corePurple _coreCorporatePurple
+!define coreGray _coreCorporateGray
+
+' --- IACT Module-Specific Colors (from v4.0.0 plantuml_styles.iuml) ---
+' Use these when diagram illustrates a specific IACT module
+!define COLOR_PRIMARY #2563EB
+!define COLOR_SECONDARY #7C3AED
+!define COLOR_SUCCESS #059669
+!define COLOR_WARNING #D97706
+!define COLOR_DANGER #DC2626
+!define COLOR_INFO #0891B2
+!define COLOR_LIGHT #F3F4F6
+!define COLOR_DARK #1F2937
+!define COLOR_BORDER #E5E7EB
+
+' Module-specific colors
+!define COLOR_AUTH #3B82F6
+!define COLOR_USERS #8B5CF6
+!define COLOR_ACCESS #EC4899
+!define COLOR_PIPELINE #F59E0B
+!define COLOR_REPORTS #10B981
+!define COLOR_ALERTS #EF4444
+!define COLOR_AUDIT #6366F1
+!define COLOR_LOGS #64748B
+
+' --- Architecture Layer Colors ---
+' Presentation layer
+!define COLOR_PRESENTATION #E1F5FE
+' Application/API layer
+!define COLOR_APPLICATION #FFF9C4
+' Domain/Service layer
+!define COLOR_DOMAIN #F0F4C3
+' Persistence/ORM layer
+!define COLOR_PERSISTENCE #C5E1A5
+' Database layer
+!define COLOR_DATABASE #FFCCBC
+
+' --- Context/System Colors (from sistema_iact_contexto.puml) ---
+!define SYSTEM_COLOR #3498DB
+!define EXTERNAL_COLOR #95A5A6
+!define USER_COLOR #E74C3C
+
+' =============================================================================
+' SECTION 4: DIAGRAM TYPE: USE CASE (Actor/Interaction)
+' =============================================================================
+skinparam actor {
+  backgroundColor _lightBlueT2
+  fontColor _darkBlueT4
+  borderColor _darkBlueT4
+  borderThickness 2
+  fontSize 11
+}
+
+skinparam usecase {
+  backgroundColor _lightGreenT2
+  fontColor _darkGreenT4
+  borderColor _darkGreenT4
+  borderThickness 2
+  fontSize 12
+  arrowColor COLOR_PRIMARY
+}
+
+' Use case stereotype colors
+skinparam usecase<<core>> {
+  backgroundColor COLOR_PRIMARY
+  fontColor white
+  borderColor COLOR_PRIMARY
+}
+
+' =============================================================================
+' SECTION 5: DIAGRAM TYPE: CLASS (Structure)
+' =============================================================================
+skinparam class {
+  backgroundColor _lightPurpleT2
+  borderColor _darkPurpleT4
+  attributeFontColor _darkGrayT4
+  borderThickness 2
+  fontSize 11
+}
+
+' =============================================================================
+' SECTION 6: DIAGRAM TYPE: SEQUENCE (Interaction/Temporal)
+' =============================================================================
+skinparam sequenceActor {
+  backgroundColor _lightBlueT2
+  borderColor _coreCorporateBlue
+  borderThickness 2
+  fontSize 11
+}
+
+skinparam participant {
+  backgroundColor _lightBlueT2
+  borderColor _coreCorporateBlue
+  borderThickness 2
+  fontColor _darkBlueT4
+  fontSize 11
+}
+
+skinparam sequence {
+  arrowColor _coreCorporateGreen
+  arrowFontColor _darkGrayT4
+  arrowFontSize 10
+  actorBackgroundColor _lightBlueT2
+  actorBorderColor _darkBlueT4
+  dividerBackgroundColor _lightGrayT1
+  dividerBorderColor _mediumGrayT3
+  lifeLineBorderColor COLOR_BORDER
+  lifeLineBackgroundColor COLOR_LIGHT
+  boxBorderColor COLOR_BORDER
+  boxBackgroundColor #F9FAFB
+  groupBorderColor COLOR_SECONDARY
+  groupBackgroundColor #EDE9FE
+  groupHeaderFontColor _darkGrayT4
+  referenceBackgroundColor #FEF3C7
+  referenceBorderColor COLOR_WARNING
+}
+
+' Participant stereotypes for sequence diagrams
+skinparam participant<<Frontend>> {
+  backgroundColor #DBEAFE
+  borderColor COLOR_AUTH
+  fontColor _darkGrayT4
+}
+
+skinparam participant<<Backend>> {
+  backgroundColor #D1FAE5
+  borderColor COLOR_SUCCESS
+  fontColor _darkGrayT4
+}
+
+skinparam participant<<Service>> {
+  backgroundColor #EDE9FE
+  borderColor COLOR_SECONDARY
+  fontColor _darkGrayT4
+}
+
+skinparam participant<<Database>> {
+  backgroundColor #FEF3C7
+  borderColor COLOR_WARNING
+  fontColor _darkGrayT4
+}
+
+skinparam participant<<External>> {
+  backgroundColor #FEE2E2
+  borderColor COLOR_DANGER
+  fontColor _darkGrayT4
+}
+
+' =============================================================================
+' SECTION 7: DIAGRAM TYPE: ACTIVITY (Flow/Process)
+' =============================================================================
+skinparam activity {
+  backgroundColor _lightGreenT2
+  borderColor _darkGreenT4
+  fontColor _darkGreenT4
+  borderThickness 2
+  fontSize 11
+  diamondBackgroundColor #FEF3C7
+  diamondBorderColor COLOR_WARNING
+  diamondFontColor _darkGrayT4
+  startColor COLOR_SUCCESS
+  endColor COLOR_DANGER
+  barColor _darkGrayT4
+  arrowColor _coreCorporateGreen
+}
+
+skinparam activityDiamond {
+  backgroundColor #FEF3C7
+  borderColor COLOR_WARNING
+  fontColor _darkGrayT4
+}
+
+skinparam swimlane {
+  borderColor _lightGrayT2
+  backgroundColor _lightGrayT1
+  fontColor _darkGrayT4
+}
+
+' =============================================================================
+' SECTION 8: DIAGRAM TYPE: COMPONENT (Architecture/Technical)
+' =============================================================================
+skinparam component {
+  backgroundColor _lightGreenT2
+  borderColor _darkGreenT4
+  fontColor _darkGreenT4
+  borderThickness 2
+  fontSize 12
+}
+
+' Component stereotypes for architecture diagrams
+skinparam component<<frontend>> {
+  backgroundColor COLOR_PRESENTATION
+  borderColor #455A64
+  fontColor _darkGrayT4
+}
+
+skinparam component<<api>> {
+  backgroundColor COLOR_APPLICATION
+  borderColor #455A64
+  fontColor _darkGrayT4
+}
+
+skinparam component<<service>> {
+  backgroundColor COLOR_DOMAIN
+  borderColor #455A64
+  fontColor _darkGrayT4
+}
+
+skinparam component<<orm>> {
+  backgroundColor COLOR_PERSISTENCE
+  borderColor #455A64
+  fontColor _darkGrayT4
+}
+
+skinparam component<<sql>> {
+  backgroundColor #81C784
+  borderColor #455A64
+  fontColor white
+}
+
+skinparam component<<db>> {
+  backgroundColor COLOR_DATABASE
+  borderColor #455A64
+  fontColor _darkGrayT4
+}
+
+' =============================================================================
+' SECTION 9: DIAGRAM TYPE: INTERFACE & DATABASE
+' =============================================================================
+skinparam interface {
+  backgroundColor _lightBlueT1
+  borderColor _coreCorporateBlue
+  fontColor _coreCorporateBlue
+  borderThickness 2
+  fontSize 11
+}
+
+skinparam database {
+  backgroundColor #DBEAFE
+  borderColor COLOR_PRIMARY
+  fontColor _darkGrayT4
+  fontSize 11
+}
+
+' =============================================================================
+' SECTION 10: DIAGRAM TYPE: RECTANGLE (Context/System Boundaries)
+' =============================================================================
+skinparam rectangle {
+  backgroundColor _lightGrayT1
+  borderColor _mediumGrayT3
+  fontColor _darkGrayT4
+  borderThickness 2
+  fontSize 12
+}
+
+' Rectangle stereotypes for system context diagrams
+skinparam rectangle<<Sistema>> {
+  backgroundColor SYSTEM_COLOR
+  borderColor #2C3E50
+  fontColor white
+  borderThickness 2
+}
+
+skinparam rectangle<<Externo>> {
+  backgroundColor EXTERNAL_COLOR
+  borderColor #2C3E50
+  fontColor white
+  borderThickness 2
+}
+
+skinparam rectangle<<presentation>> {
+  backgroundColor #E8F5E9
+  borderColor #455A64
+  fontColor _darkGrayT4
+  fontStyle bold
+  fontSize 14
+}
+
+skinparam rectangle<<application>> {
+  backgroundColor COLOR_APPLICATION
+  borderColor #455A64
+  fontColor _darkGrayT4
+  fontStyle bold
+  fontSize 14
+}
+
+skinparam rectangle<<domain>> {
+  backgroundColor COLOR_DOMAIN
+  borderColor #455A64
+  fontColor _darkGrayT4
+  fontStyle bold
+  fontSize 14
+}
+
+skinparam rectangle<<persistence>> {
+  backgroundColor COLOR_PERSISTENCE
+  borderColor #455A64
+  fontColor _darkGrayT4
+  fontStyle bold
+  fontSize 14
+}
+
+' =============================================================================
+' SECTION 11: NOTES & CALLOUTS
+' =============================================================================
+skinparam note {
+  backgroundColor #FFFBEB
+  borderColor COLOR_WARNING
+  fontColor _darkGrayT4
+  fontSize 10
+}
+
+' Constraint note (CNST stereotypes)
+skinparam noteBackgroundColor<<CNST>> #FEE2E2
+skinparam noteBorderColor<<CNST>> COLOR_DANGER
+skinparam noteFontColor<<CNST>> _darkGrayT4
+
+' Information note
+skinparam noteBackgroundColor<<INFO>> #DBEAFE
+skinparam noteBorderColor<<INFO>> COLOR_PRIMARY
+skinparam noteFontColor<<INFO>> _darkGrayT4
+
+' Success note
+skinparam noteBackgroundColor<<SUCCESS>> #D1FAE5
+skinparam noteBorderColor<<SUCCESS>> COLOR_SUCCESS
+skinparam noteFontColor<<SUCCESS>> _darkGrayT4
+
+' Warning note
+skinparam noteBackgroundColor<<WARNING>> #FEF3C7
+skinparam noteBorderColor<<WARNING>> COLOR_WARNING
+skinparam noteFontColor<<WARNING>> _darkGrayT4
+
+' =============================================================================
+' SECTION 12: ACTOR STEREOTYPES (RBAC Groupers)
+' =============================================================================
+' Admin role
+skinparam actor<<AGR_ADMIN>> {
+  backgroundColor COLOR_DANGER
+  borderColor COLOR_DANGER
+  fontColor white
+}
+
+' Operator role
+skinparam actor<<AGR_OPERADOR>> {
+  backgroundColor COLOR_SUCCESS
+  borderColor COLOR_SUCCESS
+  fontColor white
+}
+
+' Auditor role
+skinparam actor<<AGR_AUDITOR>> {
+  backgroundColor COLOR_SECONDARY
+  borderColor COLOR_SECONDARY
+  fontColor white
+}
+
+' System actor
+skinparam actor<<SISTEMA>> {
+  backgroundColor _darkGrayT4
+  borderColor _darkGrayT4
+  fontColor white
+}
+
+' User actor (standard)
+skinparam actor<<Usuario>> {
+  backgroundColor USER_COLOR
+  borderColor #C0392B
+  fontColor white
+}
+
+' =============================================================================
+' SECTION 13: HIDE DIRECTIVES (Clean Output)
+' =============================================================================
+hide footbox
+hide members
+hide circle
+hide empty fields
+hide empty methods
+
+' =============================================================================
+' SECTION 14: USEFUL MACROS (Helpers for Diagrammers)
+' =============================================================================
+' CNST (Constraint) note macro
+!define CNST_NOTE(cnst, texto) note right #FEE2E2: **cnst**\ntexto
+
+' Information note macro
+!define INFO_NOTE(texto) note right #DBEAFE: texto
+
+' Success note macro
+!define SUCCESS_NOTE(texto) note right #D1FAE5: texto
+
+' Database definitions for common systems
+!define IVR_DB database "IVR\n<<MariaDB>>\n//readonly//" as IVR #FEE2E2
+!define ANALYTICS_DB database "Analytics\n<<PostgreSQL>>\n//read-write//" as Analytics #D1FAE5
+
+' Actor with role/group
+!define ACTOR_AGR(id, nombre) actor "nombre" as id
+
+' Participant helpers for sequence diagrams
+!define FRONTEND(nombre) participant "nombre" as nombre <<Frontend>>
+!define BACKEND(nombre) participant "nombre" as nombre <<Backend>>
+!define SERVICE(nombre) participant "nombre" as nombre <<Service>>
+!define DATABASE(nombre) participant "nombre" as nombre <<Database>>
+!define EXTERNAL(nombre) participant "nombre" as nombre <<External>>
+
+' Section and subsection dividers
+!define SECTION(titulo) == titulo ==
+!define SUBSECTION(titulo) -- titulo --
+
+' Architecture layer helpers
+!define LAYER(name,color) rectangle name color
+!define COMPONENT(name) component name
+
+' =============================================================================
+' END OF CONSOLIDATED PLANTUML STYLES v2.0.0
+' =============================================================================
+'
+' CONSOLIDATION NOTES (Phase C):
+'   - Merged generic corporate colors (Phase A) with IACT module colors (v4.0.0)
+'   - Preserved POSIX naming conventions (_prefix for private, no prefix for public)
+'   - Added architecture layer colors from sistema_iact_contexto.puml
+'   - Included all stereotype support for RBAC actors and component types
+'   - Incorporated useful macros and helper definitions
+'   - Comprehensive coverage: usecase, actor, class, sequence, activity,
+'     component, interface, database, rectangle, note elements
+'   - Ready for: casos_uso/, plantuml-guide/, arquitectura_tecnica/ use
+' =============================================================================

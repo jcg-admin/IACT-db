@@ -1,0 +1,5 @@
+/home/user/IACT/docs/infraestructura/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/README-REORGANIZACION-ESTRUCTURA.md:1. **2 archivos duplicados** - `index.md` y `spec_infra_001_cpython_precompilado.md` en raíz
+/home/user/IACT/docs/infraestructura/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/PLAN-REORGANIZACION-ESTRUCTURA-INFRA-2025-11-18.md:   - `index.md` y `spec_infra_001_cpython_precompilado.md` duplicados en raiz
+/home/user/IACT/docs/infraestructura/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/PLAN-REORGANIZACION-ESTRUCTURA-INFRA-2025-11-18.md:#### TASK-022: Eliminar duplicado spec_infra_001_cpython_precompilado.md
+/home/user/IACT/docs/infraestructura/qa/QA-ANALISIS-ESTRUCTURA-INFRA-001/LISTADO-COMPLETO-TAREAS.md:Eliminar 2 archivos duplicados identificados: `index.md` (duplicado de INDEX.md) y `spec_infra_001_cpython_precompilado.md` (duplicado en cpython_precompilado/).
+/home/user/IACT/docs/infraestructura/index.md:- spec_infra_001_cpython_precompilado.md

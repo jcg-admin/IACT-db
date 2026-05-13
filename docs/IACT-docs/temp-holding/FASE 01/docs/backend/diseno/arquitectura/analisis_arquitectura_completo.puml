@@ -1,0 +1,646 @@
+@startuml
+'==============================================================================
+' ANÁLISIS ARQUITECTURAL DEL BACKEND - Call Center Site
+' Fecha: 2025-11-11
+' Archivos analizados: 151 (16,263 líneas)
+' Score promedio: 0.93/1.00
+' Violaciones SOLID: 68 | Críticos: 9 | Alta prioridad: 174
+'==============================================================================
+
+'==============================================================================
+' DIAGRAMA 1: ARQUITECTURA GENERAL - ESTADO ACTUAL
+'==============================================================================
+@startuml arquitectura_actual
+!define CRITICAL_COLOR #FF6B6B
+!define HIGH_COLOR #FFA07A
+!define MEDIUM_COLOR #FFD93D
+!define GOOD_COLOR #6BCF7F
+
+title Call Center Backend - Arquitectura Actual (2025-11-11)
+
+package "Django Backend" {
+    package "Apps de Dominio" {
+        [Llamadas] <<app>> MEDIUM_COLOR
+        [Tickets] <<app>> MEDIUM_COLOR
+        [Clientes] <<app>> MEDIUM_COLOR
+        [Equipos] <<app>> MEDIUM_COLOR
+        [Horarios] <<app>> MEDIUM_COLOR
+        [Metricas] <<app>> MEDIUM_COLOR
+    }
+
+    package "Apps de Gestión" {
+        [Dashboard] <<app>> MEDIUM_COLOR
+        [Reportes] <<app>> MEDIUM_COLOR
+        [Analytics] <<app>> GOOD_COLOR
+        [Presupuestos] <<app>> MEDIUM_COLOR
+        [Politicas] <<app>> MEDIUM_COLOR
+    }
+
+    package "Apps de Infraestructura" {
+        [Authentication] <<app>> GOOD_COLOR
+        [Permissions] <<app>> MEDIUM_COLOR
+        [Audit] <<app>> GOOD_COLOR
+        [Common] <<app>> MEDIUM_COLOR
+        [Notifications] <<app>> GOOD_COLOR
+    }
+
+    package "Apps de Integración" {
+        [ETL] <<app>> MEDIUM_COLOR
+        [IVR Legacy] <<app>> MEDIUM_COLOR
+        [Alertas] <<app>> MEDIUM_COLOR
+        [Excepciones] <<app>> MEDIUM_COLOR
+    }
+
+    package "DORA Metrics (CRÍTICO)" #CRITICAL_COLOR {
+        [DORA Views\n981 lines\nScore: 0.55]
+        [Auto Remediation\n455 lines\nScore: 0.55]
+        [Advanced Analytics\n547 lines\nScore: 0.65]
+        [Data Ecosystem\n634 lines\nScore: 0.65]
+        [ML Models\n303 lines\nScore: 0.65]
+    }
+
+    package "Data Centralization" #HIGH_COLOR {
+        [Data Central Views\n225 lines\nScore: 0.65]
+    }
+}
+
+package "External Services" {
+    database "PostgreSQL" as DB
+    queue "Celery/Redis" as Queue
+    storage "File Storage" as Storage
+}
+
+' Connections principales
+[Llamadas] --> DB
+[Tickets] --> DB
+[Dashboard] --> [Llamadas]
+[Dashboard] --> [Tickets]
+[Reportes] --> [Metricas]
+[ETL] --> DB
+[ETL] --> Queue
+[DORA Views\n981 lines\nScore: 0.55] --> DB
+[Authentication] --> [Permissions]
+[Notifications] --> Queue
+
+note right of [DORA Views\n981 lines\nScore: 0.55]
+  **ISSUES:**
+  - 36 métodos (God Class)
+  - 4 violaciones SOLID
+  - SRP, OCP violations
+  - Type checking > polimorfismo
+end note
+
+note as Summary
+**RESUMEN:**
+151 archivos | 16,263 líneas
+Score: 0.93/1.00
+SOLID violations: 68
+Critical: 9 | High: 174
+
+**Patrones detectados:**
+Factory: 56 oportunidades
+Strategy: 24 oportunidades
+Decorator: 17 oportunidades
+Observer: 8 oportunidades
+end note
+
+@enduml
+
+'==============================================================================
+' DIAGRAMA 2: DORA METRICS - CLASES PROBLEMÁTICAS
+'==============================================================================
+@startuml dora_metrics_problemas
+!theme plain
+
+title DORA Metrics - Violaciones SOLID Detectadas
+
+package "dora_metrics (CRÍTICO)" #FFCCCC {
+
+    class DORAMetricsView <<God Class>> {
+        .. HTTP Methods ..
+        + get(), post(), put(), delete()
+        .. Business Logic ..
+        + calculate_metrics()
+        + get_deployment_frequency()
+        + get_lead_time()
+        + get_mttr()
+        + get_change_failure_rate()
+        + get_trends()
+        + get_predictions()
+        .. Data Access ..
+        + aggregate_data()
+        + validate_data()
+        + transform_data()
+        + optimize_query()
+        + migrate_data()
+        .. Presentation ..
+        + serialize_response()
+        + export_report()
+        + generate_pdf()
+        + create_chart()
+        .. Infrastructure ..
+        + send_notification()
+        + send_email()
+        + log_audit()
+        + cache_results()
+        + invalidate_cache()
+        + schedule_job()
+        + sync_external()
+        .. y 14 métodos más ..
+    }
+
+    class AutoRemediationService {
+        + detect_issue()
+        + analyze_root_cause()
+        + suggest_fix()
+        + apply_fix()
+        + validate_fix()
+        + rollback_fix()
+        + notify_team()
+        + log_action()
+        + get_history()
+        + schedule_remediation()
+        + check_dependencies()
+        + run_tests()
+        + deploy_fix()
+        + monitor_results()
+        + generate_report()
+    }
+
+    class AdvancedAnalytics {
+        + analyze_trends()
+        + predict_failures()
+        + detect_anomalies()
+        + calculate_correlations()
+        + generate_insights()
+        + create_dashboard()
+        + export_results()
+        + schedule_analysis()
+        + cache_predictions()
+        + validate_models()
+        + train_models()
+        + evaluate_accuracy()
+    }
+
+    class DataEcosystem {
+        + integrate_sources()
+        + transform_data()
+        + validate_quality()
+        + sync_systems()
+        + handle_conflicts()
+        + monitor_health()
+        + generate_lineage()
+        + export_catalog()
+    }
+
+    class MLModels {
+        + train()
+        + predict()
+        + evaluate()
+        + deploy()
+        + monitor()
+    }
+}
+
+' Relaciones problemáticas - tight coupling
+DORAMetricsView --> AutoRemediationService
+DORAMetricsView --> AdvancedAnalytics
+DORAMetricsView --> DataEcosystem
+DORAMetricsView --> MLModels
+AdvancedAnalytics --> MLModels
+AutoRemediationService ..> DORAMetricsView
+
+note right of DORAMetricsView
+**VIOLACIONES:**
+✗ SRP: 7+ responsabilidades mezcladas
+  - HTTP handling
+  - Business logic
+  - Data access
+  - Presentation
+  - Notifications
+  - Caching
+  - Scheduling
+
+✗ OCP: Type checking en lugar de polimorfismo
+✗ DIP: Dependencias a implementaciones concretas
+
+**Métricas:**
+Lines: 981
+Methods: 36
+Score: 0.55/1.00
+end note
+
+note left of AutoRemediationService
+**VIOLACIONES:**
+✗ SRP: Detección, análisis, aplicación,
+  notificación, todo en una clase
+
+✗ OCP: Condicionales para tipos de issues
+
+**Métricas:**
+Lines: 455
+Methods: 15
+Score: 0.55/1.00
+end note
+
+note as Problems
+**PROBLEMAS DETECTADOS:**
+
+1. God Class Pattern
+   - DORAMetricsView: 36 métodos
+   - Múltiples responsabilidades
+
+2. Tight Coupling
+   - Referencias directas
+   - No hay abstracciones
+
+3. No Separation of Concerns
+   - Lógica en Views
+   - Data access mezclado
+
+4. Type Checking
+   - if/elif en lugar de polimorfismo
+   - Viola OCP
+end note
+
+@enduml
+
+'==============================================================================
+' DIAGRAMA 3: PROPUESTA DE REFACTORIZACIÓN
+'==============================================================================
+@startuml propuesta_arquitectura
+!theme plain
+
+title DORA Metrics - Arquitectura Propuesta (Clean + Django Best Practices)
+
+package "Presentation Layer" #E8F5E9 {
+    class DORAMetricsViewSet <<Thin View>> {
+        + list(request)
+        + retrieve(request, pk)
+        + create(request)
+        + update(request, pk)
+        + destroy(request, pk)
+    }
+    note right: Solo HTTP handling\nDelega a use cases
+}
+
+package "Application Layer (Use Cases)" #FFF9C4 {
+    interface IGetDORAMetrics {
+        + execute(params)
+    }
+
+    interface ICalculateMetrics {
+        + execute(timeRange)
+    }
+
+    interface IAutoRemediate {
+        + execute(issue)
+    }
+
+    class GetDORAMetricsUseCase {
+        - repository
+        - calculator
+        + execute(params)
+    }
+
+    class CalculateMetricsUseCase {
+        - repository
+        - strategy
+        + execute(timeRange)
+    }
+
+    class AutoRemediateUseCase {
+        - detector
+        - fixer
+        - notifier
+        + execute(issue)
+    }
+
+    IGetDORAMetrics <|.. GetDORAMetricsUseCase
+    ICalculateMetrics <|.. CalculateMetricsUseCase
+    IAutoRemediate <|.. AutoRemediateUseCase
+}
+
+package "Domain Layer" #E3F2FD {
+    class DORAMetrics <<Entity>> {
+        + deployment_frequency
+        + lead_time
+        + mttr
+        + change_failure_rate
+        --
+        + calculate()
+        + validate()
+    }
+
+    interface ICalculationStrategy {
+        + calculate(data)
+    }
+
+    class WeeklyStrategy
+    class MonthlyStrategy
+
+    ICalculationStrategy <|.. WeeklyStrategy
+    ICalculationStrategy <|.. MonthlyStrategy
+
+    class MetricsCalculator {
+        - strategies: Map
+        + calculate(data)
+        + setStrategy(type, strategy)
+    }
+
+    MetricsCalculator --> ICalculationStrategy
+}
+
+package "Infrastructure" #FCE4EC {
+    interface IMetricsRepository {
+        + get(id)
+        + save(metrics)
+        + findByDateRange(start, end)
+    }
+
+    class DjangoMetricsRepository {
+        - model
+        + get(id)
+        + save(metrics)
+    }
+
+    class DORAMetricsModel <<Fat Model>> {
+        + deployment_frequency
+        + lead_time
+        + mttr
+        + change_failure_rate
+        --
+        + objects: Manager
+        --
+        + clean()
+        + save()
+    }
+    note right: Validaciones de negocio\nen el modelo
+
+    IMetricsRepository <|.. DjangoMetricsRepository
+    DjangoMetricsRepository --> DORAMetricsModel
+
+    interface INotificationService
+    class EmailNotifier
+    class SlackNotifier
+
+    INotificationService <|.. EmailNotifier
+    INotificationService <|.. SlackNotifier
+}
+
+' Flujo de dependencias (Clean Architecture)
+DORAMetricsViewSet --> IGetDORAMetrics
+DORAMetricsViewSet --> ICalculateMetrics
+GetDORAMetricsUseCase --> IMetricsRepository
+GetDORAMetricsUseCase --> MetricsCalculator
+AutoRemediateUseCase --> INotificationService
+
+note as Benefits
+**BENEFICIOS:**
+
+✓ SRP: Cada clase una responsabilidad
+✓ OCP: Extensible vía strategies
+✓ LSP: Interfaces consistentes
+✓ ISP: Interfaces específicas
+✓ DIP: Dependencias a abstracciones
+
+✓ Django Best Practices:
+  - Thin Views
+  - Fat Models
+  - Service Layer
+  - Repository Pattern
+
+✓ Testeable:
+  - Use Cases sin Django
+  - Mocking fácil
+  - Tests aislados
+end note
+
+note as Migration
+**MIGRACIÓN GRADUAL:**
+
+1. Extraer Use Cases
+2. Crear Repositories
+3. Implementar Strategies
+4. Mover lógica a Domain
+5. Thin Views
+
+Sin Big Bang Rewrite ✓
+end note
+
+@enduml
+
+'==============================================================================
+' DIAGRAMA 4: PATRONES DE DISEÑO RECOMENDADOS
+'==============================================================================
+@startuml patrones_recomendados
+
+title Patrones de Diseño Aplicables al Backend
+
+package "Factory Pattern (56 oportunidades)" {
+    interface IMetricsFactory {
+        + create(type): IMetrics
+    }
+
+    class MetricsFactory {
+        - creators: Map
+        + create(type): IMetrics
+        + register(type, creator)
+    }
+
+    class DeploymentMetrics
+    class LeadTimeMetrics
+    class MTTRMetrics
+
+    IMetricsFactory <|.. MetricsFactory
+    MetricsFactory ..> DeploymentMetrics: crea
+    MetricsFactory ..> LeadTimeMetrics: crea
+    MetricsFactory ..> MTTRMetrics: crea
+}
+
+package "Strategy Pattern (24 oportunidades)" {
+    interface ICalculationStrategy {
+        + calculate(data): float
+    }
+
+    class DailyStrategy
+    class WeeklyStrategy
+    class MonthlyStrategy
+    class YearlyStrategy
+
+    ICalculationStrategy <|.. DailyStrategy
+    ICalculationStrategy <|.. WeeklyStrategy
+    ICalculationStrategy <|.. MonthlyStrategy
+    ICalculationStrategy <|.. YearlyStrategy
+
+    class MetricsCalculator {
+        - strategy: ICalculationStrategy
+        + setStrategy(strategy)
+        + calculate(data)
+    }
+
+    MetricsCalculator --> ICalculationStrategy
+}
+
+package "Decorator Pattern (17 oportunidades)" {
+    interface INotifier {
+        + notify(message)
+    }
+
+    class BaseNotifier {
+        + notify(message)
+    }
+
+    class LoggingDecorator {
+        - notifier: INotifier
+        + notify(message)
+    }
+
+    class RetryDecorator {
+        - notifier: INotifier
+        + notify(message)
+    }
+
+    class RateLimitDecorator {
+        - notifier: INotifier
+        + notify(message)
+    }
+
+    INotifier <|.. BaseNotifier
+    INotifier <|.. LoggingDecorator
+    INotifier <|.. RetryDecorator
+    INotifier <|.. RateLimitDecorator
+
+    LoggingDecorator o--> INotifier
+    RetryDecorator o--> INotifier
+    RateLimitDecorator o--> INotifier
+}
+
+package "Observer Pattern (8 oportunidades)" {
+    interface IObserver {
+        + update(event)
+    }
+
+    class MetricsSubject {
+        - observers: List<IObserver>
+        + attach(observer)
+        + detach(observer)
+        + notify()
+    }
+
+    class AlertObserver
+    class LogObserver
+    class DashboardObserver
+
+    IObserver <|.. AlertObserver
+    IObserver <|.. LogObserver
+    IObserver <|.. DashboardObserver
+
+    MetricsSubject --> IObserver
+}
+
+note as PatternBenefits
+**USO DE PATRONES:**
+
+Factory (56 casos):
+  - Creación de métricas
+  - Creación de reportes
+  - Creación de notificadores
+
+Strategy (24 casos):
+  - Cálculos dinámicos
+  - Algoritmos intercambiables
+  - Validaciones variables
+
+Decorator (17 casos):
+  - Logging
+  - Retry logic
+  - Rate limiting
+  - Caching
+
+Observer (8 casos):
+  - Alertas
+  - Notificaciones
+  - Dashboard updates
+end note
+
+@enduml
+
+'==============================================================================
+' RESUMEN Y RECOMENDACIONES
+'==============================================================================
+@startuml resumen
+
+title Resumen del Análisis y Plan de Acción
+
+package "Estado Actual" #FFCCCC {
+    [151 archivos\n16,263 líneas]
+    [Score: 0.93/1.00]
+    [68 violaciones SOLID]
+    [9 críticos\n174 alta prioridad]
+}
+
+package "Áreas Críticas" #FF6B6B {
+    [DORA Metrics]
+    note right
+    **Archivos problema:**
+    - views.py (0.55)
+    - auto_remediation.py (0.55)
+    - advanced_analytics.py (0.65)
+    - data_ecosystem.py (0.65)
+    - ml_models.py (0.65)
+    end note
+
+    [Data Centralization]
+    note right
+    - views.py (0.65)
+    end note
+}
+
+package "Plan de Acción" #FFF9C4 {
+    card "Fase 1: Refactorización DORA" {
+        [1. Extraer Use Cases de Views]
+        [2. Crear Services Layer]
+        [3. Implementar Repositories]
+        [4. Aplicar Strategy Pattern]
+    }
+
+    card "Fase 2: Patterns" {
+        [5. Factory para métricas]
+        [6. Decorator para notificaciones]
+        [7. Observer para eventos]
+    }
+
+    card "Fase 3: Clean Architecture" {
+        [8. Separar capas]
+        [9. Definir interfaces]
+        [10. Tests]
+    }
+}
+
+package "Mejoras Propuestas" #E8F5E9 {
+    [Agente Django-Specific]
+    note right
+    **Crear agentes especializados:**
+    - DjangoArchitectureAgent
+    - DjangoViewPatternAgent
+    - DjangoModelPatternAgent
+    - DjangoSecurityAgent
+    end note
+
+    [CI/CD Integration]
+    note right
+    **Automatizar análisis:**
+    - Pre-commit hooks
+    - PR checks
+    - Quality gates
+    end note
+}
+
+[Estado Actual] --> [Áreas Críticas]
+[Áreas Críticas] --> [Plan de Acción]
+[Plan de Acción] --> [Mejoras Propuestas]
+
+@enduml
+
+@enduml

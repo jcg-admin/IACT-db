@@ -1,0 +1,5 @@
+name: thyrox-coordinator
+description: "Use when any registered THYROX methodology is active but has no dedicated coordinator. Coordinator for THYROX — generic coordinator that reads methodology YAML dynamically and resolves transitions for any flow type (cyclic, sequential, iterative, non-sequential, conditional)."
+tools: Read, Write, Edit, Glob, Grep, Bash
+installation: manual
+async_suitable: false

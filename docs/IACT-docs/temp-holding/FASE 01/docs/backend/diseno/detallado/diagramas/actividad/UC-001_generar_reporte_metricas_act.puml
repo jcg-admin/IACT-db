@@ -1,0 +1,132 @@
+@startuml UC-001_generar_reporte_metricas_actividad
+!define PRIMARY_COLOR #2C3E50
+!define SUCCESS_COLOR #27AE60
+!define ERROR_COLOR #E74C3C
+!define WARNING_COLOR #F39C12
+
+skinparam activityBackgroundColor #ECF0F1
+skinparam activityBorderColor PRIMARY_COLOR
+skinparam activityDiamondBackgroundColor #BDC3C7
+skinparam activityDiamondBorderColor PRIMARY_COLOR
+
+|Analista de Negocio|
+start
+
+:Solicita generar reporte;
+
+|Sistema|
+:Muestra formulario de autenticación;
+
+|Analista de Negocio|
+:Proporciona credenciales;
+
+|Sistema|
+:Valida credenciales;
+
+if (Credenciales válidas?) then (sí)
+  :Muestra formulario de selección de período;
+
+  |Analista de Negocio|
+  :Selecciona período (ej: 2024-Q1);
+  :Selecciona tipo de reporte (ej: Métricas de llamadas);
+
+  |Sistema|
+  :Valida período seleccionado;
+
+  if (Período válido?) then (sí)
+    :Consulta datos de métricas en BD;
+
+    if (Datos disponibles?) then (sí)
+      :Calcula KPIs:
+      - Tiempo promedio de llamada
+      - Tasa de satisfacción
+      - Volumen de llamadas
+      - Abandono de llamadas;
+
+      :Genera gráficos y visualizaciones;
+      :Renderiza preview del reporte;
+      :Muestra preview al analista;
+
+      |Analista de Negocio|
+      if (Analista confirma generación?) then (sí)
+
+        |Sistema|
+        :Genera reporte final en memoria;
+
+        |Analista de Negocio|
+        if (Solicita exportar a PDF?) then (sí)
+
+          |Sistema|
+          :Genera archivo PDF;
+          :Ofrece descarga;
+
+          |Analista de Negocio|
+          :Descarga archivo PDF;
+
+          if (Solicita enviar por email?) then (sí)
+            :Proporciona dirección de email;
+
+            |Sistema|
+            :Envía PDF por email;
+            :Confirma envío exitoso;
+            #SUCCESS_COLOR:Reporte generado, descargado y enviado;
+            stop
+          else (no)
+            #SUCCESS_COLOR:Reporte generado y descargado;
+            stop
+          endif
+
+        else (no)
+          #SUCCESS_COLOR:Reporte visualizado en pantalla;
+          stop
+        endif
+
+      else (no - cancela)
+        |Sistema|
+        :Descarta generación;
+        #WARNING_COLOR:Generación cancelada por usuario;
+        stop
+      endif
+
+    else (no - sin datos)
+      :Notifica falta de datos para el período;
+      #ERROR_COLOR:Error: No hay datos disponibles;
+      stop
+    endif
+
+  else (no - período inválido)
+    :Muestra error de validación;
+
+    |Analista de Negocio|
+    if (Desea corregir?) then (sí)
+      :Corrige período;
+      |Sistema|
+      :Valida período seleccionado;
+      note right
+        Retorna a validación
+      end note
+    else (no)
+      #ERROR_COLOR:Error: Período inválido;
+      stop
+    endif
+  endif
+
+else (no - credenciales inválidas)
+  :Muestra error de autenticación;
+
+  |Analista de Negocio|
+  if (Desea reintentar?) then (sí)
+    :Proporciona credenciales nuevamente;
+    |Sistema|
+    :Valida credenciales;
+    note right
+      Retorna a validación
+      Máximo 3 intentos
+    end note
+  else (no)
+    #ERROR_COLOR:Error: Autenticación fallida;
+    stop
+  endif
+endif
+
+@enduml

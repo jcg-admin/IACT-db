@@ -1,0 +1,165 @@
+.. meta::
+   :artefacto: FR-008.04
+   :tipo: Requisito Funcional
+   :dominio: requisitos
+   :subdominio: funcionales/users
+   :estado: Aprobado
+   :version: 1.0.0
+   :fecha: 2026-01-07
+   :autor: Equipo IACT
+
+.. _fr-008-04:
+
+=======================================
+FR-008.04: Preservar registro histórico
+=======================================
+
+
+1. Identificación
+-----------------
+
+.. list-table::
+   :widths: 25 75
+
+   * - **ID**
+     - FR-008.04
+   * - **Nombre**
+     - Preservar registro completo para histórico y auditoría
+   * - **UC Origen**
+     - UC_008: Dar de Baja Usuario
+   * - **Paso UC**
+     - Paso 10 (implícito en BR_009)
+   * - **Módulo**
+     - MOD_Users
+   * - **Prioridad**
+     - Alta
+   * - **Tipo**
+     - Auditoría
+
+----
+
+2. Especificación
+-----------------
+
+**Declaración:**
+
+   El sistema DEBE preservar el registro completo del usuario y registrar
+   evento de auditoría CUANDO se completa la baja lógica (BR_009).
+
+**Descripción:**
+
+   Preservación de datos:
+   
+   **Datos del Usuario Preservados:**
+   
+   - Todos los campos del registro original
+   - Historial de passwords (hashes)
+   - Historial de modificaciones previas
+   - Asignaciones de roles (históricas)
+   - Registros de auditoría relacionados
+   
+   **Evento de Auditoría:**
+   
+   - ``event_type``: 'USER_DEACTIVATED'
+   - ``actor_user_id``: ID del admin
+   - ``target_user_id``: ID del usuario dado de baja
+   - ``details``: motivo, fecha, sesiones cerradas
+   
+   **Retención:**
+   
+   Los registros de usuarios inactivos se retienen indefinidamente
+   para cumplimiento y auditoría.
+
+----
+
+3. Criterio de Aceptación
+-------------------------
+
+::
+
+   DADO una baja de usuario completada
+   CUANDO se finaliza la transacción
+   ENTONCES el registro y la auditoría quedan preservados
+   
+   Escenario 1: Registro completo preservado
+   DADO usuario "juan.perez" dado de baja
+   CUANDO se consulta después de la baja
+   ENTONCES todos los datos originales existen
+   Y status = 'INACTIVE'
+   Y se puede ver historial completo
+   
+   Escenario 2: Auditoría de baja
+   DADO baja completada
+   CUANDO se consulta auditoría
+   ENTONCES existe registro USER_DEACTIVATED
+   Y contiene motivo de baja
+   Y contiene quién ejecutó la baja
+   
+   Escenario 3: Referencias intactas
+   DADO usuario dado de baja con registros de auditoría previos
+   CUANDO se consultan esos registros
+   ENTONCES las referencias al usuario siguen funcionando
+   Y se puede ver el nombre/username del usuario
+   
+   Escenario 4: Reportes incluyen inactivos
+   DADO reporte de usuarios con opción "incluir inactivos"
+   CUANDO se genera
+   ENTONCES aparecen usuarios dados de baja
+   Y se marca visualmente como INACTIVE
+
+----
+
+4. Reglas y Restricciones
+-------------------------
+
+- **BR aplicables:**
+  - BR_009: Solo bajas lógicas (preservación obligatoria)
+  
+- **CNST aplicables:**
+  - CNST-006: Políticas de retención
+  - CNST-009: Auditoría inmutable
+
+**Prohibiciones:**
+
+- NUNCA ejecutar DELETE físico de usuarios
+- NUNCA anonimizar datos sin aprobación legal
+- NUNCA truncar historial de auditoría
+
+----
+
+5. Trazabilidad
+---------------
+
+.. list-table::
+   :widths: 20 80
+
+   * - **BReq**
+     - BReq-004: Cumplimiento de Seguridad
+   * - **UC**
+     - UC_008: Dar de Baja Usuario
+   * - **Depende de**
+     - FR-008.03
+   * - **Requerido por**
+     - FR-061.01 (consulta auditoría)
+   * - **BR**
+     - BR_009
+   * - **CNST**
+     - CNST-006, CNST-009
+   * - **TEST**
+     - TST-FR-008.04 (pendiente)
+
+----
+
+6. Historial
+------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - Versión
+     - Fecha
+     - Cambio
+   * - 1.0.0
+     - 2026-01-07
+     - Versión inicial derivada de UC_008

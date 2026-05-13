@@ -1,0 +1,160 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [PROJECT_NAME]
+work_package: [YYYY-MM-DD-HH-MM-SS-nombre]
+phase: Phase 11 — TRACK/EVALUATE
+author: NestorMonroy
+status: Borrador
+audited_by: workflow-audit
+activate_if: se solicita auditoría de un WP antes de cerrar o antes de Stage 12
+```
+
+# Audit Report — [WP_NAME]
+
+**Fecha:** [YYYY-MM-DD HH:MM:SS]
+**WP auditado:** `[path/to/wp]`
+**Stages cubiertos:** [Stage N → Stage M]
+
+---
+
+## Executive Summary
+
+| Métrica | Valor |
+|---------|-------|
+| **Score global** | **XX.X%** |
+| **Grade** | **[A/B/C/F]** |
+| **Items evaluados** | N (sin contar SKIP) |
+| **PASS** | N (N%) |
+| **PARTIAL** | N (N%) |
+| **FAIL** | N (N%) |
+| **SKIP** | N |
+| **Recomendación** | [Cerrar / Corregir FAILs primero / Revisión obligatoria] |
+
+---
+
+## Dimension Scores
+
+| Dimensión | Items | PASS | PARTIAL | FAIL | SKIP | Score |
+|-----------|-------|------|---------|------|------|-------|
+| Task Plan (30%) | N | N | N | N | N | XX% |
+| Artifacts (25%) | N | N | N | N | N | XX% |
+| Commits (20%) | N | N | N | N | N | XX% |
+| Scripts (15%) | N | N | N | N | N | XX% |
+| State (10%) | N | N | N | N | N | XX% |
+| **TOTAL** | **N** | **N** | **N** | **N** | **N** | **XX%** |
+
+---
+
+## Critical Failures — ❌ FAIL
+
+> Items que bloquean el cierre del WP. Deben resolverse antes de STANDARDIZE.
+
+### Dimensión: [Task Plan / Artifacts / Commits / Scripts / State]
+
+- **[Nombre del item]**
+  - Esperado: [qué debería existir]
+  - Encontrado: [qué existe realmente — o "nada"]
+  - Evidencia: `[path o comando que confirma el FAIL]`
+  - Corrección sugerida: [acción concreta]
+
+---
+
+## Partial Items — ⚠️ PARTIAL
+
+> Items que existen pero están incompletos. Recomendado corregir; no bloquean por defecto.
+
+### Dimensión: [Nombre]
+
+- **[Nombre del item]**
+  - Estado: [qué tiene bien / qué le falta]
+  - Evidencia: `[path o referencia]`
+  - Corrección sugerida: [acción concreta]
+
+---
+
+## Hallazgos Sistémicos
+
+> Patrones de error recurrentes que afectan al proceso, no solo a instancias individuales.
+
+### ⚠️ [Nombre del hallazgo]
+
+[Descripción del patrón — N ítems afectados, causa raíz probable, corrección al framework]
+
+---
+
+## Drift de Scope
+
+### ℹ️ Drift positivo (trabajo adicional valioso)
+
+- [Descripción de trabajo implementado fuera del task plan]
+  - Evaluación: [Apropiado / Mejorable]
+  - Acción: [Ninguna / Agregar retroactivamente como T-NNN]
+
+### ❌ Drift negativo (T-NNN marcado sin implementación)
+
+- T-NNN: [descripción]
+  - Evidencia de ausencia: [git log o file check]
+  - Veredicto: ❌ FAIL — checkbox marcado prematuramente
+
+---
+
+## Action Plan
+
+> Pasos ordenados por prioridad para resolver issues.
+
+### P1 — Crítico (bloquea cierre)
+
+- [ ] [Acción concreta — path / comando / archivo a crear]
+- [ ] [...]
+
+### P2 — Alto (corregir antes de STANDARDIZE)
+
+- [ ] [Acción concreta]
+- [ ] [...]
+
+### P3 — Medio (resolver en siguiente WP si es menor)
+
+- [ ] [Acción concreta]
+
+### P4 — Bajo (documentar como TD para framework)
+
+- [ ] [Acción concreta]
+
+---
+
+## Passed Items — ✅ PASS
+
+> Documentación de lo que funcionó correctamente.
+
+### Task Plan
+
+- ✅ T-001: [descripción] — `[evidencia: path o commit]`
+- ✅ T-002: [descripción] — `[evidencia]`
+
+### Artifacts
+
+- ✅ [nombre-artefacto] — path correcto, metadata completa, naming correcto
+
+### Commits
+
+- ✅ `[hash corto]` — `type(scope): descripción` — formato correcto
+
+### Scripts
+
+- ✅ [script.sh] — shebang ✓, sintaxis ✓, ejecutable ✓
+
+### State
+
+- ✅ now.md — campos consistentes con WP actual
+
+---
+
+## Decisión del ejecutor
+
+> Completar después de revisar este reporte.
+
+**Decisión:** [ ] Cerrar WP con grade [X] | [ ] Corregir FAILs primero | [ ] Revisión mayor
+
+**Notas:** [observaciones del ejecutor]
+
+**Fecha de decisión:** [YYYY-MM-DD]

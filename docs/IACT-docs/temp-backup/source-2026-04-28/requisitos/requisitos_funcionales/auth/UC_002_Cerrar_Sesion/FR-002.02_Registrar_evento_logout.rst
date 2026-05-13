@@ -1,0 +1,158 @@
+.. meta::
+   :artefacto: FR-002.02
+   :tipo: Requisito Funcional
+   :dominio: requisitos
+   :subdominio: funcionales/auth
+   :estado: Aprobado
+   :version: 1.0.0
+   :fecha: 2026-01-07
+   :autor: Equipo IACT
+
+.. _fr-002-02:
+
+==================================
+FR-002.02: Registrar evento logout
+==================================
+
+
+1. Identificación
+-----------------
+
+.. list-table::
+   :widths: 25 75
+
+   * - **ID**
+     - FR-002.02
+   * - **Nombre**
+     - Registrar evento de logout en auditoría
+   * - **UC Origen**
+     - UC_002: Cerrar Sesion
+   * - **Paso UC**
+     - Paso 5 del flujo normal
+   * - **Módulo**
+     - MOD_Auth
+   * - **Prioridad**
+     - Alta
+   * - **Tipo**
+     - Auditoría
+
+----
+
+2. Especificación
+-----------------
+
+**Declaración:**
+
+   El sistema DEBE registrar un evento de auditoría inmutable CUANDO
+   un usuario cierra su sesión exitosamente (BR_008).
+
+**Descripción:**
+
+   El sistema crea un registro en la tabla de auditoría con:
+   
+   **Datos del Evento:**
+   
+   - ``event_type``: 'LOGOUT'
+   - ``user_id``: ID del usuario
+   - ``username``: username del usuario
+   - ``timestamp``: fecha/hora exacta (UTC)
+   - ``ip_address``: IP del cliente
+   - ``session_id``: jti del token cerrado
+   - ``session_duration``: duración de la sesión en segundos
+   - ``logout_type``: 'VOLUNTARY' | 'FORCED' | 'EXPIRED'
+
+----
+
+3. Criterio de Aceptación
+-------------------------
+
+::
+
+   DADO un cierre de sesión exitoso
+   CUANDO se invalida el token
+   ENTONCES se registra evento en tabla de auditoría
+   
+   Escenario 1: Logout voluntario
+   DADO usuario que cierra sesión manualmente
+   CUANDO se completa el cierre
+   ENTONCES existe registro con event_type = 'LOGOUT'
+   Y logout_type = 'VOLUNTARY'
+   Y session_duration contiene duración real
+   
+   Escenario 2: Logout forzado por admin
+   DADO admin que fuerza cierre de sesión de otro usuario
+   CUANDO se invalida la sesión
+   ENTONCES logout_type = 'FORCED'
+   Y se registra admin_user_id que ejecutó la acción
+   
+   Escenario 3: Cálculo de duración
+   DADO sesión iniciada a las 10:00 y cerrada a las 12:30
+   CUANDO se registra el logout
+   ENTONCES session_duration = 9000 (segundos)
+
+----
+
+4. Reglas y Restricciones
+-------------------------
+
+- **BR aplicables:**
+  - BR_008: Auditoría de accesos obligatoria
+  
+- **CNST aplicables:**
+  - CNST-009: Logging y auditoría inmutable
+
+**Tipos de Logout:**
+
+.. list-table::
+   :widths: 25 75
+   :header-rows: 1
+
+   * - Tipo
+     - Descripción
+   * - VOLUNTARY
+     - Usuario cerró sesión manualmente
+   * - FORCED
+     - Admin forzó cierre de sesión
+   * - EXPIRED
+     - Token expiró por tiempo
+   * - NEW_LOGIN
+     - Sesión cerrada por nuevo login (BR_005)
+
+----
+
+5. Trazabilidad
+---------------
+
+.. list-table::
+   :widths: 20 80
+
+   * - **BReq**
+     - BReq-004: Cumplimiento de Seguridad
+   * - **UC**
+     - UC_002: Cerrar Sesion
+   * - **Depende de**
+     - FR-002.01
+   * - **Requerido por**
+     - FR-061.01 (consulta de auditoría)
+   * - **BR**
+     - BR_008
+   * - **CNST**
+     - CNST-009
+   * - **TEST**
+     - TST-FR-002.02 (pendiente)
+
+----
+
+6. Historial
+------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - Versión
+     - Fecha
+     - Cambio
+   * - 1.0.0
+     - 2026-01-07
+     - Versión inicial derivada de UC_002

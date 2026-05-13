@@ -1,0 +1,447 @@
+```yml
+started_at: [YYYY-MM-DD HH:MM:SS]
+ended_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+report_version: [1.0]
+process_owner: [Nombre]
+Issues iniciales: [N]
+resolved_issues: [N]
+pending_issues: [N]
+resolution_rate: [%]
+Tiempo total: [días/horas]
+budget_used: [horas/costo]
+approved_by: [Nombre]
+Estado final: [Completado/Parcial/Fallido]
+```
+
+# Reporte Final - [Nombre del Proyecto/Tarea]
+
+## Propósito
+
+Documentar el resultado final de la corrección de issues. Resumen con lecciones aprendidas.
+
+> Objetivo: Objetivo: Crear registro permanente de qué se logró, qué no, y cómo mejorar para el futuro.
+
+---
+
+---
+
+## Resumen Ejecutivo
+
+**Estado final**: [Completado / Completado con excepciones / Parcialmente completado]
+
+**Issues resueltos**: [X] de [Y total] ([%]%)
+
+**Tiempo total invertido**: [Xh] (estimado: [Yh], variación: [+/-%])
+
+**Lotes ejecutados**: [X] de [Y planificados]
+
+**Calidad del resultado**: [Excelente / Buena / Aceptable / Necesita mejoras]
+
+**Impacto en build**: [Descripción del impacto, ej: "Build ahora pasa sin warnings críticos"]
+
+---
+
+## Objetivos y Resultados
+
+### Objetivos Iniciales
+
+[Listar objetivos del análisis inicial]
+
+1. [Objetivo 1, ej: Reducir warnings de build en 80%]
+2. [Objetivo 2, ej: Eliminar todos los errores críticos]
+3. [Objetivo 3, ej: Mejorar calidad de documentación]
+
+### Resultados Alcanzados
+
+| Objetivo | Estado | Resultado | % Completado |
+|----------|--------|-----------|--------------|
+| [Objetivo 1] | [✓ Logrado / ⚠ Parcial / ✗ No logrado] | [Descripción del resultado] | [%] |
+| [Objetivo 2] | [Estado] | [Resultado] | [%] |
+| [Objetivo 3] | [Estado] | [Resultado] | [%] |
+
+**Logros adicionales no planificados**:
+- [Logro extra 1]
+- [Logro extra 2]
+
+---
+
+## Métricas Finales
+
+### Reducción de Issues
+
+**Estado inicial** (antes):
+- Total de issues: [#]
+- Errores críticos: [#]
+- Warnings: [#]
+- Información: [#]
+
+**Estado final** (después):
+- Total de issues: [#]
+- Errores críticos: [#]
+- Warnings: [#]
+- Información: [#]
+
+**Reducción lograda**:
+- Issues totales: [#] → [#] (reducción de [#], [%]%)
+- Errores críticos: [#] → [#] (reducción de [#], [%]%)
+- Warnings: [#] → [#] (reducción de [#], [%]%)
+
+**Representación visual**:
+```
+Inicial: [#########################] [#] issues
+Final:   [#####___________________] [#] issues
+Mejora:  [####################____] [%]% de reducción
+```
+
+### Métricas de Calidad
+
+| Métrica | Antes | Después | Mejora |
+|---------|-------|---------|--------|
+| Build success rate | [%] | [%] | [+%] |
+| Warnings críticos | [#] | [#] | [-#] |
+| Coverage de documentación | [%] | [%] | [+%] |
+| Tiempo de build | [Xs] | [Ys] | [+/-Zs] |
+| Archivos afectados por issues | [#] | [#] | [-#] |
+
+### Distribución de Issues Resueltos
+
+**Por tipo**:
+```
+[Tipo 1]: [################] [#] resueltos ([%]%)
+[Tipo 2]: [###########_____] [#] resueltos ([%]%)
+[Tipo 3]: [#######_________] [#] resueltos ([%]%)
+[Tipo 4]: [####____________] [#] resueltos ([%]%)
+```
+
+**Por severidad**:
+- Críticos: [#] de [#] resueltos ([%]%)
+- Altos: [#] de [#] resueltos ([%]%)
+- Medios: [#] de [#] resueltos ([%]%)
+- Bajos: [#] de [#] resueltos ([%]%)
+
+---
+
+## Tabla Comparativa: Antes vs Después
+
+| Aspecto | Antes | Después | Mejora |
+|---------|-------|---------|--------|
+| **Build Status** | [✗ Fail / ⚠ Pass con warnings] | [✓ Pass clean / ⚠ Pass con warnings menores] | [Descripción] |
+| **Total issues** | [#] | [#] | [-# (-[%]%)] |
+| **Archivos problemáticos** | [#] | [#] | [-#] |
+| **Tiempo promedio build** | [Xs] | [Ys] | [+/-Zs] |
+| **Calidad documentación** | [Baja/Media/Alta] | [Baja/Media/Alta] | [Mejora descripción] |
+| **Mantenibilidad** | [Baja/Media/Alta] | [Baja/Media/Alta] | [Mejora descripción] |
+
+---
+
+## Ejecución de Lotes
+
+### Resumen de Lotes
+
+| Lote | Nombre | Issues | Tiempo Estimado | Tiempo Real | Status |
+|------|--------|--------|-----------------|-------------|--------|
+| 1 | [Nombre] | [#] | [Xh] | [Yh] | [✓ / ⚠ / ✗] |
+| 2 | [Nombre] | [#] | [Xh] | [Yh] | [Status] |
+| 3 | [Nombre] | [#] | [Xh] | [Yh] | [Status] |
+| 4 | [Nombre] | [#] | [Xh] | [Yh] | [Status] |
+| 5 | [Nombre] | [#] | [Xh] | [Yh] | [Status] |
+| **Total** | | [#] | [Xh] | [Yh] | |
+
+**Variación tiempo**: [+/-Xh] ([+/-%]% vs estimado)
+
+### Lotes Más Exitosos
+
+1. **[Lote #X - Nombre]**: [Razón del éxito, ej: "Completado 100% en tiempo estimado"]
+2. **[Lote #Y - Nombre]**: [Razón]
+3. **[Lote #Z - Nombre]**: [Razón]
+
+### Lotes Con Dificultades
+
+1. **[Lote #A - Nombre]**: 
+   - Problema: [Descripción]
+   - Impacto: [Cómo afectó]
+   - Resolución: [Cómo se resolvió]
+
+2. **[Lote #B - Nombre]**:
+   [Misma estructura]
+
+---
+
+## Problemas Críticos Encontrados
+
+### Problema 1: [Título del Problema]
+
+**Descripción**: [Qué era el problema]
+
+**Impacto**: [Cómo afectó la ejecución]
+- Tiempo perdido: [Xh]
+- Lotes afectados: [Lista]
+- Gravedad: [Crítico / Alto / Medio / Bajo]
+
+**Solución aplicada**: [Cómo se resolvió]
+
+**Prevención futura**: [Qué hacer para evitarlo en el futuro]
+
+---
+
+### Problema 2: [Título del Problema]
+
+[Misma estructura]
+
+---
+
+### Problema 3: [Título del Problema]
+
+[Misma estructura]
+
+---
+
+## Lecciones Aprendidas
+
+### Lo que Funcionó Bien
+
+1. **[Aspecto positivo 1]**
+   - Por qué funcionó: [Razón]
+   - Impacto: [Beneficio obtenido]
+   - Recomendación: [Cómo replicarlo en futuro]
+
+2. **[Aspecto positivo 2]**
+   [Misma estructura]
+
+3. **[Aspecto positivo 3]**
+   [Misma estructura]
+
+### Lo que No Funcionó
+
+1. **[Aspecto problemático 1]**
+   - Qué salió mal: [Descripción]
+   - Impacto: [Consecuencia]
+   - Aprendizaje: [Qué hacer diferente]
+
+2. **[Aspecto problemático 2]**
+   [Misma estructura]
+
+### Mejoras para Futuras Correcciones
+
+**Proceso**:
+- [Mejora 1 al proceso]
+- [Mejora 2 al proceso]
+- [Mejora 3 al proceso]
+
+**Herramientas**:
+- [Herramienta o script que sería útil desarrollar]
+- [Mejora a herramienta existente]
+
+**Planificación**:
+- [Mejora 1 a cómo planificar]
+- [Mejora 2 a estimaciones]
+
+---
+
+## Issues No Resueltos
+
+[Si hay issues que quedaron pendientes]
+
+| # | Archivo | Issue | Razón No Resuelto | Prioridad | Acción Futura |
+|---|---------|-------|-------------------|-----------|---------------|
+| 1 | [archivo.rst] | [Descripción] | [Por qué no se resolvió] | [Alta/Media/Baja] | [Qué hacer] |
+| 2 | [archivo.rst] | [Descripción] | [Razón] | [Prioridad] | [Acción] |
+| 3 | [archivo.rst] | [Descripción] | [Razón] | [Prioridad] | [Acción] |
+
+**Total issues pendientes**: [#]
+
+**Impacto de issues pendientes**: [Descripción del impacto]
+
+**Plan para resolverlos**:
+[Descripción de qué hacer con los issues pendientes]
+
+---
+
+## Archivos Modificados
+
+### Estadísticas
+
+- **Total de archivos modificados**: [#]
+- **Líneas agregadas**: [#]
+- **Líneas eliminadas**: [#]
+- **Líneas modificadas netas**: [+/-#]
+
+### Archivos Más Modificados (Top 10)
+
+| Posición | Archivo | Cambios | Tipo de Cambios |
+|----------|---------|---------|-----------------|
+| 1 | [archivo1.rst] | [#] líneas | [Descripción tipo] |
+| 2 | [archivo2.rst] | [#] líneas | [Descripción] |
+| 3 | [archivo3.rst] | [#] líneas | [Descripción] |
+| 4 | [archivo4.rst] | [#] líneas | [Descripción] |
+| 5 | [archivo5.rst] | [#] líneas | [Descripción] |
+[... hasta 10]
+
+### Commits Realizados
+
+```bash
+# Total de commits: [#]
+
+# Commits principales:
+[hash] - fix([scope]): resolve lote-1 issues
+[hash] - fix([scope]): resolve lote-2 issues
+[hash] - fix([scope]): resolve lote-3 issues
+[hash] - fix([scope]): resolve lote-4 issues
+[hash] - docs: final validation and cleanup
+```
+
+---
+
+## Recomendaciones
+
+### Para Mantenimiento Futuro
+
+1. **[Recomendación 1]**
+   - Qué hacer: [Acción específica]
+   - Frecuencia: [Cuándo hacerlo]
+   - Responsable: [Quién]
+   - Beneficio: [Por qué es importante]
+
+2. **[Recomendación 2]**
+   [Misma estructura]
+
+3. **[Recomendación 3]**
+   [Misma estructura]
+
+### Para Prevenir Regresiones
+
+- [Acción preventiva 1]
+- [Acción preventiva 2]
+- [Acción preventiva 3]
+
+### Para Mejorar Calidad
+
+- [Mejora de calidad 1]
+- [Mejora de calidad 2]
+- [Mejora de calidad 3]
+
+### Herramientas a Implementar
+
+1. **[Herramienta/Script 1]**
+   - Propósito: [Para qué serviría]
+   - Esfuerzo de implementación: [Estimación]
+   - Beneficio esperado: [Qué resolvería]
+
+2. **[Herramienta/Script 2]**
+   [Misma estructura]
+
+---
+
+## Conclusiones
+
+### Logros Principales
+
+1. [Logro principal 1 con impacto cuantificado]
+2. [Logro principal 2]
+3. [Logro principal 3]
+
+### Impacto en el Proyecto
+
+**Calidad**:
+[Descripción de cómo mejoró la calidad del proyecto]
+
+**Mantenibilidad**:
+[Descripción de cómo es más fácil mantener ahora]
+
+**Productividad**:
+[Descripción de cómo el equipo puede trabajar mejor]
+
+### Valor Agregado
+
+**Valor cuantificable**:
+- Reducción de [%]% en warnings
+- [Xh] ahorradas en builds futuros
+- [Y] archivos ahora libres de issues
+
+**Valor cualitativo**:
+- [Mejora cualitativa 1]
+- [Mejora cualitativa 2]
+- [Mejora cualitativa 3]
+
+---
+
+## Siguientes Pasos
+
+### Inmediatos
+
+1. [Acción inmediata 1]
+2. [Acción inmediata 2]
+3. [Acción inmediata 3]
+
+### Corto Plazo (1-2 semanas)
+
+1. [Acción corto plazo 1]
+2. [Acción corto plazo 2]
+3. [Acción corto plazo 3]
+
+### Largo Plazo (1-3 meses)
+
+1. [Acción largo plazo 1]
+2. [Acción largo plazo 2]
+3. [Acción largo plazo 3]
+
+---
+
+## Anexos
+
+### Anexo A: Comandos Útiles
+
+```bash
+# Build completo
+make clean && make html
+
+# Validar warnings específicos
+make html 2>&1 | grep -i "warning"
+
+# Contar warnings
+make html 2>&1 | grep -c "WARNING"
+
+# Linkcheck
+make linkcheck
+```
+
+### Anexo B: Referencias
+
+**Documentación consultada**:
+- [Documento 1]: [URL o ubicación]
+- [Documento 2]: [URL o ubicación]
+
+**Skills utilizados**:
+- [Skill 1]: Para [propósito]
+- [Skill 2]: Para [propósito]
+
+### Anexo C: Datos Detallados
+
+[Si hay datos adicionales que no encajan en secciones anteriores]
+
+---
+
+## Agradecimientos
+
+[Si hay personas que ayudaron]
+
+- [Persona 1]: [Contribución]
+- [Persona 2]: [Contribución]
+
+---
+
+## Metadatos del Reporte
+
+**Documento creado**: [YYYY-MM-DD-HH-MM-SS HH:MM]
+
+**Autor**: [Nombre]
+
+**Revisado por**: [Nombre si aplica]
+
+**Versión**: 1.0
+
+**Documentos relacionados**:
+- analysis-phase.md - [Fecha]
+- categorization-plan.md - [Fecha]
+- execution-log.md - [Fecha]

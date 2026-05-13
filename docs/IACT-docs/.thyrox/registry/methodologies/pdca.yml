@@ -1,0 +1,46 @@
+# PDCA — Plan-Do-Check-Act
+# type: cyclic
+# Ciclo continuo de mejora. El último paso (act) regresa a plan para el siguiente ciclo.
+
+id: pdca
+type: cyclic
+display: "PDCA — Plan-Do-Check-Act"
+note: >
+  Ciclo de mejora continua (Deming Cycle). Cada iteración completa un ciclo;
+  si el act determina que se necesita más mejora, el coordinator inicia el siguiente
+  ciclo automáticamente volviendo a pdca:plan.
+
+native_phase_count: 4
+produces:
+  - Improvement Plan
+  - Pilot Results
+  - Gap Analysis
+  - Standard Update or New Cycle Plan
+consumes:
+  - problem-statement
+  - current-state-data
+
+steps:
+  - id: pdca:plan
+    display: "Plan — Identificar problema y diseñar mejora"
+    activities: ["Definir el problema", "Analizar la situación actual", "Establecer objetivos medibles", "Diseñar el plan de mejora"]
+    output: "Plan de mejora con objetivos, hipótesis y acciones concretas"
+    next: [pdca:do]
+
+  - id: pdca:do
+    display: "Do — Ejecutar el plan a escala pequeña (piloto)"
+    activities: ["Implementar el plan en ámbito limitado", "Recopilar datos durante la ejecución", "Documentar observaciones y desviaciones"]
+    output: "Resultados del piloto con datos recopilados"
+    next: [pdca:check]
+
+  - id: pdca:check
+    display: "Check — Verificar resultados vs objetivos del Plan"
+    activities: ["Comparar resultados con objetivos", "Identificar desviaciones", "Analizar causas de éxito/fracaso"]
+    output: "Análisis de brecha entre resultados obtenidos y esperados"
+    next: [pdca:act]
+
+  - id: pdca:act
+    display: "Act — Estandarizar si exitoso, ajustar y repetir si no"
+    activities: ["Si exitoso: estandarizar y escalar", "Si no exitoso: ajustar y planificar siguiente ciclo", "Documentar lecciones aprendidas"]
+    output: "Estándar actualizado O nuevo plan para siguiente ciclo"
+    next: [pdca:plan]   # ciclo continuo

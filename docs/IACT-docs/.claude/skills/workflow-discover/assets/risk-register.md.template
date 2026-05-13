@@ -1,0 +1,101 @@
+```yml
+project: [Nombre del proyecto]
+Work package: [YYYY-MM-DD-HH-MM-SS-nombre]
+created_at: [YYYY-MM-DD HH:MM:SS]
+updated_at: [YYYY-MM-DD HH:MM:SS]
+current_phase: [Phase N — PHASE_NAME]
+open_risks: [N]
+mitigated_risks: [N]
+closed_risks: [N]
+author: [Nombre]
+```
+
+# Risk Register: [Nombre del Proyecto / Work Package]
+
+## Propósito
+
+Registrar, priorizar y trackear los riesgos identificados durante el proyecto. Un riesgo es una condición que **podría** impedir completar el trabajo con la calidad esperada.
+
+> Diferencia con `error-report.md`: el error ya ocurrió. El riesgo es lo que **puede** ocurrir.
+> Actualizar este documento en cada fase. Un riesgo no gestionado es una deuda oculta.
+
+---
+
+## Matriz de riesgos
+
+| ID | Descripción | Probabilidad | Impacto | Severidad | Estado | Dueño |
+|----|-------------|:------------:|:-------:|:---------:|--------|-------|
+| R-001 | [Descripción concisa] | alta/media/baja | alto/medio/bajo | crítica/alta/media/baja | abierto/mitigado/cerrado | [Nombre] |
+| R-002 | [Descripción] | | | | | |
+
+**Severidad** = Probabilidad × Impacto:
+- `crítica` = probabilidad alta + impacto alto
+- `alta` = probabilidad alta + impacto medio, o media + alto
+- `media` = combinaciones intermedias
+- `baja` = probabilidad baja o impacto bajo
+
+---
+
+## Detalle de riesgos
+
+### R-001: [Título que revela el riesgo, no solo el área]
+
+**Descripción**
+
+[Qué condición existe que podría causar un problema. Ser específico: no "problemas técnicos" sino "el modelo puede saltar Phase 3 si no hay work package activo".]
+
+**Probabilidad**: [alta / media / baja]
+**Impacto**: [alto / medio / bajo]
+**Severidad**: [crítica / alta / media / baja]
+**Estado**: [abierto / mitigado / cerrado]
+**Fase de identificación**: [Phase N]
+**Última actualización**: [YYYY-MM-DD HH:MM:SS]
+
+**Señales de alerta**
+
+[Indicadores observables que sugieren que el riesgo se está materializando.]
+- [Señal 1]
+- [Señal 2]
+
+**Mitigación**
+
+[Qué se hace para reducir probabilidad o impacto ANTES de que ocurra.]
+- [Acción de mitigación 1]
+- [Acción de mitigación 2]
+
+**Plan de contingencia**
+
+[Qué hacer SI el riesgo se materializa.]
+- [Paso 1]
+- [Paso 2]
+
+**Historial**
+
+| Fecha | Fase | Cambio | Autor |
+|-------|------|--------|-------|
+| [YYYY-MM-DD HH:MM:SS] | Phase 1 | Identificado | [Nombre] |
+| [YYYY-MM-DD HH:MM:SS] | Phase 4 | Mitigación aplicada: [descripción] | [Nombre] |
+
+---
+
+### R-002: [Título]
+
+[Repetir estructura]
+
+---
+
+## Riesgos cerrados
+
+| ID | Descripción | Cómo se cerró | Fecha cierre |
+|----|-------------|---------------|-------------|
+| R-NNN | [Descripción] | [Mitigado / No ocurrió / Ocurrió y se resolvió con ERR-NNN] | [YYYY-MM-DD HH:MM:SS] |
+
+---
+
+## Checklist de gestión
+
+- [ ] Riesgos identificados en Phase 1 antes de planificar
+- [ ] Cada riesgo tiene señales de alerta definidas
+- [ ] Cada riesgo tiene plan de contingencia (no solo mitigación)
+- [ ] Registro actualizado al final de cada fase
+- [ ] Riesgos materializados referenciados en `context/errors/ERR-NNN.md`

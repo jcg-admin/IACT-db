@@ -1,0 +1,10 @@
+# Requisitos de Stakeholders Frontend (Stakeholder Requirements)
+
+Esta carpeta contiene documentos RS-XXX específicos del frontend siguiendo ISO 29148 Clause 9.4.
+
+Archivos esperados:
+- rs010_dashboard_interactivo_gerente.md
+- rs011_visualizaciones_analistas.md
+- etc.
+
+Usa la plantilla: docs/plantillas/template_requisito_stakeholder.md

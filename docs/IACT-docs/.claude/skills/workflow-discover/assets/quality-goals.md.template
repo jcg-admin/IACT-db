@@ -1,0 +1,103 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+quality_goals_version: [1.0]
+author: [Nombre]
+evaluation_period: [YYYY-MM-DD-HH-MM-SS hasta YYYY-MM-DD-HH-MM-SS]
+Metas definidas: [N]
+```
+
+# Quality Goals: [PROJECT_NAME]
+
+## Propósito
+
+Documentar QUÉ TAN BIEN debe el sistema cumplir sus requisitos, usando atributos de calidad con scenarios medibles.
+
+> Objetivo: Especificar atributos de calidad (performance, security, usability, etc.) priorizados en tres niveles (Critical, Important, Desirable).
+
+---
+
+## Priority 1: Critical
+
+| Quality Goal | Scenario |
+|--------------|----------|
+| [Attribute]  | Every [action] must [result] |
+| [Attribute]  | Every [action] must [result] |
+| [Attribute]  | Every [action] must [result] |
+
+**Ejemplo:**
+| Quality Goal | Scenario |
+|--------------|----------|
+| Correctness  | Every product price is correctly calculated in cart |
+| Security     | Payment data is encrypted end-to-end |
+| Reliability  | 99.9% of transactions process without error |
+
+---
+
+## Priority 2: Important
+
+| Quality Goal | Scenario |
+|--------------|----------|
+| [Attribute]  | [Action] must complete within [time/measure] |
+| [Attribute]  | System must handle [load] |
+| [Attribute]  | User must complete [action] in under [time] |
+
+**Ejemplo:**
+| Quality Goal | Scenario |
+|--------------|----------|
+| Performance  | Product search returns results in under 2 seconds |
+| Scalability  | System handles 10,000 concurrent users |
+| Usability    | New user completes registration in under 3 minutes |
+
+---
+
+## Priority 3: Desirable
+
+| Quality Goal | Scenario |
+|--------------|----------|
+| [Attribute]  | [Nice-to-have scenario] |
+| [Attribute]  | [Nice-to-have scenario] |
+
+**Ejemplo:**
+| Quality Goal | Scenario |
+|--------------|----------|
+| Performance  | Mobile app loads products in under 1 second on 4G |
+| Flexibility  | New payment methods can be added without code changes |
+
+---
+
+## Trade-offs and Resolutions
+
+**Trade-off 1: Performance vs Flexibility**
+- Tension: Más flexible → más lento
+- Resolution: Priority 1 es Correctness, Priority 3 es Performance
+- Decision: Acceptable trade-off
+
+**Trade-off 2: Security vs Usability**
+- Tension: Más seguro → más pasos
+- Resolution: Priority 1 es Security, Priority 2 es Usability
+- Decision: Balance con 2FA opcional
+
+[Agregar más trade-offs si aplica]
+
+---
+
+## Validación Checklist
+
+- [ ] Priority 1 claramente definida
+- [ ] Priority 2 claramente definida
+- [ ] Priority 3 claramente definida
+- [ ] Cada goal tiene scenario específico
+- [ ] Scenarios son medibles
+- [ ] Scenarios son verificables
+- [ ] Trade-offs identificados
+- [ ] Trade-offs resueltos
+
+---
+
+## Siguiente Paso
+
+Una vez completado este documento:
+→ Pasar a `stakeholders.md`
+
+---

@@ -1,0 +1,157 @@
+# CODEOWNERS - Asignación de Ownership del Repositorio IACT
+#
+# Este archivo define quién es responsable de revisar cambios en diferentes
+# partes del repositorio. Los owners serán automáticamente solicitados como
+# reviewers cuando se creen Pull Requests.
+#
+# Documentación: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Formato:
+# pattern @owner1 @owner2
+#
+# Los patrones siguen el mismo formato que .gitignore
+
+# ==============================================================================
+# DEFAULT OWNERS
+# ==============================================================================
+
+# Por defecto, equipo-backend es owner de todo
+* @equipo-backend
+
+# ==============================================================================
+# DOCUMENTACIÓN
+# ==============================================================================
+
+# Documentación general
+/docs/ @equipo-backend @equipo-ba
+
+# Arquitectura y ADRs
+/docs/adr/ @equipo-arquitectura @equipo-backend
+/docs/backend/arquitectura/ @equipo-arquitectura @equipo-backend
+
+# Requisitos y especificaciones
+/docs/backend/requisitos/ @equipo-ba @equipo-backend
+
+# Sistema de Permisos Granular (nuevo)
+/docs/backend/requisitos/INDICE_MAESTRO_PERMISOS_GRANULAR.md @equipo-backend @equipo-ba
+/docs/backend/requisitos/prioridad_01_estructura_base_datos.md @equipo-backend @equipo-dba
+/docs/backend/requisitos/prioridad_02_funciones_core.md @equipo-backend
+/docs/backend/requisitos/prioridad_03_modulos_operativos.md @equipo-backend
+/docs/backend/requisitos/prioridad_04_modulos_gestion.md @equipo-backend
+/docs/backend/requisitos/CATALOGO_GRUPOS_FUNCIONALES.md @equipo-backend @equipo-ba
+/docs/backend/requisitos/CASOS_DE_USO_SISTEMA_PERMISOS.md @equipo-ba @equipo-backend
+/docs/backend/requisitos/MAPEO_FUNCIONES_MODULOS_DJANGO.md @equipo-backend @equipo-arquitectura
+/docs/backend/requisitos/MATRIZ_TRAZABILIDAD_PERMISOS.md @equipo-ba @equipo-backend
+
+# Guías de usuario
+/docs/guias/ @equipo-backend @equipo-documentacion
+
+# Plantillas
+/docs/plantillas/ @equipo-ba @equipo-backend
+
+# ==============================================================================
+# CÓDIGO BACKEND
+# ==============================================================================
+
+# Django settings y configuración
+/api/callcentersite/callcentersite/settings*.py @equipo-backend @equipo-seguridad
+/api/callcentersite/callcentersite/urls.py @equipo-backend
+
+# Apps Django - Users y Autenticación
+/api/callcentersite/callcentersite/apps/users/ @equipo-backend @equipo-seguridad
+/api/callcentersite/callcentersite/apps/authentication/ @equipo-backend @equipo-seguridad
+
+# Apps Django - Módulos Operativos
+/api/callcentersite/callcentersite/apps/ivr_legacy/ @equipo-backend @equipo-ivr
+/api/callcentersite/callcentersite/apps/dashboard/ @equipo-backend
+/api/callcentersite/callcentersite/apps/analytics/ @equipo-backend @equipo-analytics
+/api/callcentersite/callcentersite/apps/reports/ @equipo-backend @equipo-analytics
+
+# Apps Django - Módulos de Gestión
+/api/callcentersite/callcentersite/apps/notifications/ @equipo-backend
+/api/callcentersite/callcentersite/apps/audit/ @equipo-backend @equipo-seguridad
+/api/callcentersite/callcentersite/apps/common/ @equipo-backend
+
+# Apps Django - ETL
+/api/callcentersite/callcentersite/apps/etl/ @equipo-backend @equipo-dba
+
+# Migraciones de base de datos
+/api/callcentersite/callcentersite/apps/*/migrations/ @equipo-backend @equipo-dba
+
+# Tests
+/api/callcentersite/tests/ @equipo-backend @equipo-qa
+
+# ==============================================================================
+# FRONTEND
+# ==============================================================================
+
+/frontend/ @equipo-frontend
+
+# ==============================================================================
+# INFRAESTRUCTURA Y DEVOPS
+# ==============================================================================
+
+# Docker
+/Dockerfile* @equipo-backend @equipo-devops
+/docker-compose*.yml @equipo-backend @equipo-devops
+/.dockerignore @equipo-backend @equipo-devops
+
+# Vagrant
+/Vagrantfile @equipo-devops
+/vagrant/ @equipo-devops
+
+# CI/CD
+/.github/ @equipo-devops @equipo-backend
+/.github/workflows/ @equipo-devops @equipo-backend
+
+# Scripts
+/scripts/ @equipo-backend @equipo-devops
+/scripts/ai/ @equipo-backend @equipo-ai
+/scripts/dora_metrics.py @equipo-backend @equipo-devops
+/scripts/sdlc_agent.py @equipo-backend @equipo-ai
+
+# ==============================================================================
+# BASE DE DATOS
+# ==============================================================================
+
+# SQL scripts
+*.sql @equipo-dba @equipo-backend
+
+# ==============================================================================
+# CONFIGURACIÓN Y DEPENDENCIAS
+# ==============================================================================
+
+# Python dependencies
+/requirements*.txt @equipo-backend @equipo-seguridad
+/pyproject.toml @equipo-backend
+/poetry.lock @equipo-backend
+
+# Node dependencies (si existen)
+/package.json @equipo-frontend
+/package-lock.json @equipo-frontend
+
+# Configuración de proyecto
+/.editorconfig @equipo-backend @equipo-frontend
+/.gitignore @equipo-backend @equipo-devops
+/README.md @equipo-backend @equipo-documentacion
+
+# ==============================================================================
+# SEGURIDAD
+# ==============================================================================
+
+# Cualquier archivo relacionado con seguridad
+**/security*.* @equipo-seguridad @equipo-backend
+**/*password*.* @equipo-seguridad @equipo-backend
+**/*secret*.* @equipo-seguridad @equipo-backend
+**/*auth*.* @equipo-seguridad @equipo-backend
+
+# GitHub security
+/.github/SECURITY.md @equipo-seguridad
+/.github/dependabot.yml @equipo-seguridad @equipo-devops
+
+# ==============================================================================
+# LEGAL Y COMPLIANCE
+# ==============================================================================
+
+/LICENSE @equipo-legal
+/CODEOWNERS @equipo-backend @equipo-arquitectura

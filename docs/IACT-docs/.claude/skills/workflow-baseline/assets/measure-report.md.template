@@ -1,0 +1,48 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+work_package: [YYYY-MM-DD-HH-MM-SS-nombre]
+current_phase: Phase 2 — MEASURE
+author: [Nombre]
+status: Borrador
+```
+
+# Measure Report: [Nombre del Work Package]
+
+## Resumen ejecutivo
+
+[2-3 líneas: qué se midió, cuál es el dato más importante, qué implica para las fases siguientes.]
+
+---
+
+## Datos recopilados
+
+[Referencia al baseline.md con los datos raw. Este documento sintetiza — no duplica.]
+
+Ver [baseline](baseline.md) para datos detallados.
+
+---
+
+## Análisis de gaps
+
+| Área | Estado actual | Estado deseado | Gap | Severidad |
+|------|--------------|----------------|-----|-----------|
+| [Área] | [valor/descripción] | [valor/descripción] | [diferencia] | crítico/alto/medio/bajo |
+
+---
+
+## Hallazgos clave
+
+1. **[Hallazgo 1]** — [descripción + evidencia cuantitativa]
+2. **[Hallazgo 2]** — [descripción + evidencia cuantitativa]
+3. **[Hallazgo 3]** — [descripción + evidencia cuantitativa]
+
+---
+
+## Implicaciones para Phase 3 ANALYZE
+
+[Qué preguntas de análisis surgen de los datos. Qué áreas merecen investigación profunda.]
+
+- [ ] Investigar causa de [anomalía o gap crítico]
+- [ ] Comparar [métrica X] con [benchmark externo o período anterior]
+- [ ] Validar si [hipótesis] explica los datos observados

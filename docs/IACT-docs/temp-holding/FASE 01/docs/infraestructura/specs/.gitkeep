@@ -1,0 +1,16 @@
+# Directorio para especificaciones de features
+
+Este directorio contiene especificaciones formales de features siguiendo ISO 29148:2018.
+
+Usar plantilla: `docs/plantillas/desarrollo/plantilla_spec.md`
+
+Para crear una nueva spec:
+```bash
+cp docs/plantillas/desarrollo/plantilla_spec.md docs/specs/nombre-feature.md
+```
+
+Para validar specs:
+```bash
+make validate_spec SPEC=docs/specs/nombre-feature.md
+make validate_spec  # Valida todas
+```

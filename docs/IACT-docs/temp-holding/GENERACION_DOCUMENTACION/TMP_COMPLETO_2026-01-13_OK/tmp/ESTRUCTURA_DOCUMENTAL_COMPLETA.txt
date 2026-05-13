@@ -1,0 +1,107 @@
+╔══════════════════════════════════════════════════════════════════╗
+║       ESTRUCTURA DOCUMENTAL COMPLETA - PROYECTO IACT             ║
+║                    Base Cognitiva v1.3.0                         ║
+║                  Actualizado: 2026-01-11                         ║
+╚══════════════════════════════════════════════════════════════════╝
+
+base_cognitiva/
+│
+├── 📁 fundacionales/ ................................................ [2 archivos]
+│   ├── STD_001_Estandares_Documentacion_1_1_0.rst ............... 473 líneas, 10KB
+│   └── NOM_001_Nomenclatura_Proyecto_2_0_0.rst .................. 804 líneas, 17KB
+│
+├── 📁 pedagogico/ .................................................. [12 archivos]
+│   │
+│   ├── PARTE_0_Contexto_Fundamentos_IACT_1_0_0.md
+│   │
+│   ├── [BLOQUE 1: REGLAS DE NEGOCIO]
+│   │   └── PARTE_1_Identificar_Reglas_Negocio_IACT_1_0_0.md ... 1,198 líneas, 31KB
+│   │
+│   ├── [BLOQUE 2: TRANSFORMACIÓN BR → UC]
+│   │   ├── PARTE_2A_Fundamentos_Transformacion_IACT_1_0_0.md .. 3,745 líneas, 142KB
+│   │   ├── PARTE_2B_Construccion_Detallada_IACT_1_0_0.md ...... 4,369 líneas, 156KB
+│   │   └── PARTE_2C_Casos_Especiales_Validacion_IACT_1_0_0.md . 3,342 líneas, 114KB
+│   │
+│   ├── [BLOQUE 3: USE CASES ESPECIALES]
+│   │   ├── PARTE_3A_Introduccion_CRUD_IACT_1_0_0.md ............. 946 líneas, 25KB
+│   │   ├── PARTE_3B_Tecnica_Larman_IACT_1_0_0.md .............. 3,287 líneas, 119KB
+│   │   ├── PARTE_3C_UI_Stakeholders_IACT_1_0_0.md ............. 1,811 líneas, 74KB
+│   │   └── PARTE_3D_Consolidacion_Resumen_IACT_1_0_0.md ....... 1,290 líneas, 48KB
+│   │
+│   ├── [BLOQUE 4: REQUISITOS FUNCIONALES]
+│   │   └── PARTE_4_Requisitos_Funcionales_IACT_1_0_0.md ....... 6,717 líneas, 202KB
+│   │
+│   ├── [BLOQUE 5: TRAZABILIDAD]
+│   │   └── PARTE_5_Trazabilidad_Gestion_IACT_1_0_0.md ......... 1,036 líneas, 28KB
+│   │
+│   └── [BLOQUE 6: CASOS PRÁCTICOS]
+│       └── PARTE_6_Casos_Practicos_Completos_IACT_1_0_0.md .... 1,307 líneas, 35KB
+│
+├── 📁 templates/ ................................................... [12 archivos válidos]
+│   │
+│   ├── README.md
+│   │
+│   ├── [GRUPO A: BUSINESS RULES - 1 template]
+│   │   └── TPL_BR_Decision_Tipo_1_3_0.rst ..................... 2,269 líneas, 0.5% ph
+│   │
+│   ├── [GRUPO B: USE CASES - 7 templates]
+│   │   ├── TPL_UC_Construccion_7_Pasos_1_3_0.rst .............. 1,276 líneas, 0.0% ph
+│   │   ├── TPL_UC_UI_Driven_1_3_0.rst ........................... 927 líneas, 1.5% ph
+│   │   ├── TPL_UC_Temporal_Schedulers_1_3_0.rst ................. 824 líneas, 1.2% ph
+│   │   ├── TPL_UC_Stakeholder_Driven_1_3_0.rst .................. 743 líneas, 0.0% ph
+│   │   ├── TPL_UC_Actor_Secundario_1_3_0.rst .................... 762 líneas, 0.4% ph
+│   │   ├── TPL_UC_CRUD_Operaciones_1_2_0.rst .................. 1,279 líneas, 3.7% ph ⭐
+│   │   └── TPL_UC_Larman_Contratos_1_2_0.rst .................... 981 líneas, 1.7% ph ⭐
+│   │
+│   ├── [GRUPO C: FUNCTIONAL REQUIREMENTS - 3 templates]
+│   │   ├── TPL_FR_Documentacion_10_Componentes_1_3_0.rst ...... 1,338 líneas, 1.7% ph
+│   │   ├── TPL_FR_Query_SQL_1_3_0.rst ........................... 845 líneas, 1.2% ph 🆕
+│   │   └── TPL_FR_Validacion_Reglas_1_3_0.rst ................. 1,007 líneas, 3.0% ph 🆕
+│   │
+│   └── [GRUPO D: TRAZABILIDAD - 1 template]
+│       └── TPL_TRZ_Matriz_RTM_1_3_0.rst ......................... 750 líneas, 0.0% ph 🆕
+│
+├── 📁 originales/ .................................................. [16 archivos]
+│   ├── [METAMODELO]
+│   │   ├── META_01_Identidad_Proyecto.rst
+│   │   ├── META_02_Clasificacion_Documental.rst
+│   │   ├── META_03_Fases_SDLC.rst
+│   │   ├── META_04_Contexto_IACT.rst
+│   │   ├── META_05_Estructura_Documental.rst
+│   │   ├── MTM_02_Metamodelo_Trazabilidad.rst
+│   │   └── MTM_03_Metamodelo_RBAC.rst
+│   │
+│   ├── [FUNDAMENTOS]
+│   │   ├── FND_01_Concepto_Requisito.rst
+│   │   ├── FND_03_Casos_de_Uso.rst
+│   │   ├── FND_04_Trazabilidad.rst
+│   │   ├── FND_05_Jerarquia_4_Niveles.rst
+│   │   ├── FND_06_Derivacion_vs_Transformacion.rst
+│   │   └── FND_07_Requerimientos_Funcionales.rst
+│   │
+│   └── [ARCHIVOS ORIGINALES]
+│       ├── MODELO_DOCUMENTAL_IACT_v2_2_0_PARTE1.md
+│       ├── MODELO_DOCUMENTAL_IACT_v2_2_0_PARTE2.md
+│       ├── MODELO_RBAC_IACT_v5_1_1.md
+│       ├── ANEXO_A_ARBOL_COMPLETO_PARTE1.md
+│       └── ANEXO_A_ARBOL_COMPLETO_PARTE2.md
+│
+├── 📁 indices/ ..................................................... [vacío - pendiente]
+│   ├── [PENDIENTE] INDICE_MAESTRO_DOCUMENTACION_IACT_1_0_0.md
+│   ├── [PENDIENTE] MAPA_REFERENCIAS_CRUZADAS_IACT_1_0_0.md
+│   └── [PENDIENTE] CATALOGO_TEMPLATES_IACT_1_3_0.rst
+│
+├── 📁 ejemplos/ .................................................... [vacío - pendiente]
+│   └── [ESPACIO PARA EJEMPLOS DE USO DE TEMPLATES]
+│
+├── 📁 metamodelo/ .................................................. [vacío]
+│
+└── 📄 Archivos de documentación raíz
+    ├── README.md
+    ├── RESUMEN_EJECUTIVO.md
+    ├── INDICE_RAPIDO.md
+    ├── CHANGELOG.md
+    ├── ESTRUCTURA_COMPLETA.txt
+    ├── DIAGRAMA_VISUAL_ESTRUCTURA.txt
+    └── ANALISIS_ESTRUCTURA.md
+

@@ -1,0 +1,116 @@
+@startuml UC-002_registrar_llamada_entrante_actividad
+!define PRIMARY_COLOR #2C3E50
+!define SUCCESS_COLOR #27AE60
+!define ERROR_COLOR #E74C3C
+
+skinparam activityBackgroundColor #ECF0F1
+skinparam activityBorderColor PRIMARY_COLOR
+skinparam activityDiamondBackgroundColor #BDC3C7
+
+|Sistema Telefónico (PBX)|
+start
+
+:Detecta llamada entrante;
+:Captura ANI (número origen);
+:Captura DNIS (número destino);
+
+|Sistema IACT|
+:Recibe notificación de llamada;
+:Captura datos de telefonía;
+
+|Agente de Servicio|
+:Visualiza notificación emergente\ncon número del cliente;
+:Acepta llamada;
+
+|Sistema IACT|
+:Confirma conexión con PBX;
+:Busca cliente por número telefónico;
+
+if (Cliente encontrado?) then (sí)
+  :Muestra ficha del cliente:
+  - ID: C-12345
+  - Nombre: Juan Pérez
+  - Historial de llamadas
+  - Productos contratados;
+else (no - cliente nuevo)
+  :Indica "Cliente no registrado";
+  note right
+    Opción futura:
+    Registrar cliente nuevo
+  end note
+endif
+
+|Agente de Servicio|
+:Atiende consulta del cliente;
+:Inicia registro de llamada;
+
+|Sistema IACT|
+:Muestra formulario de registro;
+
+|Agente de Servicio|
+:Selecciona motivo de llamada\n(ej: "Consulta de saldo");
+:Selecciona categoría\n(ej: "Información");
+:Ingresa notas adicionales;
+
+|Sistema IACT|
+:Valida campos obligatorios;
+
+if (Datos completos?) then (sí)
+  :Guarda registro en base de datos;
+  :Genera ID de llamada (ej: LL-98765);
+
+  if (Sincronización con CRM activa?) then (sí)
+    :Envía datos al CRM externo;
+
+    if (Sincronización exitosa?) then (sí)
+      :Marca llamada como sincronizada;
+    else (no - error de CRM)
+      :Marca para reintento posterior;
+      note right
+        Sistema continúa
+        Sincronización no bloquea
+      end note
+    endif
+  endif
+
+  :Muestra confirmación de registro;
+
+  |Agente de Servicio|
+  :Continúa conversación con cliente;
+  :Finaliza llamada;
+
+  |Sistema IACT|
+  :Notifica finalización al PBX;
+
+  |Sistema Telefónico (PBX)|
+  :Desconecta llamada;
+  :Calcula duración (ej: 3m 45s);
+
+  |Sistema IACT|
+  :Actualiza registro con duración;
+  :Cambia estado a "Finalizada";
+  :Muestra resumen de llamada al agente;
+
+  #SUCCESS_COLOR:Llamada registrada exitosamente;
+  stop
+
+else (no - datos incompletos)
+  :Muestra errores de validación;
+
+  |Agente de Servicio|
+  if (Desea completar datos?) then (sí)
+    :Completa campos faltantes;
+
+    |Sistema IACT|
+    :Valida campos obligatorios;
+    note right
+      Retorna a validación
+    end note
+  else (no - cancela registro)
+    :Cancela registro;
+    #ERROR_COLOR:Registro cancelado;
+    stop
+  endif
+endif
+
+@enduml

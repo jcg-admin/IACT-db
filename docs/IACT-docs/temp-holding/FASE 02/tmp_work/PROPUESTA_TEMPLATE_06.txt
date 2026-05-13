@@ -1,0 +1,42 @@
+PROPUESTA REGENERACION - Template 6 de 10
+==========================================
+
+TEMPLATE A REGENERAR:
+TPL_UC_Stakeholder_Driven_1_3_0.rst
+
+PRIORIDAD: MEDIA (Template para UC derivados de narrativa stakeholder)
+
+VERSION ACTUAL v1_2_0:
+- Lineas: 185
+- Placeholders: 26 (14% ratio)
+- Calidad: MALO
+- Problema: Sin codigo, pocos ejemplos IACT (4 referencias)
+
+VERSION OBJETIVO v1_3_0:
+- Lineas: 350-450
+- Placeholders: < 20 (< 5% ratio)
+- Calidad: EXCELENTE
+- Solucion: Narrativa completa stakeholder, extraccion requisitos, mapeo a UC
+
+CONTENIDO:
+
+Introduccion (40 lineas)
+- Cuando usar este template
+- Diferencia vs UC normal
+
+Narrativa Stakeholder (100 lineas)
+- Transcripcion literal de entrevista
+- Contexto del stakeholder
+- Problema que describe
+
+Extraccion de Requisitos (120 lineas)
+- Identificar actores
+- Identificar pasos
+- Identificar reglas de negocio
+- Tabla de extraccion
+
+Mapeo a UC Formal (100 lineas)
+- De narrativa informal a UC estructurado
+- Tabla de transformacion
+
+Ejemplo: UC-RPT-01 derivado de entrevista con Gerente Operaciones

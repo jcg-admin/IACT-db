@@ -1,0 +1,10 @@
+# Requisitos de Stakeholders (Stakeholder Requirements)
+
+Esta carpeta contiene documentos RS-XXX siguiendo ISO 29148 Clause 9.4.
+
+Archivos esperados:
+- rs001_alertas_para_gerente_compras.md
+- rs002_reportes_para_analistas.md
+- etc.
+
+Usa la plantilla: docs/plantillas/template_requisito_stakeholder.md

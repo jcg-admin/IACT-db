@@ -1,0 +1,147 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+constraints_version: [1.0]
+author: [Nombre]
+validity_period: [YYYY-MM-DD-HH-MM-SS hasta YYYY-MM-DD-HH-MM-SS]
+Constraints identificadas: [N]
+```
+
+# Constraints: [PROJECT_NAME]
+
+## Propósito
+
+Documentar QUÉ LIMITA el sistema. Las limitaciones pueden ser técnicas, de plataforma, organizativas, regulatorias o de negocio.
+
+> Objetivo: Objetivo: Que todos entiendan qué restringe el diseño y la implementación del sistema.
+
+---
+
+## Technical Constraints
+
+| Constraint | Reason | Impact |
+|-----------|--------|--------|
+| [Technology/Requirement] | [Why is this required] | [What it limits] |
+| [Technology/Requirement] | [Why is this required] | [What it limits] |
+
+**Ejemplo:**
+| Constraint | Reason | Impact |
+|-----------|--------|--------|
+| Java Only | Organization expertise | No Go, Rust, Node.js |
+| PostgreSQL | ACID needed for payments | No MongoDB, DynamoDB |
+| REST API | Standard for partners | No gRPC as primary |
+
+---
+
+## Platform Constraints
+
+| Constraint | Reason | Impact |
+|-----------|--------|--------|
+| [Infrastructure] | [Why required] | [What it affects] |
+| [Infrastructure] | [Why required] | [What it affects] |
+
+**Ejemplo:**
+| Constraint | Reason | Impact |
+|-----------|--------|--------|
+| AWS Only | Corporate agreement | No GCP, Azure, On-Prem |
+| Docker | Standard deployment | Must containerize everything |
+| Kubernetes | Container orchestration | Infrastructure complexity |
+
+---
+
+## Organizational Constraints
+
+| Constraint | Reason | Impact |
+|-----------|--------|--------|
+| [Org Limit] | [Why it exists] | [What it constrains] |
+| [Org Limit] | [Why it exists] | [What it constrains] |
+
+**Ejemplo:**
+| Constraint | Reason | Impact |
+|-----------|--------|--------|
+| 3 developers | Budget limitations | Architecture must be simple |
+| 6 month timeline | Funding deadline | MVP scope, defer features |
+| Single team | No extra resources | Can't hire specialists |
+
+---
+
+## Regulatory Constraints
+
+| Constraint | Reason | Impact |
+|-----------|--------|--------|
+| [Regulation] | [Which law/standard] | [What it requires] |
+| [Regulation] | [Which law/standard] | [What it requires] |
+
+**Ejemplo:**
+| Constraint | Reason | Impact |
+|-----------|--------|--------|
+| GDPR | EU user protection | Encryption, right to be forgotten |
+| PCI-DSS | Payment processing | Secure payment handling |
+| HIPAA | Health data (if applicable) | Audit logs, access controls |
+
+---
+
+## Business Constraints
+
+| Constraint | Reason | Impact |
+|-----------|--------|--------|
+| [Business Limit] | [Business reason] | [Cost/timeline impact] |
+| [Business Limit] | [Business reason] | [Cost/timeline impact] |
+
+**Ejemplo:**
+| Constraint | Reason | Impact |
+|-----------|--------|--------|
+| $10k budget | Startup funding | Use only open source |
+| $2k/month ops | Cost approval | Minimal infrastructure |
+| No licensing | Budget limits | All open source tools |
+
+---
+
+## How Constraints Guide Solution Strategy
+
+### Technical Constraint Impact on Strategy
+
+**Constraint:** [Example]
+**Impact on Strategy:** [How it affects architectural decisions]
+**Solution:** [How we work within this constraint]
+
+**Ejemplo:**
+**Constraint:** Java Only
+**Impact on Strategy:** Limits language choices, frameworks available
+**Solution:** Use Java ecosystem (Spring Boot, Hibernate, etc)
+
+### Platform Constraint Impact on Strategy
+
+[Repetir estructura]
+
+### Organizational Constraint Impact on Strategy
+
+[Repetir estructura]
+
+### Regulatory Constraint Impact on Strategy
+
+[Repetir estructura]
+
+### Business Constraint Impact on Strategy
+
+[Repetir estructura]
+
+---
+
+## Validación Checklist
+
+- [ ] Technical constraints identificados
+- [ ] Platform constraints identificados
+- [ ] Organizational constraints identificados
+- [ ] Regulatory constraints identificados
+- [ ] Business constraints identificados
+- [ ] Razón clara para cada constraint
+- [ ] Impacto documentado
+- [ ] Impacto en Solution Strategy visible
+
+---
+
+## Siguiente Paso
+
+Una vez completado este documento:
+→ Pasar a `context.md`

@@ -1,0 +1,184 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+work_package: [YYYY-MM-DD-HH-MM-SS-nombre]
+phase: Stage 8 — PLAN EXECUTION
+author: [Nombre]
+status: Borrador
+```
+
+# Task Plan — [Nombre descriptivo] ([ÉPICA N])
+
+> **Generado desde:** `[plan/nombre-del-plan.md]`
+> **Alcance:** [Descripción breve del alcance en una línea]
+> **Ruta crítica:** T-001 → T-002 → T-003 → ...
+
+<!-- Sección de versioning (usar solo cuando hay revisiones mayores, v2+):
+> **vN** — Actualizado tras [revisión/deep-review]. Cambios vs v{N-1}:
+> - T-NNN: [cambio aplicado]
+> - T-NNN: [eliminado / renombrado / ampliado]
+-->
+
+---
+
+## Convención de tarea
+
+<!-- Elegir UNA convención según el tipo de trabajo. Borrar las otras dos. -->
+
+<!-- OPCIÓN A — Anatomía de componentes (skills, assets, references, templates)
+     Usar cuando cada tarea produce un artefacto concreto con partes identificables.
+     Formato: T-NNN {componente} — {tipo}: {artefacto} · {tipo}: {artefacto} · {acción}
+
+     Ejemplo:
+     - [x] T-001 `pdca-plan` — assets: pdca-plan-template.md · references: problem-analysis-techniques.md · SKILL.md update
+     - [ ] T-002 `pdca-do` — assets: pdca-do-template.md · SKILL.md update
+-->
+
+<!-- OPCIÓN B — Tiers/Capas (trabajo con dependencias en cascada, arquitectura por capas)
+     Usar cuando el trabajo tiene capas que se desbloquean secuencialmente.
+     Formato: T-NNN Descripción accionable
+
+     Ejemplo:
+     - [x] T-001 Crear lean.yml — type: sequential, 5 pasos con tollgates
+     - [ ] T-002 Crear lean-coordinator.md — skills: [lean-define, ...], color: cyan
+-->
+
+<!-- OPCIÓN C — Tareas genéricas con trazabilidad a spec
+     Usar cuando las tareas son heterogéneas y cada una tiene un requisito de origen.
+     Formato: T-NNN Descripción (SPEC-N)
+
+     Ejemplo:
+     - [ ] T-001 Implementar endpoint /api/users (SPEC-3)
+     - [ ] T-002 [P] Agregar validación de input (SPEC-3, SPEC-7)
+     Nota: [P] = paralelizable. Ver protocols de claim en workflow-decompose/SKILL.md
+-->
+
+---
+
+## [Grupo 1 — Nombre descriptivo]
+
+> *(Renombrar según tipo: "B1 — PDCA (4 skills)" / "Tier 1 — Registry YAMLs" / "Fase — Preparación")*
+> *(Nota opcional sobre el grupo: dependencias, decisiones clave, contexto)*
+
+- [ ] **T-001** Descripción de la tarea
+- [ ] **T-002** Descripción de la tarea
+- [ ] **T-003** Descripción de la tarea
+- [ ] **T-004** Commit [Grupo1]: `type(scope): descripción del commit`
+
+---
+
+## [Grupo 2 — Nombre descriptivo]
+
+> *(Agrega tantos grupos como el trabajo requiera. Cada grupo idealmente cierra con un commit.)*
+
+- [ ] **T-005** Descripción de la tarea
+- [ ] **T-006** Descripción de la tarea
+- [ ] **T-007** Commit [Grupo2]: `type(scope): descripción del commit`
+
+---
+
+## Cierre
+
+- [ ] **T-NNN** Deep-review de cobertura: verificar que todos los outputs tienen contenido completo
+- [ ] **T-NNN** Push y actualizar `now.md` (campos: `stage`, `current_work`, `methodology_step`)
+
+---
+
+## DAG de dependencias
+
+<!-- Opción A — texto: para planes ≤ 3 grupos o dependencias lineales -->
+```
+T-001 → T-002 → T-003 → T-004 (commit B1)
+                               ↓
+              T-005 → T-006 → T-007 (commit B2)
+```
+
+<!-- Opción B — Mermaid: para planes con dependencias cruzadas o > 4 grupos
+```mermaid
+graph TD
+    T001[T-001 descripción] ---> T004
+    T002[T-002 descripción] ---> T004
+    T003[T-003 descripción] ---> T004
+    T004[T-004 commit B1] ---> T007
+    T005[T-005 descripción] ---> T007
+    T006[T-006 descripción] ---> T007
+    T007[T-007 commit B2] ---> TFIN
+    TFIN[T-NNN Push final]
+```
+-->
+
+---
+
+## Calibración epistémica del task-plan
+
+### Algoritmo Cherry-Pick Consciente
+
+Al crear tareas derivadas de análisis de clusters o hallazgos, aplicar este criterio:
+
+| Score de similaridad | Acción |
+|---------------------|--------|
+| ≥ 0.80 | Preservar exactamente — la tarea está bien definida |
+| 0.60 - 0.79 | Evaluar — puede necesitar adaptación al contexto del WP |
+| < 0.60 | Reescribir — el hallazgo original no aplica directamente |
+
+### Efecto Denominador
+
+Al reportar cobertura del task-plan, SIEMPRE declarar el denominador:
+- Correcto: "13 de 91 tareas pendientes (14.3%)"
+- Incorrecto: "13 tareas pendientes" (sin total)
+
+Al reportar hallazgos positivos: verificar que no se está excluyendo selectivamente los casos negativos del denominador.
+
+---
+
+## Evidencia de respaldo
+
+> Todo claim que fundamente la viabilidad del plan o los criterios de completitud debe clasificarse aquí.
+> Claims SPECULATIVE sin fuente observable bloquean el gate Stage 8→9 (I-012). Ver: `.claude/references/evidence-classification.md`
+
+| Claim | Tipo | Fuente | Confianza | Origen |
+|-------|------|--------|-----------|--------|
+| [afirmación sobre viabilidad o scope del plan] | PROVEN/INFERRED/SPECULATIVE | [tool output citado / documento / inferencia] | alta/media/baja | nuevo/heredado/externo |
+
+**Criterios de Confianza:**
+- alta: claim OBSERVABLE con herramienta ejecutada y output citado textualmente
+- media: claim INFERRED con razonamiento explícito y fuente documentada
+- baja: claim SPECULATIVE o inferencia sin fuente primaria verificable
+
+**Criterios de Origen:**
+- nuevo: generado en este WP con evidencia directa
+- heredado: propagado de un stage anterior sin re-verificación en este stage
+- externo: proveniente de documento o referencia fuera del WP (citar fuente)
+
+> PROVEN = producido por tool_use ejecutado en este WP (Bash, Read, Grep output citado textualmente)
+> INFERRED = derivado de observables con razonamiento explícito documentado
+> SPECULATIVE = sin observable de origen — NO puede fundamentar gates de stage (I-012)
+> Origen heredado + Confianza baja → re-verificar en este stage antes de avanzar (I-013)
+
+---
+
+## Stopping Points *(opcional — borrar sección si no hay gates explícitos)*
+
+| SP | Tarea | Condición de parada |
+|----|-------|---------------------|
+| SP-01 | Pre-T-NNN | [Qué debe ocurrir / quién debe aprobar antes de continuar] |
+
+---
+
+## Out-of-scope *(opcional — borrar sección si no es necesaria)*
+
+Los siguientes ítems identificados durante la planificación quedan fuera de este task-plan:
+
+- [Qué NO se implementa en este plan y por qué]
+- [Qué se deja para ÉPICA futura]
+
+---
+
+## Resumen de progreso
+
+| Grupo | Tareas | Completadas | Pendientes |
+|-------|--------|-------------|------------|
+| **[Grupo 1]** | N | 0 | N |
+| **[Grupo 2]** | N | 0 | N |
+| **Cierre** | 2 | 0 | 2 |
+| **Total** | **N** | **0** | **N** |

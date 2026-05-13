@@ -1,0 +1,27 @@
+# Categorization Plan
+
+```yml
+created_at: YYYY-MM-DD HH:MM:SS
+project: [Nombre]
+work_package: YYYY-MM-DD-HH-MM-SS-nombre
+phase: Phase 8 — PLAN EXECUTION
+author: [Nombre]
+status: Borrador
+```
+
+## Eje de categorización
+
+[Qué dimensión se usa para categorizar — por tipo, por módulo, por prioridad]
+
+## Categorías
+
+| Categoría | Descripción | Criterio de inclusión |
+|-----------|-------------|----------------------|
+| [Cat 1] | [Desc] | [Criterio] |
+| [Cat 2] | [Desc] | [Criterio] |
+
+## Asignación
+
+| Ítem | Categoría | Justificación |
+|------|-----------|---------------|
+| [Ítem 1] | [Cat] | [Por qué] |

@@ -1,0 +1,13 @@
+adr/README.md
+catalogos/README.md
+ci_cd/README.md
+ejemplos/README.md
+estilos/README.md
+glosarios/README.md
+metodologias/README.md
+plantillas/README.md
+procesos/README.md
+referencias/README.md
+templates/README.md
+trazabilidad/README.md
+vision_y_alcance/README.md

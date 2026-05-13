@@ -1,0 +1,158 @@
+
+
+
+bash
+
+
+cd /tmp/iact_regeneracion
+
+echo "========================================="
+echo "VALIDANDO: STD_001_Estandares_Documentacion_1_1_0.rst"
+echo "========================================="
+echo ""
+
+# Validar nomenclatura
+./validar_nomenclatura.sh fundacionales/STD_001_Estandares_Documentacion_1_1_0.rst
+
+echo ""
+echo "----------------------------------------"
+echo ""
+
+# Validar referencias
+./validar_referencias.sh fundacionales/STD_001_Estandares_Documentacion_1_1_0.rst
+
+echo ""
+echo "----------------------------------------"
+echo "Estadísticas del archivo:"
+wc -l fundacionales/STD_001_Estandares_Documentacion_1_1_0.rst
+ls -lh fundacionales/STD_001_Estandares_Documentacion_1_1_0.rst
+Output
+
+=========================================
+VALIDANDO: STD_001_Estandares_Documentacion_1_1_0.rst
+=========================================
+
+=========================================
+VALIDANDO NOMENCLATURA: STD_001_Estandares_Documentacion_1_1_0.rst
+=========================================
+[OK] Versionado presente
+[OK] Usa guiones bajos correctamente
+[OK] Prefijo válido: STD
+[OK] Extensión válida: .rst
+=========================================
+RESULTADO: [OK] Nomenclatura correcta
+=========================================
+
+----------------------------------------
+
+=========================================
+VALIDANDO REFERENCIAS: STD_001_Estandares_Documentacion_1_1_0.rst
+=========================================
+
+Referencias a archivos .md:
+----------------------------
+  Línea 144: _IACT_1_0_0.md
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 146: _IACT_1_0_0.md
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 195: _IACT_1_0_0.md
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 196: _IACT_1_0_0.md
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 197: _IACT_1_0_0.md
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 255: _IACT_1_0_0.md
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 268: _1_0_0.md
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 278: _IACT_1_0_0.md
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 292: _IACT_1_0_0.md
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 323: _IACT_1_0_0.md
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 410: _IACT_1_0_0.md
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 412: _IACT_1_1_0.md
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 414: _IACT_1_1_1.md
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 416: _IACT_2_0_0.md
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 428: _IACT_1_0_0.md
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 450: PLAN_REGENERACION_COMPLETA_DESDE_CERO_1_0_0.md
+    [OK] Archivo encontrado
+
+Referencias a archivos .rst:
+----------------------------
+  Línea 145: _1_0_0.rst
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 234: _2_0_0.rst
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 245: _2_0_0.rst
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 256: _1_0_0.rst
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 257: _4_0_0.rst
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 258: _1_0_0.rst
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 295: _1_0_0.rst
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 297: _1_0_0.rst
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 429: _1_0_0.rst
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+  Línea 449: _2_0_0.rst
+    [WARN] Archivo no encontrado (puede no estar generado aún)
+
+Verificando referencias antiguas (SIN versionado):
+---------------------------------------------------
+166:   ✅ PARTE 0 generado          # INCORRECTO: Emoji
+312:   [ERROR] Como se explicó en PARTE 0...       # Sin nombre de archivo
+[ERROR] Encontradas referencias antiguas a PARTES (sin versionado)
+167:   ❌ Falta Template T01         # INCORRECTO: Emoji
+313:   [ERROR] Ver Template T01...                 # Nomenclatura antigua
+[ERROR] Encontradas referencias antiguas a Templates (T01, T02...)
+
+Verificando emojis (prohibido por STD_001):
+--------------------------------------------
+81:   ✅ ❌ ⚠️  (checkmarks, cruz, advertencia)
+82:   🚀 📁 💾  (iconos temáticos)
+83:   ⭐ 🔴 🟢  (estrellas, círculos de color)
+84:   🎯 📊 📈  (objetivos, gráficos)
+85:   🔧 🔄 ⏱️  (herramientas, reloj)
+101:   * - ✅
+104:   * - ❌
+107:   * - ⚠️
+110:   * - 🚀
+113:   * - 📁
+116:   * - 💾
+119:   * - ⭐
+122:   * - 🔴
+125:   * - 🟢
+128:   * - 🎯
+131:   * - 📊
+166:   ✅ PARTE 0 generado          # INCORRECTO: Emoji
+167:   ❌ Falta Template T01         # INCORRECTO: Emoji
+168:   ⚠️ Referencias pendientes    # INCORRECTO: Emoji
+178:   grep -r '[✅❌⚠️🚀📁💾⭐🔴🟢🎯📊🔧]' *.{md,rst} && echo "ERROR: Emojis encontrados"
+268:   [ERROR] parte_1_identificar_br_1_0_0.md     # Minúsculas (debe ser MAYÚSCULAS)
+385:- Cambio de nomenclatura de IDs (BR-XXX → BR_XXX)
+411:     ↓ Agregar sección "Técnicas Avanzadas"
+413:     ↓ Corregir typos
+415:     ↓ Reestructuración completa
+[ERROR] Encontrados emojis (prohibido por STD_001 v1.1.0)
+
+=========================================
+RESUMEN:
+  Errores: 3
+  Warnings: 0
+=========================================
+RESULTADO: [ERROR] 3 errores críticos
+
+----------------------------------------
+Estadísticas del archivo:
+473 fundacionales/STD_001_Estandares_Documentacion_1_1_0.rst
+-rw-r--r-- 1 root root 10K Jan  9 00:38 fundacionales/STD_001_Estandares_Documentacion_1_1_0.rst

@@ -1,0 +1,5 @@
+name: gate-consistency-evaluator
+description: "Use when evaluating Stage gate consistency. Returns claims_contradictorios and claims_heredados_sin_verificar."
+tools: Read, Glob, Grep
+installation: manual
+async_suitable: true

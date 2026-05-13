@@ -1,0 +1,160 @@
+.. meta::
+   :artefacto: FR-009.02
+   :tipo: Requisito Funcional
+   :dominio: requisitos
+   :subdominio: funcionales/users
+   :estado: Aprobado
+   :version: 1.0.0
+   :fecha: 2026-01-07
+   :autor: Equipo IACT
+
+.. _fr-009-02:
+
+=====================================
+FR-009.02: Aplicar filtros a la lista
+=====================================
+
+
+1. Identificación
+-----------------
+
+.. list-table::
+   :widths: 25 75
+
+   * - **ID**
+     - FR-009.02
+   * - **Nombre**
+     - Aplicar filtros a la lista de usuarios
+   * - **UC Origen**
+     - UC_009: Listar Usuarios
+   * - **Paso UC**
+     - Paso 4-5, FA-1, FA-2
+   * - **Módulo**
+     - MOD_Users
+   * - **Prioridad**
+     - Media
+   * - **Tipo**
+     - Interfaz
+
+----
+
+2. Especificación
+-----------------
+
+**Declaración:**
+
+   El sistema DEBE permitir filtrar la lista de usuarios por múltiples
+   criterios CUANDO el actor aplica filtros en la interfaz.
+
+**Descripción:**
+
+   Filtros disponibles:
+   
+   **Filtro por Estado:**
+   
+   - Todos (por defecto)
+   - Solo Activos
+   - Solo Inactivos
+   
+   **Filtro por Búsqueda de Texto:**
+   
+   - Busca en: username, nombre completo, email
+   - Búsqueda parcial (contains)
+   - Case insensitive
+   
+   **Filtro por Rol:**
+   
+   - Dropdown con roles disponibles
+   - Muestra usuarios que tengan el rol seleccionado
+   
+   **Combinación de Filtros:**
+   
+   Los filtros se combinan con AND lógico.
+
+----
+
+3. Criterio de Aceptación
+-------------------------
+
+::
+
+   DADO lista de usuarios visible
+   CUANDO el actor aplica filtros
+   ENTONCES la lista se actualiza mostrando solo coincidencias
+   
+   Escenario 1: Filtro por estado
+   DADO filtro estado = "Inactivos"
+   CUANDO se aplica
+   ENTONCES solo se muestran usuarios con status = INACTIVE
+   
+   Escenario 2: Búsqueda por texto
+   DADO texto de búsqueda = "juan"
+   CUANDO se aplica
+   ENTONCES se muestran usuarios donde username, nombre o email contienen "juan"
+   
+   Escenario 3: Filtros combinados
+   DADO estado = "Activos" Y búsqueda = "perez"
+   CUANDO se aplican ambos
+   ENTONCES se muestran usuarios activos cuyo nombre contiene "perez"
+   
+   Escenario 4: Sin resultados
+   DADO filtros que no coinciden con ningún usuario
+   CUANDO se aplican
+   ENTONCES se muestra "No se encontraron usuarios"
+   Y se ofrece opción de limpiar filtros
+   
+   Escenario 5: Limpiar filtros
+   DADO filtros aplicados
+   CUANDO se presiona "Limpiar"
+   ENTONCES se remueven todos los filtros
+   Y se muestra lista completa
+
+----
+
+4. Reglas y Restricciones
+-------------------------
+
+- **BR aplicables:** Ninguna específica
+  
+- **CNST aplicables:** Ninguna específica
+
+**UX:**
+
+- Filtros aplicados visibles como "chips" removibles
+- Actualización en tiempo real (debounce 300ms para búsqueda)
+- Mantener filtros al paginar
+
+----
+
+5. Trazabilidad
+---------------
+
+.. list-table::
+   :widths: 20 80
+
+   * - **BReq**
+     - BReq-004: Cumplimiento de Seguridad
+   * - **UC**
+     - UC_009: Listar Usuarios
+   * - **Depende de**
+     - FR-009.01
+   * - **Requerido por**
+     - Ninguno
+   * - **TEST**
+     - TST-FR-009.02 (pendiente)
+
+----
+
+6. Historial
+------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - Versión
+     - Fecha
+     - Cambio
+   * - 1.0.0
+     - 2026-01-07
+     - Versión inicial derivada de UC_009

@@ -1,0 +1,320 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+architecture_version: [1.0]
+architect: [Nombre]
+stack_version: [ej: Python 3.11, Django 4.2, PostgreSQL 14]
+validated_by: [Nombre]
+status: [Propuesta/En revisión/Aprobado]
+```
+
+# Solution Strategy: [PROJECT_NAME]
+
+## Propósito
+
+Documentar el plan arquitectónico completo. CÓMO lograr arquitectónicamente los requisitos dentro de las limitaciones.
+
+> Objetivo: Objetivo: Transformar requisitos de PHASE 1 en decisiones arquitectónicas ejecutables.
+
+---
+
+## Key Ideas
+
+### Idea 1: [Architecture Concept]
+
+**Descripción:**
+[What is this idea and why is it important]
+
+**Impacto:**
+[How does it affect the rest of the architecture]
+
+**Ejemplo:**
+**Idea: Microservices Architecture**
+- Descripción: Descomponer aplicación en servicios independientes
+- Impacto: Escalabilidad por servicio, equipos independientes
+
+### Idea 2: [Architecture Concept]
+
+[Repetir estructura]
+
+### Idea 3: [Architecture Concept]
+
+[Repetir estructura]
+
+---
+
+## Fundamental Decisions
+
+### Decision 1: [What We Decided]
+
+**Alternatives Considered:**
+- [Alternative A] - [Brief description]
+- [Alternative B] - [Brief description]
+- [Alternative C] - [Brief description]
+
+**Justification:**
+[Why we chose this decision]
+
+**Implications:**
+[Consequences of this decision]
+
+**Ejemplo:**
+**Decision: Use Hexagonal Architecture**
+
+Alternatives Considered:
+- Layered Architecture - Simpler but less flexible
+- MVC - Good for web, less suitable for APIs
+- CQRS - Powerful but adds complexity
+
+Justification:
+- Decouples business logic from frameworks
+- Easier to test and change
+- Aligns with Quality Goals (maintainability)
+- Works well with microservices
+
+Implications:
+- More complex initial structure
+- Better testability
+- Framework-agnostic business logic
+- Easier to replace technologies
+
+### Decision 2: [What We Decided]
+
+[Repetir estructura]
+
+---
+
+## Technology Stack
+
+```
+Language & Runtime:     [e.g., Java 17]
+Web Framework:          [e.g., Spring Boot 3.0]
+Database:               [e.g., PostgreSQL 15]
+Cache:                  [e.g., Redis 7.0]
+Message Broker:         [e.g., RabbitMQ 3.12]
+Search:                 [e.g., Elasticsearch 8.x]
+Container:              [e.g., Docker]
+Orchestration:          [e.g., Kubernetes]
+Deployment:             [e.g., AWS ECS/EKS]
+Monitoring:             [e.g., Prometheus + Grafana]
+Logging:                [e.g., ELK Stack]
+```
+
+**Justification for each:**
+[Brief explanation of why each technology]
+
+---
+
+## Architecture Patterns
+
+### Structural Patterns
+
+- [Pattern Name] - [Brief description]
+- [Pattern Name] - [Brief description]
+
+**Ejemplo:**
+- Hexagonal Architecture - Decouple business from frameworks
+- Repository Pattern - Data access abstraction
+- Dependency Injection - Loose coupling
+
+### Behavioral Patterns
+
+- [Pattern Name] - [Brief description]
+- [Pattern Name] - [Brief description]
+
+**Ejemplo:**
+- Observer Pattern - Event handling
+- Command Pattern - Async operations
+- Strategy Pattern - Payment methods selection
+
+### Architectural Styles
+
+- [Style Name] - [Brief description]
+- [Style Name] - [Brief description]
+
+**Ejemplo:**
+- REST API - Service communication
+- Event Sourcing - State management
+- SAGA Pattern - Distributed transactions
+
+---
+
+## Diagrama de Arquitectura
+
+<!-- Crear cuando la solución tiene ≥2 capas o ≥3 componentes. Elegir el tipo: `graph TB` para arquitectura en capas, `flowchart LR` para flujo de datos entre servicios, `C4Context` si el renderizador lo soporta. -->
+
+```mermaid
+graph TB
+    subgraph FE["Frontend Layer"]
+        UI["Client Application"]
+    end
+    subgraph BE["Backend Layer"]
+        API["API Gateway"]
+        BL["Business Logic"]
+    end
+    subgraph DA["Data Layer"]
+        DB[("Database")]
+        Cache[("Cache")]
+    end
+
+    UI --> API
+    API --> BL
+    BL --> DB
+    BL --> Cache
+```
+
+[Adaptar capas y componentes según el stack documentado en "Technology Stack" — eliminar capas que no apliquen, agregar servicios externos si corresponde]
+
+---
+
+## How We Achieve Quality Goals
+
+### Quality Goal 1: [Attribute]
+
+**Approach:**
+[High-level strategy for achieving this]
+
+**Mechanisms:**
+[Specific technical mechanisms]
+
+**Technologies:**
+[Tech stack supporting this]
+
+**Ejemplo:**
+**Quality Goal: Correctness**
+
+Approach:
+- Exhaustive testing at multiple levels
+- Type safety through static analysis
+- Automated validation
+
+Mechanisms:
+- Unit tests for each component
+- Integration tests for feature flows
+- Contract tests between services
+- Static analysis (SpotBugs, Checkstyle)
+
+Technologies:
+- JUnit 5, Mockito for unit testing
+- Testcontainers for integration tests
+- Pact for contract testing
+- SpotBugs, Checkstyle for analysis
+
+### Quality Goal 2: [Attribute]
+
+[Repetir estructura]
+
+---
+
+## Adherence to Constraints
+
+### Technical Constraint: [Constraint]
+
+**How we respect it:**
+[How this architecture complies]
+
+**Ejemplo:**
+**Technical Constraint: Java Only**
+How we respect it: Entire solution uses Java 17 + Spring ecosystem
+
+### Platform Constraint: [Constraint]
+
+[Repetir estructura]
+
+### Organizational Constraint: [Constraint]
+
+[Repetir estructura]
+
+### Regulatory Constraint: [Constraint]
+
+[Repetir estructura]
+
+### Business Constraint: [Constraint]
+
+[Repetir estructura]
+
+---
+
+## Traceability to Analysis
+
+### Satisfying Requirements
+
+[How solution strategy addresses major requirements]
+
+- R-1: [Requirement] → Addressed by [Architectural decision]
+- R-2: [Requirement] → Addressed by [Architectural decision]
+
+### Satisfying Quality Goals
+
+[How solution strategy achieves quality goals]
+
+- QG-1: [Goal] → Achieved through [Strategy]
+- QG-2: [Goal] → Achieved through [Strategy]
+
+### Satisfying Stakeholder Needs
+
+[How solution strategy meets stakeholder expectations]
+
+- [Stakeholder]: [Need] → Addressed by [Architectural decision]
+
+---
+
+## Si el WP es un sistema agentic: checklist obligatorio
+
+> Completar si el WP construye o diseña un sistema donde un agente toma decisiones autónomas.
+> Ver: `workflow-strategy/references/agentic-system-design.md`
+
+- [ ] **Mecanismo de razonamiento especificado**: ¿la estrategia define cuándo el agente usará Planning vs Routing vs RAG? (no solo el código que lo rodea, sino el mecanismo de decisión)
+- [ ] **Callbacks sin side-effects documentados**: ¿la estrategia garantiza que los callbacks no modifican estado externo de forma no controlada? (AP-01/02)
+- [ ] **Type contracts de herramientas**: ¿la estrategia especifica los contratos de tipo para inputs/outputs de herramientas del agente? (AP-03..06)
+- [ ] **Estrategia de observabilidad**: ¿la estrategia incluye cómo medir drift, latency y quality del agente en producción? (AP-13..15)
+- [ ] **HITL/HOTL/HIC especificado**: ¿la estrategia define los puntos de aprobación o override humano? (AP-07/08)
+
+---
+
+## Evidencia de respaldo
+
+> Todo claim que fundamente una decisión de gate Stage 5→6 debe estar clasificado aquí.
+> Claims SPECULATIVE sin fuente observable bloquean el gate (I-012). Ver: `.claude/references/evidence-classification.md`
+
+| Claim | Tipo | Fuente | Confianza | Origen |
+|-------|------|--------|-----------|--------|
+| [decisión estratégica principal] | PROVEN/INFERRED/SPECULATIVE | [tool output citado / documento / inferencia] | alta/media/baja | nuevo/heredado/externo |
+
+**Criterios de Confianza:**
+- alta: claim OBSERVABLE con herramienta ejecutada y output citado textualmente
+- media: claim INFERRED con razonamiento explícito y fuente documentada
+- baja: claim SPECULATIVE o inferencia sin fuente primaria verificable
+
+**Criterios de Origen:**
+- nuevo: generado en este WP con evidencia directa
+- heredado: propagado de un stage anterior sin re-verificación en este stage
+- externo: proveniente de documento o referencia fuera del WP (citar fuente)
+
+> PROVEN = producido por tool_use ejecutado en este WP (Bash, Read, Grep output citado textualmente)
+> INFERRED = derivado de observables con razonamiento explícito documentado
+> SPECULATIVE = sin observable de origen — NO puede fundamentar gates de stage (I-012)
+> Origen heredado + Confianza baja → re-verificar en este stage antes de avanzar (I-013)
+
+---
+
+## Validation Checklist
+
+- [ ] Key ideas clearly articulated
+- [ ] Fundamental decisions documented
+- [ ] Alternatives considered for each decision
+- [ ] Clear justifications
+- [ ] Technology stack complete
+- [ ] All patterns explained
+- [ ] Quality goals addressed
+- [ ] Constraints respected
+- [ ] Traceable to PHASE 2: ANALYZE
+- [ ] Clear guidance for PHASE 4: STRUCTURE
+- [ ] Sección "Evidencia de respaldo" con ≥3 claims clasificados (ninguno SPECULATIVE sin flag)
+
+---
+
+## Siguiente Paso
+
+Una vez completado PHASE 2: SOLUTION_STRATEGY:
+→ Pasar a PHASE 3: PLAN (especificaciones detalladas)

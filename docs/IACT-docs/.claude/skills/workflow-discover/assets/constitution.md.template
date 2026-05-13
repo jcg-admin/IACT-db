@@ -1,0 +1,91 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [PROJECT_NAME]
+constitution_version: 1.0
+author: [Nombre]
+status: [Borrador/Aprobada]
+```
+
+# Constitution: [PROJECT_NAME]
+
+## Propósito
+
+Principios inmutables que gobiernan todas las decisiones del proyecto. Cada fase del SKILL debe respetar estos principios. Violaciones requieren justificación documentada en un ADR.
+
+---
+
+## Core Principles
+
+### Principle 1: [NOMBRE]
+
+**Descripción:** [Qué establece este principio]<br>
+**Enforcement:** [Cómo se verifica — qué gate lo chequea]
+
+### Principle 2: [NOMBRE]
+
+**Descripción:** [Qué establece]<br>
+**Enforcement:** [Cómo se verifica]
+
+### Principle 3: [NOMBRE]
+
+**Descripción:** [Qué establece]<br>
+**Enforcement:** [Cómo se verifica]
+
+### Principle 4: [NOMBRE]
+
+**Descripción:** [Qué establece]<br>
+**Enforcement:** [Cómo se verifica]
+
+### Principle 5: [NOMBRE]
+
+**Descripción:** [Qué establece]<br>
+**Enforcement:** [Cómo se verifica]
+
+---
+
+## Constraints
+
+### Security
+- [Constraint de seguridad 1]
+- [Constraint de seguridad 2]
+
+### Performance
+- [Constraint de performance 1]
+
+### Compliance
+- [Constraint regulatorio 1]
+
+---
+
+## Governance
+
+### Amendments
+
+Los principios pueden enmendarse siguiendo este proceso:
+1. Proponer cambio en un ADR (context/decisions/adr-NNN.md)
+2. Documentar razón del cambio
+3. Obtener aprobación
+4. Actualizar este documento
+5. Bump version
+
+### Versioning
+
+- **MAJOR:** Eliminación de un principio
+- **MINOR:** Nuevo principio agregado
+- **PATCH:** Clarificación de principio existente
+
+---
+
+## Constitution Check (usar en Phase 2: SOLUTION_STRATEGY)
+
+Antes de tomar decisiones arquitectónicas, verificar:
+
+- [ ] ¿Cada decisión respeta todos los Core Principles?
+- [ ] ¿Algún constraint se viola? Si sí, ¿hay justificación en ADR?
+- [ ] ¿Las tecnologías elegidas son consistentes con los principles?
+
+Si algún check falla → PARAR. Documentar excepción en ADR antes de continuar.
+
+---
+
+**Última actualización:** [YYYY-MM-DD HH:MM:SS]

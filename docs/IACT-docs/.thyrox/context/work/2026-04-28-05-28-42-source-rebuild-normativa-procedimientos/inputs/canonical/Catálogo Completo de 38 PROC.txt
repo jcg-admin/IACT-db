@@ -1,0 +1,71 @@
+
+## Catálogo Completo de 38 PROC
+
+### Preparación y Apoyo (4)
+
+1. PROC_Revision_UC_Previo_Derivacion_1_0_0.rst
+2. PROC_Revision_TPL_Previo_Generacion_1_0_0.rst
+3. PROC_Crear_Estructura_Directorios_Tmp_1_0_0.rst
+4. PROC_Crear_Plan_Analisis_1_0_0.rst
+
+### Generación de Artefactos (16)
+
+5. PROC_Generacion_BReq_1_0_0.rst
+6. PROC_Generacion_BR_1_0_0.rst
+7. PROC_Generacion_UC_1_0_0.rst
+8. PROC_Generacion_FR_1_0_0.rst
+9. PROC_Generacion_NFR_1_0_0.rst
+10. PROC_Generacion_TST_1_0_0.rst
+11. PROC_Generacion_CNST_1_0_0.rst
+12. PROC_Generacion_MOD_1_0_0.rst
+13. PROC_Generacion_ADR_1_0_0.rst
+14. PROC_Generacion_STD_1_0_0.rst
+15. PROC_Generacion_POL_1_0_0.rst
+16. PROC_Generacion_FD_1_0_0.rst
+17. PROC_Generacion_VIEW_1_0_0.rst
+18. PROC_Generacion_API_1_0_0.rst
+19. PROC_Generacion_RTM_1_0_0.rst
+20. PROC_Generacion_Index_1_0_0.rst
+
+### Derivación (5)
+
+21. PROC_Derivacion_BReq_BR_1_0_0.rst
+22. PROC_Derivacion_BR_UC_1_0_0.rst
+23. PROC_Derivacion_UC_FR_1_0_0.rst
+24. PROC_Derivacion_FR_TST_1_1_0.rst
+25. PROC_Derivacion_FR_CODE_1_0_0.rst
+
+### Gobernanza Documental (7)
+
+26. PROC_Versionado_Semantico_1_0_0.rst
+27. PROC_Congelamiento_Subdominio_1_0_0.rst
+28. PROC_Descongelamiento_Subdominio_1_0_0.rst
+29. PROC_Actualizacion_Modelo_Documental_1_0_0.rst
+30. PROC_Cambio_Requisitos_1_0_0.rst
+31. PROC_Revision_Artefactos_1_0_0.rst
+32. PROC_Aprobacion_Documentos_1_0_0.rst
+
+### Transferencia y Publicación (3)
+
+33. PROC_Copiar_Tmp_Outputs_1_0_0.rst
+34. PROC_Validacion_Sphinx_1_0_0.rst
+35. PROC_Publicacion_Documentacion_1_0_0.rst
+
+### Trazabilidad y Verificación (3)
+
+36. PROC_Verificacion_Cobertura_1_0_0.rst
+37. PROC_Auditoria_Documental_1_0_0.rst
+38. PROC_Identificar_Gaps_Huerfanos_1_0_0.rst
+
+---
+
+**Nomenclatura aplicada:** `PROC_[Nombre_Descriptivo]_[MAJOR]_[MINOR]_[PATCH].rst`
+
+**Todos los PROC siguen la estructura del TPL_PROC con:**
+
+- Meta tags completos
+- Diagrama PlantUML
+- Pasos detallados
+- Verificación y validación
+- Manejo de excepciones
+- Historial de cambios

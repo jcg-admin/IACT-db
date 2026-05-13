@@ -1,0 +1,166 @@
+.. meta::
+   :artefacto: FR-001.05
+   :tipo: Requisito Funcional
+   :dominio: requisitos
+   :subdominio: funcionales/auth
+   :estado: Aprobado
+   :version: 1.0.0
+   :fecha: 2026-01-07
+   :autor: Equipo IACT
+
+.. _fr-001-05:
+
+===========================================
+FR-001.05: Registrar evento auditoría login
+===========================================
+
+
+1. Identificación
+-----------------
+
+.. list-table::
+   :widths: 25 75
+
+   * - **ID**
+     - FR-001.05
+   * - **Nombre**
+     - Registrar evento de login en auditoría
+   * - **UC Origen**
+     - UC_001: Iniciar Sesion
+   * - **Paso UC**
+     - Paso 9 del flujo normal
+   * - **Módulo**
+     - MOD_Auth
+   * - **Prioridad**
+     - Alta
+   * - **Tipo**
+     - Auditoría
+
+----
+
+2. Especificación
+-----------------
+
+**Declaración:**
+
+   El sistema DEBE registrar un evento de auditoría inmutable CUANDO
+   un usuario completa el proceso de login exitosamente (BR_008).
+
+**Descripción:**
+
+   El sistema crea un registro en la tabla de auditoría con:
+   
+   **Datos del Evento:**
+   
+   - ``event_type``: 'LOGIN_SUCCESS'
+   - ``user_id``: ID del usuario autenticado
+   - ``username``: username del usuario
+   - ``timestamp``: fecha/hora exacta (UTC)
+   - ``ip_address``: IP del cliente
+   - ``user_agent``: navegador/cliente
+   - ``session_id``: jti del token generado
+   - ``details``: JSON con metadata adicional
+   
+   **Inmutabilidad:**
+   
+   - El registro se inserta en tabla append-only (CNST-009)
+   - No se permite UPDATE ni DELETE
+   - Se genera hash de integridad
+
+----
+
+3. Criterio de Aceptación
+-------------------------
+
+::
+
+   DADO un login exitoso
+   CUANDO se completa la autenticación
+   ENTONCES se registra evento en tabla de auditoría
+   
+   Escenario 1: Login exitoso registrado
+   DADO usuario "juan.perez" con login exitoso
+   CUANDO se genera el token
+   ENTONCES existe registro con event_type = 'LOGIN_SUCCESS'
+   Y el timestamp es el momento exacto del login
+   Y contiene la IP del cliente
+   
+   Escenario 2: Intento fallido también registrado
+   DADO usuario con credenciales incorrectas
+   CUANDO falla la autenticación
+   ENTONCES existe registro con event_type = 'LOGIN_FAILED'
+   Y NO contiene el password intentado
+   
+   Escenario 3: Datos sensibles excluidos
+   DADO cualquier evento de login
+   CUANDO se registra en auditoría
+   ENTONCES el campo details NO contiene passwords
+   Y NO contiene tokens completos
+
+----
+
+4. Reglas y Restricciones
+-------------------------
+
+- **BR aplicables:**
+  - BR_008: Auditoría de accesos obligatoria
+  
+- **CNST aplicables:**
+  - CNST-009: Logging y auditoría inmutable
+  - CNST-010: Clasificación de datos (no loguear PII sensible)
+
+**Tipos de Evento Login:**
+
+.. list-table::
+   :widths: 30 70
+   :header-rows: 1
+
+   * - Tipo
+     - Descripción
+   * - LOGIN_SUCCESS
+     - Autenticación exitosa
+   * - LOGIN_FAILED
+     - Credenciales incorrectas
+   * - LOGIN_BLOCKED
+     - Cuenta bloqueada por intentos
+   * - LOGIN_INACTIVE
+     - Usuario inactivo intentó login
+
+----
+
+5. Trazabilidad
+---------------
+
+.. list-table::
+   :widths: 20 80
+
+   * - **BReq**
+     - BReq-004: Cumplimiento de Seguridad
+   * - **UC**
+     - UC_001: Iniciar Sesion
+   * - **Depende de**
+     - FR-001.03
+   * - **Requerido por**
+     - FR-061.01 (consulta de auditoría)
+   * - **BR**
+     - BR_008
+   * - **CNST**
+     - CNST-009, CNST-010
+   * - **TEST**
+     - TST-FR-001.05 (pendiente)
+
+----
+
+6. Historial
+------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - Versión
+     - Fecha
+     - Cambio
+   * - 1.0.0
+     - 2026-01-07
+     - Versión inicial derivada de UC_001

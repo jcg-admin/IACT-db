@@ -1,0 +1,135 @@
+{
+  "effortLevel": "medium",
+  "env": {
+    "CLAUDE_STREAM_IDLE_TIMEOUT_MS": "420000",
+    "CLAUDE_CODE_EFFORT_LEVEL": "medium"
+  },
+  "extraKnownMarketplaces": {
+    "thyrox-local": {
+      "source": {
+        "source": "directory",
+        "path": "./"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "thyrox@thyrox-local": true
+  },
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Edit(/ROADMAP.md)",
+      "Write(/.claude/references/**)",
+      "Bash(bash .claude/scripts/*)",
+      "Bash(bash .claude/skills/*/scripts/*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git commit -m *)",
+      "Bash(git push *)",
+      "Bash(git push -u *)",
+      "Bash(git status)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git fetch *)",
+      "Bash(git branch *)",
+      "Bash(date *)",
+      "Bash(mkdir *)",
+      "Bash(ls *)",
+      "Bash(echo *)",
+      "Bash(rm -rf build/*)",
+      "Bash(rm -rf build/html*)",
+      "Bash(make clean)",
+      "Bash(make html)"
+    ],
+    "ask": [
+      "Edit(/.claude/scripts/*.sh)",
+      "Edit(/.claude/settings.json)"
+    ],
+    "deny": [
+      "Bash(git push --force *)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git reset --hard *)",
+      "Bash(rm -rf *)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/session-start.sh"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/scripts/lint-agents.py || true"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/validate-session-close.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/stop-hook-git-check.sh"
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/session-resume.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/scripts/bound-detector.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/validate-commit-message.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/check-i001-prewrite.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "MAIN=$(dirname $(git rev-parse --git-common-dir 2>/dev/null || echo '.')); bash \"$MAIN/.claude/scripts/sync-wp-state.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

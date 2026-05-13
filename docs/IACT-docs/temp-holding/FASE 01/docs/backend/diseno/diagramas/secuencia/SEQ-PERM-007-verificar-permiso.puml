@@ -1,0 +1,141 @@
+@startuml SEQ-PERM-007-verificar-permiso
+!theme plain
+title Flujo de Verificación de Permisos (UC-PERM-007)
+caption Secuencia completa de verificación de capacidad con cache y auditoría
+footer Proyecto IACT | Generado: 2025-11-17 | ADR-GOB-004
+
+actor Usuario as user
+participant "Frontend\nReact" as frontend
+participant "API Gateway\nDjango" as api
+participant "PermisoService" as service
+participant "Cache\nRedis" as cache
+participant "Database\nPostgreSQL" as db
+participant "AuditLog" as audit
+
+== Solicitud de Acceso a Recurso ==
+
+user -> frontend: Click en "Ver Llamadas"
+activate frontend
+
+frontend -> api: GET /api/llamadas/\nAuthorization: Bearer {token}
+activate api
+
+api -> api: Verificar JWT token
+api -> api: Extraer usuario_id del token
+
+== Verificación de Permiso ==
+
+api -> service: usuario_tiene_permiso(\n  usuario_id=1,\n  capacidad="sistema.operaciones.llamadas.ver"\n)
+activate service
+
+service -> cache: GET perm:user:1:llamadas.ver
+activate cache
+
+alt Cache Hit
+    cache --> service: {"tiene_permiso": true, "ttl": 300}
+    note right: Cache hit - respuesta inmediata
+    service --> api: True
+
+else Cache Miss
+    cache --> service: None
+    note right: Cache miss - consultar DB
+
+    == Verificar en Base de Datos ==
+
+    service -> db: SELECT * FROM permissions_capacidades\nWHERE nombre_completo = 'sistema.operaciones.llamadas.ver'\nAND activa = true
+    activate db
+    db --> service: Capacidad{id=42, ...}
+    deactivate db
+
+    == 1. Verificar Permisos Excepcionales ==
+
+    service -> db: SELECT * FROM permissions_permisos_excepcionales\nWHERE usuario_id = 1\n  AND capacidad_id = 42\n  AND tipo = 'revocar'\n  AND activo = true\n  AND fecha_inicio <= NOW()\n  AND (fecha_fin IS NULL OR fecha_fin >= NOW())
+    activate db
+    db --> service: [] (sin revocaciones)
+    deactivate db
+
+    note right of service
+      Si existe revocación activa:
+      return False (prioridad máxima)
+    end note
+
+    service -> db: SELECT * FROM permissions_permisos_excepcionales\nWHERE usuario_id = 1\n  AND capacidad_id = 42\n  AND tipo = 'conceder'\n  AND activo = true\n  AND fecha_inicio <= NOW()\n  AND (fecha_fin IS NULL OR fecha_fin >= NOW())
+    activate db
+    db --> service: [] (sin concesiones)
+    deactivate db
+
+    note right of service
+      Si existe concesión activa:
+      return True (segunda prioridad)
+    end note
+
+    == 2. Verificar Permisos por Grupos ==
+
+    service -> db: SELECT grupo_id FROM permissions_usuarios_grupos\nWHERE usuario_id = 1\n  AND activo = true\n  AND (fecha_expiracion IS NULL OR fecha_expiracion >= NOW())
+    activate db
+    db --> service: [5, 12] (grupos activos)
+    deactivate db
+
+    note right of service
+      Usuario pertenece a:
+      - Grupo 5: "atencion_cliente"
+      - Grupo 12: "visualizacion_metricas"
+    end note
+
+    service -> db: SELECT * FROM permissions_grupo_capacidades\nWHERE grupo_id IN (5, 12)\n  AND capacidad_id = 42
+    activate db
+    db --> service: [GrupoCapacidad{grupo_id=5, capacidad_id=42}]
+    deactivate db
+
+    note right of service
+      Grupo 5 tiene la capacidad 42
+      → Usuario tiene permiso
+    end note
+
+    service -> cache: SET perm:user:1:llamadas.ver\n{"tiene_permiso": true}\nEX 300
+    cache --> service: OK
+
+    service --> api: True
+    deactivate cache
+end
+
+deactivate service
+
+== Auditoría (si capacidad requiere) ==
+
+alt Capacidad requiere auditoría
+    api -> audit: AuditoriaPermiso.create(\n  usuario_id=1,\n  capacidad="sistema.operaciones.llamadas.ver",\n  accion_realizada="acceso_concedido",\n  recurso_accedido="/api/llamadas/",\n  ip_address="192.168.1.100",\n  user_agent="Mozilla/5.0...",\n  metadata={"endpoint": "/api/llamadas/"}\n)
+    activate audit
+    audit -> db: INSERT INTO permissions_auditoria_permisos (...)
+    activate db
+    db --> audit: AuditoriaPermiso{id=789}
+    deactivate db
+    audit --> api: OK
+    deactivate audit
+end
+
+== Retornar Recurso ==
+
+api -> db: SELECT * FROM llamadas\nWHERE agente_id = 1\nLIMIT 50
+activate db
+db --> api: [Llamada{...}, Llamada{...}, ...]
+deactivate db
+
+api --> frontend: HTTP 200 OK\n{\n  "results": [\n    {"id": 1, "numero": "555-1234", ...},\n    ...\n  ],\n  "count": 150\n}
+deactivate api
+
+frontend -> frontend: Renderizar lista de llamadas
+frontend --> user: Mostrar pantalla "Mis Llamadas"
+deactivate frontend
+
+== Caso: Permiso Denegado ==
+
+note over user, audit
+  Si usuario_tiene_permiso() retorna False:
+  1. API retorna HTTP 403 Forbidden
+  2. Se registra en AuditoriaPermiso con accion_realizada="acceso_denegado"
+  3. Frontend muestra mensaje de error
+  4. Usuario ve pantalla de "Sin permisos"
+end note
+
+@enduml

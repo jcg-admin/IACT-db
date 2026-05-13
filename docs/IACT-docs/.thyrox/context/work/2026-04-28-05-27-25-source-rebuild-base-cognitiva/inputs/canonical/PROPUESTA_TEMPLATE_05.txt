@@ -1,0 +1,47 @@
+PROPUESTA REGENERACION - Template 5 de 10
+==========================================
+
+TEMPLATE A REGENERAR:
+TPL_UC_Temporal_Schedulers_1_3_0.rst
+
+PRIORIDAD: MEDIA (Template para UC temporales/cron)
+
+VERSION ACTUAL v1_2_0:
+- Lineas: 339
+- Placeholders: 12 (3.5% ratio)
+- Calidad: REGULAR/MALO
+- Problema: Poco contenido IACT (solo 8 referencias)
+
+VERSION OBJETIVO v1_3_0:
+- Lineas: 450-550
+- Placeholders: < 25 (< 5% ratio)
+- Calidad: EXCELENTE
+- Solucion: Ejemplo completo proceso nocturno IACT con cron, locks, monitoreo
+
+CONTENIDO:
+
+Introduccion (40 lineas)
+- Cuando usar este template
+- Diferencia vs UC normal
+
+Trigger Temporal (80 lineas)
+- Cron expression completa
+- Comando exacto
+- Horario y frecuencia
+
+Flujo Automatico (150 lineas)
+- Pasos detallados del proceso
+- Locks para evitar ejecuciones concurrentes
+- Cleanup y logging
+
+Codigo (120 lineas)
+- Script Python completo
+- SQL locks
+- Logging
+
+Monitoreo (80 lineas)
+- Alertas
+- Metricas
+- Healthcheck
+
+Ejemplo: UC-AUTH-08 Marcar Sesiones Expiradas

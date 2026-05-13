@@ -1,0 +1,390 @@
+
+
+
+
+bash
+
+
+cd /mnt/user-data/outputs/source/base_cognitiva
+
+# Crear visualización de estructura completa
+cat > ESTRUCTURA_COMPLETA.txt << 'EOF'
+BASE COGNITIVA IACT v2.0.0
+================================================================================
+
+source/base_cognitiva/
+│
+├── 📘 README.md                      [7.5KB] Guía principal
+├── 🔍 INDICE_RAPIDO.md                [7.0KB] Navegación rápida por tema/rol
+├── 📋 CHANGELOG.md                    [8.2KB] Historial de cambios v1.0→v2.0
+├── 📊 RESUMEN_EJECUTIVO.md            [9.1KB] Estado actual y métricas
+└── 📁 ESTRUCTURA_COMPLETA.txt         Este archivo
+│
+├── 📁 fundacionales/ (2 archivos, 27KB)
+│   ├── STD_001_Estandares_Documentacion_1_1_0.rst    [10KB, 473 líneas]
+│   └── NOM_001_Nomenclatura_Proyecto_2_0_0.rst       [17KB, 804 líneas]
+│
+├── 📁 pedagogico/ (12 archivos, 974KB)
+│   ├── PARTE_0_Contexto_Fundamentos_IACT_1_0_0.md           [88KB, 2,780 líneas]
+│   ├── PARTE_1_Identificar_Reglas_Negocio_IACT_1_0_0.md     [31KB, 1,198 líneas] ⭐ NUEVO
+│   ├── PARTE_2A_Fundamentos_Transformacion_IACT_1_0_0.md    [142KB, 3,745 líneas]
+│   ├── PARTE_2B_Construccion_Detallada_IACT_1_0_0.md        [156KB, 4,369 líneas]
+│   ├── PARTE_2C_Casos_Especiales_Validacion_IACT_1_0_0.md   [114KB, 3,342 líneas]
+│   ├── PARTE_3A_Introduccion_CRUD_IACT_1_0_0.md             [25KB, 946 líneas]
+│   ├── PARTE_3B_Tecnica_Larman_IACT_1_0_0.md                [119KB, 3,287 líneas]
+│   ├── PARTE_3C_UI_Stakeholders_IACT_1_0_0.md               [74KB, 1,811 líneas]
+│   ├── PARTE_3D_Consolidacion_Resumen_IACT_1_0_0.md         [48KB, 1,290 líneas]
+│   ├── PARTE_4_Requisitos_Funcionales_IACT_1_0_0.md         [202KB, 6,717 líneas]
+│   ├── PARTE_5_Trazabilidad_Gestion_IACT_1_0_0.md           [28KB, 1,036 líneas] ⭐ NUEVO
+│   └── PARTE_6_Casos_Practicos_Completos_IACT_1_0_0.md      [35KB, 1,307 líneas] ⭐ NUEVO
+│
+├── 📁 originales/ (18 archivos, 300KB) - Base Cognitiva Legacy
+│   ├── FND_01_Concepto_Requisito.rst              [13KB]
+│   ├── FND_03_Casos_de_Uso.rst                    [22KB]
+│   ├── FND_04_Trazabilidad.rst                    [17KB]
+│   ├── FND_05_Jerarquia_4_Niveles.rst             [18KB]
+│   ├── FND_06_Derivacion_vs_Transformacion.rst    [14KB]
+│   ├── FND_07_Requerimientos_Funcionales.rst      [15KB]
+│   ├── META_01_Identidad_Proyecto.rst             [6.7KB]
+│   ├── META_02_Clasificacion_Documental.rst       [7.7KB]
+│   ├── META_03_Fases_SDLC.rst                     [9.1KB]
+│   ├── META_04_Contexto_IACT.rst                  [8.9KB]
+│   ├── META_05_Estructura_Documental.rst          [11KB]
+│   ├── MTM_02_Metamodelo_Trazabilidad.rst         [17KB]
+│   ├── MODELO_DOCUMENTAL_IACT_v2_2_0_PARTE1.md    [17KB]
+│   ├── MODELO_DOCUMENTAL_IACT_v2_2_0_PARTE2.md    [13KB]
+│   ├── MODELO_RBAC_IACT_v5_1_1.md                 [58KB]
+│   ├── ANEXO_A_ARBOL_COMPLETO_PARTE1.md           [14KB]
+│   ├── ANEXO_A_ARBOL_COMPLETO_PARTE2.md           [16KB]
+│   └── (más archivos...)
+│
+├── 📁 templates/ (PENDIENTE FASE 13 - 12 archivos estimados)
+│   ├── TPL_BR_Decision_Tipo_1_0_0.rst
+│   ├── TPL_UC_Construccion_7_Pasos_1_0_0.rst
+│   ├── TPL_UC_CRUD_Operaciones_1_0_0.rst
+│   ├── TPL_UC_Larman_Contratos_1_0_0.rst
+│   ├── TPL_UC_UI_Driven_1_0_0.rst
+│   ├── TPL_UC_Stakeholder_Driven_1_0_0.rst
+│   ├── TPL_UC_Actor_Secundario_1_0_0.rst
+│   ├── TPL_UC_Temporal_Schedulers_1_0_0.rst
+│   ├── TPL_FR_Documentacion_10_Componentes_1_0_0.rst
+│   ├── TPL_FR_Query_SQL_1_0_0.rst
+│   ├── TPL_FR_Validacion_Reglas_1_0_0.rst
+│   └── TPL_TRZ_Matriz_RTM_1_0_0.rst
+│
+├── 📁 indices/ (PENDIENTE FASE 14 - 2 archivos estimados)
+│   ├── INDICE_MAESTRO_DOCUMENTACION_IACT_1_0_0.md
+│   └── MAPA_REFERENCIAS_CRUZADAS_IACT_1_0_0.md
+│
+└── 📁 ejemplos/ (PENDIENTE FASE 15 - 40+ archivos estimados)
+    ├── BR_IACT_001_Cliente_Activo_1_0_0.rst
+    ├── BR_IACT_028_Aprobacion_Consultas_1_0_0.rst
+    ├── BR_IACT_031_Notificar_Sesion_Expira_1_0_0.rst
+    ├── BR_IACT_046_Marcar_Sesion_Expirada_1_0_0.rst
+    ├── BR_IACT_087_Nivel_Seguridad_Criticas_1_0_0.rst
+    ├── UC_IACT_RPT_01_Consultar_Reporte_4_0_0.rst
+    ├── UC_IACT_AUTH_07_Notificar_Sesion_4_0_0.rst
+    ├── FR_RPT_01_07_Calcular_Count_1_0_0.rst
+    └── (más archivos...)
+
+================================================================================
+
+ESTADÍSTICAS GLOBALES
+================================================================================
+
+Archivos:
+  - Documentación:    4 archivos (README, INDICE, CHANGELOG, RESUMEN)
+  - Fundacionales:    2 archivos
+  - Pedagógico:      12 archivos ⭐ COMPLETO
+  - Originales:      18 archivos (legacy)
+  - Templates:        0 archivos (pendiente FASE 13)
+  - Índices:          0 archivos (pendiente FASE 14)
+  - Ejemplos:         0 archivos (pendiente FASE 15)
+  ────────────────────────────────────
+  TOTAL ACTUAL:      36 archivos
+
+Líneas de código/docs:
+  - Fundacionales:     1,277 líneas
+  - Pedagógico:      ~31,000 líneas ⭐
+  - Originales:       ~8,000 líneas
+  ────────────────────────────────────
+  TOTAL:            ~40,000 líneas
+
+Tamaño en disco:
+  - Total:              1.4MB
+
+Estado de Completitud:
+  - Material Pedagógico: 100% ✅
+  - Fundacionales:       100% ✅
+  - Templates:             0% 🔄
+  - Índices:               0% 🔄
+  - Ejemplos:              0% 🔄
+  ────────────────────────────────────
+  COMPLETITUD GLOBAL:     60%
+
+================================================================================
+
+ARCHIVOS CLAVE POR ROL
+================================================================================
+
+🎓 Para ESTUDIANTES:
+  1. README.md
+  2. INDICE_RAPIDO.md
+  3. fundacionales/STD_001_Estandares_Documentacion_1_1_0.rst
+  4. fundacionales/NOM_001_Nomenclatura_Proyecto_2_0_0.rst
+  5. pedagogico/PARTE_0_Contexto_Fundamentos_IACT_1_0_0.md
+  6. pedagogico/PARTE_1_Identificar_Reglas_Negocio_IACT_1_0_0.md
+  ... (continuar PARTES 2-6 en orden)
+
+📊 Para BUSINESS ANALYSTS:
+  1. pedagogico/PARTE_1_Identificar_Reglas_Negocio_IACT_1_0_0.md
+  2. pedagogico/PARTE_2B_Construccion_Detallada_IACT_1_0_0.md
+  3. pedagogico/PARTE_5_Trazabilidad_Gestion_IACT_1_0_0.md
+  4. templates/TPL_BR_Decision_Tipo_1_0_0.rst (pendiente)
+
+💻 Para DEVELOPERS:
+  1. fundacionales/NOM_001_Nomenclatura_Proyecto_2_0_0.rst
+  2. pedagogico/PARTE_4_Requisitos_Funcionales_IACT_1_0_0.md
+  3. pedagogico/PARTE_5_Trazabilidad_Gestion_IACT_1_0_0.md
+  4. pedagogico/PARTE_6_Casos_Practicos_Completos_IACT_1_0_0.md (Sección 2.6)
+
+🧪 Para QA ENGINEERS:
+  1. pedagogico/PARTE_1_Identificar_Reglas_Negocio_IACT_1_0_0.md
+  2. pedagogico/PARTE_6_Casos_Practicos_Completos_IACT_1_0_0.md (Sección 2.7)
+
+📋 Para PROJECT MANAGERS:
+  1. RESUMEN_EJECUTIVO.md
+  2. pedagogico/PARTE_0_Contexto_Fundamentos_IACT_1_0_0.md
+  3. pedagogico/PARTE_5_Trazabilidad_Gestion_IACT_1_0_0.md (Sección 5)
+
+================================================================================
+
+PRÓXIMOS PASOS SUGERIDOS
+================================================================================
+
+Opción A: COMPLETAR TEMPLATES (FASE 13)
+  - Esfuerzo:  ~6 horas
+  - Archivos:  12 templates RST
+  - Beneficio: Herramientas reutilizables para documentación
+  - Prioridad: ALTA (referenciados en PARTES 1-6)
+
+Opción B: GENERAR ÍNDICES (FASE 14)
+  - Esfuerzo:  ~4 horas
+  - Archivos:  2 índices maestros
+  - Beneficio: Navegación y referencias cruzadas
+  - Prioridad: MEDIA
+
+Opción C: CREAR EJEMPLOS (FASE 15)
+  - Esfuerzo:  ~20 horas
+  - Archivos:  40+ ejemplos reales BR/UC/FR
+  - Beneficio: Material de práctica completo
+  - Prioridad: BAJA (opcional)
+
+Opción D: FINALIZAR AQUÍ
+  - Material pedagógico COMPLETO
+  - Base cognitiva lista para uso educativo
+  - Templates y ejemplos pueden agregarse después
+
+================================================================================
+
+RECOMENDACIÓN: Completar FASE 13 (Templates) para cerrar ciclo completo.
+
+================================================================================
+
+Versión: 2.0.0
+Fecha: 2026-01-09
+Estado: MATERIAL PEDAGÓGICO COMPLETO ✅
+
+================================================================================
+EOF
+
+cat ESTRUCTURA_COMPLETA.txt
+Output
+
+BASE COGNITIVA IACT v2.0.0
+================================================================================
+
+source/base_cognitiva/
+│
+├── 📘 README.md                      [7.5KB] Guía principal
+├── 🔍 INDICE_RAPIDO.md                [7.0KB] Navegación rápida por tema/rol
+├── 📋 CHANGELOG.md                    [8.2KB] Historial de cambios v1.0→v2.0
+├── 📊 RESUMEN_EJECUTIVO.md            [9.1KB] Estado actual y métricas
+└── 📁 ESTRUCTURA_COMPLETA.txt         Este archivo
+│
+├── 📁 fundacionales/ (2 archivos, 27KB)
+│   ├── STD_001_Estandares_Documentacion_1_1_0.rst    [10KB, 473 líneas]
+│   └── NOM_001_Nomenclatura_Proyecto_2_0_0.rst       [17KB, 804 líneas]
+│
+├── 📁 pedagogico/ (12 archivos, 974KB)
+│   ├── PARTE_0_Contexto_Fundamentos_IACT_1_0_0.md           [88KB, 2,780 líneas]
+│   ├── PARTE_1_Identificar_Reglas_Negocio_IACT_1_0_0.md     [31KB, 1,198 líneas] ⭐ NUEVO
+│   ├── PARTE_2A_Fundamentos_Transformacion_IACT_1_0_0.md    [142KB, 3,745 líneas]
+│   ├── PARTE_2B_Construccion_Detallada_IACT_1_0_0.md        [156KB, 4,369 líneas]
+│   ├── PARTE_2C_Casos_Especiales_Validacion_IACT_1_0_0.md   [114KB, 3,342 líneas]
+│   ├── PARTE_3A_Introduccion_CRUD_IACT_1_0_0.md             [25KB, 946 líneas]
+│   ├── PARTE_3B_Tecnica_Larman_IACT_1_0_0.md                [119KB, 3,287 líneas]
+│   ├── PARTE_3C_UI_Stakeholders_IACT_1_0_0.md               [74KB, 1,811 líneas]
+│   ├── PARTE_3D_Consolidacion_Resumen_IACT_1_0_0.md         [48KB, 1,290 líneas]
+│   ├── PARTE_4_Requisitos_Funcionales_IACT_1_0_0.md         [202KB, 6,717 líneas]
+│   ├── PARTE_5_Trazabilidad_Gestion_IACT_1_0_0.md           [28KB, 1,036 líneas] ⭐ NUEVO
+│   └── PARTE_6_Casos_Practicos_Completos_IACT_1_0_0.md      [35KB, 1,307 líneas] ⭐ NUEVO
+│
+├── 📁 originales/ (18 archivos, 300KB) - Base Cognitiva Legacy
+│   ├── FND_01_Concepto_Requisito.rst              [13KB]
+│   ├── FND_03_Casos_de_Uso.rst                    [22KB]
+│   ├── FND_04_Trazabilidad.rst                    [17KB]
+│   ├── FND_05_Jerarquia_4_Niveles.rst             [18KB]
+│   ├── FND_06_Derivacion_vs_Transformacion.rst    [14KB]
+│   ├── FND_07_Requerimientos_Funcionales.rst      [15KB]
+│   ├── META_01_Identidad_Proyecto.rst             [6.7KB]
+│   ├── META_02_Clasificacion_Documental.rst       [7.7KB]
+│   ├── META_03_Fases_SDLC.rst                     [9.1KB]
+│   ├── META_04_Contexto_IACT.rst                  [8.9KB]
+│   ├── META_05_Estructura_Documental.rst          [11KB]
+│   ├── MTM_02_Metamodelo_Trazabilidad.rst         [17KB]
+│   ├── MODELO_DOCUMENTAL_IACT_v2_2_0_PARTE1.md    [17KB]
+│   ├── MODELO_DOCUMENTAL_IACT_v2_2_0_PARTE2.md    [13KB]
+│   ├── MODELO_RBAC_IACT_v5_1_1.md                 [58KB]
+│   ├── ANEXO_A_ARBOL_COMPLETO_PARTE1.md           [14KB]
+│   ├── ANEXO_A_ARBOL_COMPLETO_PARTE2.md           [16KB]
+│   └── (más archivos...)
+│
+├── 📁 templates/ (PENDIENTE FASE 13 - 12 archivos estimados)
+│   ├── TPL_BR_Decision_Tipo_1_0_0.rst
+│   ├── TPL_UC_Construccion_7_Pasos_1_0_0.rst
+│   ├── TPL_UC_CRUD_Operaciones_1_0_0.rst
+│   ├── TPL_UC_Larman_Contratos_1_0_0.rst
+│   ├── TPL_UC_UI_Driven_1_0_0.rst
+│   ├── TPL_UC_Stakeholder_Driven_1_0_0.rst
+│   ├── TPL_UC_Actor_Secundario_1_0_0.rst
+│   ├── TPL_UC_Temporal_Schedulers_1_0_0.rst
+│   ├── TPL_FR_Documentacion_10_Componentes_1_0_0.rst
+│   ├── TPL_FR_Query_SQL_1_0_0.rst
+│   ├── TPL_FR_Validacion_Reglas_1_0_0.rst
+│   └── TPL_TRZ_Matriz_RTM_1_0_0.rst
+│
+├── 📁 indices/ (PENDIENTE FASE 14 - 2 archivos estimados)
+│   ├── INDICE_MAESTRO_DOCUMENTACION_IACT_1_0_0.md
+│   └── MAPA_REFERENCIAS_CRUZADAS_IACT_1_0_0.md
+│
+└── 📁 ejemplos/ (PENDIENTE FASE 15 - 40+ archivos estimados)
+    ├── BR_IACT_001_Cliente_Activo_1_0_0.rst
+    ├── BR_IACT_028_Aprobacion_Consultas_1_0_0.rst
+    ├── BR_IACT_031_Notificar_Sesion_Expira_1_0_0.rst
+    ├── BR_IACT_046_Marcar_Sesion_Expirada_1_0_0.rst
+    ├── BR_IACT_087_Nivel_Seguridad_Criticas_1_0_0.rst
+    ├── UC_IACT_RPT_01_Consultar_Reporte_4_0_0.rst
+    ├── UC_IACT_AUTH_07_Notificar_Sesion_4_0_0.rst
+    ├── FR_RPT_01_07_Calcular_Count_1_0_0.rst
+    └── (más archivos...)
+
+================================================================================
+
+ESTADÍSTICAS GLOBALES
+================================================================================
+
+Archivos:
+  - Documentación:    4 archivos (README, INDICE, CHANGELOG, RESUMEN)
+  - Fundacionales:    2 archivos
+  - Pedagógico:      12 archivos ⭐ COMPLETO
+  - Originales:      18 archivos (legacy)
+  - Templates:        0 archivos (pendiente FASE 13)
+  - Índices:          0 archivos (pendiente FASE 14)
+  - Ejemplos:         0 archivos (pendiente FASE 15)
+  ────────────────────────────────────
+  TOTAL ACTUAL:      36 archivos
+
+Líneas de código/docs:
+  - Fundacionales:     1,277 líneas
+  - Pedagógico:      ~31,000 líneas ⭐
+  - Originales:       ~8,000 líneas
+  ────────────────────────────────────
+  TOTAL:            ~40,000 líneas
+
+Tamaño en disco:
+  - Total:              1.4MB
+
+Estado de Completitud:
+  - Material Pedagógico: 100% ✅
+  - Fundacionales:       100% ✅
+  - Templates:             0% 🔄
+  - Índices:               0% 🔄
+  - Ejemplos:              0% 🔄
+  ────────────────────────────────────
+  COMPLETITUD GLOBAL:     60%
+
+================================================================================
+
+ARCHIVOS CLAVE POR ROL
+================================================================================
+
+🎓 Para ESTUDIANTES:
+  1. README.md
+  2. INDICE_RAPIDO.md
+  3. fundacionales/STD_001_Estandares_Documentacion_1_1_0.rst
+  4. fundacionales/NOM_001_Nomenclatura_Proyecto_2_0_0.rst
+  5. pedagogico/PARTE_0_Contexto_Fundamentos_IACT_1_0_0.md
+  6. pedagogico/PARTE_1_Identificar_Reglas_Negocio_IACT_1_0_0.md
+  ... (continuar PARTES 2-6 en orden)
+
+📊 Para BUSINESS ANALYSTS:
+  1. pedagogico/PARTE_1_Identificar_Reglas_Negocio_IACT_1_0_0.md
+  2. pedagogico/PARTE_2B_Construccion_Detallada_IACT_1_0_0.md
+  3. pedagogico/PARTE_5_Trazabilidad_Gestion_IACT_1_0_0.md
+  4. templates/TPL_BR_Decision_Tipo_1_0_0.rst (pendiente)
+
+💻 Para DEVELOPERS:
+  1. fundacionales/NOM_001_Nomenclatura_Proyecto_2_0_0.rst
+  2. pedagogico/PARTE_4_Requisitos_Funcionales_IACT_1_0_0.md
+  3. pedagogico/PARTE_5_Trazabilidad_Gestion_IACT_1_0_0.md
+  4. pedagogico/PARTE_6_Casos_Practicos_Completos_IACT_1_0_0.md (Sección 2.6)
+
+🧪 Para QA ENGINEERS:
+  1. pedagogico/PARTE_1_Identificar_Reglas_Negocio_IACT_1_0_0.md
+  2. pedagogico/PARTE_6_Casos_Practicos_Completos_IACT_1_0_0.md (Sección 2.7)
+
+📋 Para PROJECT MANAGERS:
+  1. RESUMEN_EJECUTIVO.md
+  2. pedagogico/PARTE_0_Contexto_Fundamentos_IACT_1_0_0.md
+  3. pedagogico/PARTE_5_Trazabilidad_Gestion_IACT_1_0_0.md (Sección 5)
+
+================================================================================
+
+PRÓXIMOS PASOS SUGERIDOS
+================================================================================
+
+Opción A: COMPLETAR TEMPLATES (FASE 13)
+  - Esfuerzo:  ~6 horas
+  - Archivos:  12 templates RST
+  - Beneficio: Herramientas reutilizables para documentación
+  - Prioridad: ALTA (referenciados en PARTES 1-6)
+
+Opción B: GENERAR ÍNDICES (FASE 14)
+  - Esfuerzo:  ~4 horas
+  - Archivos:  2 índices maestros
+  - Beneficio: Navegación y referencias cruzadas
+  - Prioridad: MEDIA
+
+Opción C: CREAR EJEMPLOS (FASE 15)
+  - Esfuerzo:  ~20 horas
+  - Archivos:  40+ ejemplos reales BR/UC/FR
+  - Beneficio: Material de práctica completo
+  - Prioridad: BAJA (opcional)
+
+Opción D: FINALIZAR AQUÍ
+  - Material pedagógico COMPLETO
+  - Base cognitiva lista para uso educativo
+  - Templates y ejemplos pueden agregarse después
+
+================================================================================
+
+RECOMENDACIÓN: Completar FASE 13 (Templates) para cerrar ciclo completo.
+
+================================================================================
+
+Versión: 2.0.0
+Fecha: 2026-01-09
+Estado: MATERIAL PEDAGÓGICO COMPLETO ✅
+
+=======================================================

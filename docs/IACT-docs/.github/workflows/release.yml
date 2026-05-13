@@ -1,0 +1,107 @@
+name: Release Docs
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        run: pip install --upgrade pip uv
+
+      - name: Install system deps (libenchant + Java)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libenchant-2-2 default-jre-headless
+
+      - name: Bootstrap project (uv sync + plantuml.jar + hooks)
+        run: bash scripts/setup.sh
+
+      - name: Strict build (warnings as errors)
+        run: |
+          source .venv/bin/activate
+          make clean
+          sphinx-build -W -b html -d build/doctrees source build/html
+
+      - name: Extract tag name
+        id: tag
+        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Assemble package contents
+        run: |
+          mkdir -p package/iact-docs-${{ steps.tag.outputs.TAG }}
+          cp -r build/html package/iact-docs-${{ steps.tag.outputs.TAG }}/html
+          cp licence.rst package/iact-docs-${{ steps.tag.outputs.TAG }}/LICENSE.rst
+          cp readme.rst package/iact-docs-${{ steps.tag.outputs.TAG }}/readme.rst
+          cp CHANGELOG.md package/iact-docs-${{ steps.tag.outputs.TAG }}/CHANGELOG.md
+
+      - name: Create tarball
+        run: |
+          cd package
+          tar -czf ../iact-docs-${{ steps.tag.outputs.TAG }}.tar.gz iact-docs-${{ steps.tag.outputs.TAG }}/
+          cd ..
+
+      - name: Generate SHA-256 checksum
+        run: |
+          sha256sum iact-docs-${{ steps.tag.outputs.TAG }}.tar.gz \
+            > iact-docs-${{ steps.tag.outputs.TAG }}.tar.gz.sha256
+
+      - name: Verify package contents
+        run: |
+          tar -tzf iact-docs-${{ steps.tag.outputs.TAG }}.tar.gz | head -20
+          ls -lh iact-docs-${{ steps.tag.outputs.TAG }}.tar.gz*
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG }}
+          name: IACT Docs ${{ steps.tag.outputs.TAG }}
+          generate_release_notes: true
+          files: |
+            iact-docs-${{ steps.tag.outputs.TAG }}.tar.gz
+            iact-docs-${{ steps.tag.outputs.TAG }}.tar.gz.sha256
+          body: |
+            ## IACT Documentation — ${{ steps.tag.outputs.TAG }}
+
+            Static HTML build de la documentación, lista para desplegar
+            al servidor on-premise.
+
+            ### Archivos adjuntos
+
+            - `iact-docs-${{ steps.tag.outputs.TAG }}.tar.gz` — paquete
+              versionado con HTML + LICENSE + readme + CHANGELOG.
+            - `iact-docs-${{ steps.tag.outputs.TAG }}.tar.gz.sha256` —
+              checksum SHA-256 para verificación de integridad.
+
+            ### Procedimiento de despliegue
+
+            Ver `source/normativa/procedimientos/PROC-OPS-001-deployment.rst`
+            en el repo para el procedimiento de descarga, verificación y
+            despliegue al servidor on-premise.
+
+            ### Verificación de integridad
+
+            ```bash
+            sha256sum -c iact-docs-${{ steps.tag.outputs.TAG }}.tar.gz.sha256
+            ```
+
+            ### Cambios
+
+            (Auto-generados desde commits — ver sección abajo)

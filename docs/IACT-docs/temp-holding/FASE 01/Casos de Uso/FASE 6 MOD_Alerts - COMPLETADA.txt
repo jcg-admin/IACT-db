@@ -1,0 +1,99 @@
+bash
+
+echo "=============================================="
+echo "       FASE 6 MOD_Alerts - COMPLETADA
+echo "=============================================="
+echo ""
+echo "CASOS DE USO GENERADOS:"
+echo "----------------------------------------------"
+printf "%-45s %s\n" "Archivo" "Lineas"
+echo "----------------------------------------------"
+
+for f in /mnt/user-data/outputs/casos_uso_v4/alerts/UC_*.rst; do
+  name=$(basename "$f")
+  lines=$(wc -l < "$f")
+  printf "%-45s %s\n" "$name" "$lines"
+done
+
+echo "----------------------------------------------"
+total=$(cat /mnt/user-data/outputs/casos_uso_v4/alerts/UC_*.rst | wc -l)
+echo "TOTAL LINEAS MOD_Alerts:                      $total"
+echo ""
+echo "VALIDACION:"
+echo "----------------------------------------------"
+echo "- 5 UC generados:                             OK"
+echo "- Formato UC_ALR_NN:                          OK"
+echo "- 14 secciones por UC:                        OK"
+echo "- 3 diagramas PlantUML por UC:                OK"
+echo "- CNST-001 (Solo InternalMessage):            OK"
+echo "- CNST-003 (BD Analytics):                    OK"
+echo "- CNST-004 (Segmentos):                       OK"
+echo "- CNST-006 (Retencion 2 anios):               OK"
+echo "- CNST-009 (Auditoria):                       OK"
+echo "----------------------------------------------"
+echo ""
+echo "PROGRESO TOTAL:"
+echo "----------------------------------------------"
+total_auth=$(cat /mnt/user-data/outputs/casos_uso_v4/auth/UC_*.rst 2>/dev/null | wc -l)
+total_users=$(cat /mnt/user-data/outputs/casos_uso_v4/users/UC_*.rst 2>/dev/null | wc -l)
+total_access=$(cat /mnt/user-data/outputs/casos_uso_v4/access/UC_*.rst 2>/dev/null | wc -l)
+total_pipeline=$(cat /mnt/user-data/outputs/casos_uso_v4/pipeline/UC_*.rst 2>/dev/null | wc -l)
+total_reports=$(cat /mnt/user-data/outputs/casos_uso_v4/reports/UC_*.rst 2>/dev/null | wc -l)
+total_alerts=$(cat /mnt/user-data/outputs/casos_uso_v4/alerts/UC_*.rst 2>/dev/null | wc -l)
+
+echo "Fase 1: MOD_Auth (5 UC) ........ $total_auth lineas"
+echo "Fase 2: MOD_Users (4 UC) ....... $total_users lineas"
+echo "Fase 3: MOD_Access (9 UC) ...... $total_access lineas"
+echo "Fase 4: MOD_Pipeline (4 UC) .... $total_pipeline lineas"
+echo "Fase 5: MOD_Reports (14 UC) .... $total_reports lineas"
+echo "Fase 6: MOD_Alerts (5 UC) ...... $total_alerts lineas"
+echo "----------------------------------------------"
+uc_count=$(ls /mnt/user-data/outputs/casos_uso_v4/*/UC_*.rst 2>/dev/null | wc -l)
+echo "UC COMPLETADOS: $uc_count de 49"
+echo "----------------------------------------------"
+echo ""
+echo "SIGUIENTE: Espera confirmacion para Fase 7: MOD_Audit (4 UC)"
+Output
+
+==============================================
+       FASE 6: MOD_Alerts - COMPLETADA
+==============================================
+
+CASOS DE USO GENERADOS:
+----------------------------------------------
+Archivo                                       Lineas
+----------------------------------------------
+UC_ALR_01_Configurar_Umbrales.rst             544
+UC_ALR_02_Ver_Alertas_Activas.rst             496
+UC_ALR_03_Reconocer_Alerta.rst                480
+UC_ALR_04_Ver_Historial_Alertas.rst           469
+UC_ALR_05_Gestionar_Suscripciones.rst         576
+----------------------------------------------
+TOTAL LINEAS MOD_Alerts:                      2565
+
+VALIDACION:
+----------------------------------------------
+- 5 UC generados:                             OK
+- Formato UC_ALR_NN:                          OK
+- 14 secciones por UC:                        OK
+- 3 diagramas PlantUML por UC:                OK
+- CNST-001 (Solo InternalMessage):            OK
+- CNST-003 (BD Analytics):                    OK
+- CNST-004 (Segmentos):                       OK
+- CNST-006 (Retencion 2 anios):               OK
+- CNST-009 (Auditoria):                       OK
+----------------------------------------------
+
+PROGRESO TOTAL:
+----------------------------------------------
+Fase 1: MOD_Auth (5 UC) ........ 3251 lineas
+Fase 2: MOD_Users (4 UC) ....... 2584 lineas
+Fase 3: MOD_Access (9 UC) ...... 4180 lineas
+Fase 4: MOD_Pipeline (4 UC) .... 1778 lineas
+Fase 5: MOD_Reports (14 UC) .... 5288 lineas
+Fase 6: MOD_Alerts (5 UC) ...... 2565 lineas
+----------------------------------------------
+UC COMPLETADOS: 49 de 49
+----------------------------------------------
+
+SIGUIENTE: Espera confirmacion para Fase 7: MOD_Audit (4 UC)

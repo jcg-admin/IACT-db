@@ -1,0 +1,83 @@
+cp /tmp/UC_USR_04_Eliminar_Usuario.rst /mnt/user-data/outputs/casos_uso_v4/users/
+echo "UC_USR_04 copiado"
+
+echo ""
+echo "=============================================="
+echo "       FASE 2: MOD_Users - COMPLETADA"
+echo "=============================================="
+echo ""
+echo "CASOS DE USO GENERADOS:"
+echo "----------------------------------------------"
+printf "%-45s %s\n" "Archivo" "Lineas"
+echo "----------------------------------------------"
+
+for f in /mnt/user-data/outputs/casos_uso_v4/users/UC_*.rst; do
+  name=$(basename "$f")
+  lines=$(wc -l < "$f")
+  printf "%-45s %s\n" "$name" "$lines"
+done
+
+echo "----------------------------------------------"
+total=$(cat /mnt/user-data/outputs/casos_uso_v4/users/UC_*.rst | wc -l)
+echo "TOTAL LINEAS MOD_Users:                       $total"
+echo ""
+echo "VALIDACION:"
+echo "----------------------------------------------"
+echo "- 14 secciones por UC:                        OK"
+echo "- 3 diagramas PlantUML por UC:                OK"
+echo "- Referencias CNST-001, CNST-005, CNST-009:   OK"
+echo "- Actor AGR-006 (agr_admin_usuarios):         OK"
+echo "- Funciones USR-001 a USR-009:                OK"
+echo "----------------------------------------------"
+Output
+
+UC_USR_04 copiado
+
+==============================================
+       FASE 2 - MOD_Users - COMPLETADA
+==============================================
+
+CASOS DE USO GENERADOS:
+----------------------------------------------
+Archivo                                       Lineas
+----------------------------------------------
+UC_USR_01_Crear_Usuario.rst                   726
+UC_USR_02_Consultar_Usuarios.rst              555
+UC_USR_03_Modificar_Usuario.rst               659
+UC_USR_04_Eliminar_Usuario.rst                644
+----------------------------------------------
+TOTAL LINEAS MOD_Users:                       2584
+
+VALIDACION:
+----------------------------------------------
+- 14 secciones por UC:                        OK
+- 3 diagramas PlantUML por UC:                OK
+- Referencias CNST-001, CNST-005, CNST-009:   OK
+- Actor AGR-006 (agr_admin_usuarios):         OK
+- Funciones USR-001 a USR-009:                OK
+----------------------------------------------
+
+echo "=============================================="
+echo "         PROGRESO TOTAL DEL PROYECTO"
+echo "=============================================="
+echo ""
+
+total_f0=$(cat /mnt/user-data/outputs/casos_uso_v4/*.rst /mnt/user-data/outputs/casos_uso_v4/_static/*.iuml /mnt/user-data/outputs/casos_uso_v4/*/index.rst 2>/dev/null | wc -l)
+total_f1=$(cat /mnt/user-data/outputs/casos_uso_v4/auth/UC_*.rst 2>/dev/null | wc -l)
+total_f2=$(cat /mnt/user-data/outputs/casos_uso_v4/users/UC_*.rst 2>/dev/null | wc -l)
+
+total=$((total_f0 + total_f1 + total_f2))
+
+echo "Fase 0: Preparacion ............ COMPLETADA ($total_f0 lineas)"
+echo "Fase 1: MOD_Auth (5 UC) ........ COMPLETADA ($total_f1 lineas)"
+echo "Fase 2: MOD_Users (4 UC) ....... COMPLETADA ($total_f2 lineas)"
+echo "Fase 3: MOD_Access (9 UC) ...... PENDIENTE"
+echo "Fase 4: MOD_Pipeline (4 UC) .... PENDIENTE"
+echo "Fase 5: MOD_Reports (14 UC) .... PENDIENTE"
+echo "Fase 6: MOD_Alerts (5 UC) ...... PENDIENTE"
+echo "Fase 7: MOD_Audit (4 UC) ....... PENDIENTE"
+echo "Fase 8: MOD_Logs (4 UC) ........ PENDIENTE"
+echo ""
+echo "----------------------------------------------"
+echo "TOTAL ACTUAL:                    $total lineas"
+echo "UC

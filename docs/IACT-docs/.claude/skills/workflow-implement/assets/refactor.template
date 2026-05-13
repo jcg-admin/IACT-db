@@ -1,0 +1,43 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+type: refactor
+component: [Nombre componente refactorizado]
+Razón: [Descripción breve por qué]
+author: [Nombre]
+Alcance: [Número de archivos/líneas afectadas]
+tests_passing: [SI/NO]
+Performance impact: [Ninguno/Mejora/Degradación]
+Estimado esfuerzo: [horas]
+```
+
+refactor(scope): short description of refactoring
+
+Explain the reason for refactoring:
+- Code smell that was addressed
+- Performance issue solved
+- Maintainability improvement
+- Structure clarification
+
+Explain the refactoring:
+- How the code was reorganized
+- What changed structurally (not functionally)
+- Patterns or principles applied
+- Migration path if complex
+
+Impact:
+- Files affected: [list]
+- Lines changed: [roughly]
+- Breaking changes: [none/list them]
+- Performance impact: [neutral/improved/slightly slower]
+- Backward compatibility: [fully/partially/broken]
+
+Behavior:
+- Functional behavior: [unchanged/improved]
+- Tests before: [passing/failing]
+- Tests after: [passing/failing]
+
+Examples:
+refactor(database): consolidate user queries into repository pattern
+refactor(api): extract common validation into middleware
+refactor(structure): reorganize project directories per conventions
+refactor(code): remove code duplication in auth service

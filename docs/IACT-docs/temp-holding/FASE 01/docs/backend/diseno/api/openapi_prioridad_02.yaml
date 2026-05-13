@@ -1,0 +1,824 @@
+openapi: 3.0.3
+info:
+  title: Sistema de Permisos Granular - PRIORIDAD 2
+  description: |
+    API REST para gestion de funciones core del sistema de call center.
+
+    Implementa control de acceso basado en capacidades granulares con:
+    - Usuarios y grupos funcionales
+    - Dashboards personalizables
+    - Configuraciones del sistema
+
+    **Autenticacion**: Todas las peticiones requieren JWT token en header Authorization.
+
+    **Permisos**: Cada endpoint verifica permisos granulares especificos.
+
+    Referencia: docs/PLAN_MAESTRO_PRIORIDAD_02.md (Tarea 90)
+  version: 1.0.0
+  contact:
+    name: Equipo de Desarrollo
+    email: dev@callcenter.com
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Desarrollo local
+  - url: https://api.callcenter.com/api/v1
+    description: Produccion
+
+tags:
+  - name: Usuarios
+    description: Gestion de usuarios y asignacion de grupos
+  - name: Dashboard
+    description: Visualizacion y personalizacion de dashboards
+  - name: Configuracion
+    description: Gestion de configuraciones del sistema
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Mensaje de error
+
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        is_active:
+          type: boolean
+        is_staff:
+          type: boolean
+        grupos:
+          type: array
+          items:
+            type: object
+            properties:
+              codigo:
+                type: string
+              nombre:
+                type: string
+              asignado_en:
+                type: string
+                format: date-time
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        last_login:
+          type: string
+          format: date-time
+          readOnly: true
+
+    UsuarioCreate:
+      type: object
+      required:
+        - email
+        - first_name
+        - last_name
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        password:
+          type: string
+          format: password
+          minLength: 8
+        is_staff:
+          type: boolean
+          default: false
+
+    UsuarioListResponse:
+      type: object
+      properties:
+        resultados:
+          type: array
+          items:
+            $ref: '#/components/schemas/Usuario'
+        total:
+          type: integer
+        pagina:
+          type: integer
+        paginas_totales:
+          type: integer
+
+    AsignarGrupos:
+      type: object
+      required:
+        - grupos_codigos
+      properties:
+        grupos_codigos:
+          type: array
+          items:
+            type: string
+          example: ["visualizacion_basica", "reportes_analitica"]
+
+    SuspenderUsuario:
+      type: object
+      properties:
+        motivo:
+          type: string
+          maxLength: 500
+
+    DashboardOverview:
+      type: object
+      properties:
+        last_update:
+          type: string
+          format: date-time
+        widgets:
+          type: array
+          items:
+            type: object
+
+    ExportarDashboard:
+      type: object
+      required:
+        - formato
+      properties:
+        formato:
+          type: string
+          enum: [pdf, excel]
+
+    ExportarDashboardResponse:
+      type: object
+      properties:
+        formato:
+          type: string
+        archivo:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    PersonalizarDashboard:
+      type: object
+      required:
+        - configuracion
+      properties:
+        configuracion:
+          type: object
+          description: Configuracion JSON de widgets y layout
+
+    PersonalizarDashboardResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        configuracion:
+          type: object
+        updated_at:
+          type: string
+          format: date-time
+
+    CompartirDashboard:
+      type: object
+      properties:
+        compartir_con_usuario_id:
+          type: integer
+        compartir_con_grupo_codigo:
+          type: string
+
+    CompartirDashboardResponse:
+      type: object
+      properties:
+        compartido_con:
+          type: string
+        tipo:
+          type: string
+          enum: [usuario, grupo]
+        timestamp:
+          type: string
+          format: date-time
+
+    Configuracion:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        categoria:
+          type: string
+          enum: [general, seguridad, notificaciones, integraciones, llamadas, tickets, reportes, sistema]
+        clave:
+          type: string
+        valor:
+          type: string
+        tipo_dato:
+          type: string
+          enum: [string, integer, boolean, float, json, email, url]
+        valor_default:
+          type: string
+        descripcion:
+          type: string
+        activa:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_by:
+          type: integer
+          readOnly: true
+
+    EditarConfiguracion:
+      type: object
+      required:
+        - nuevo_valor
+      properties:
+        nuevo_valor:
+          type: string
+
+    ImportarConfiguracion:
+      type: object
+      required:
+        - configuraciones_json
+      properties:
+        configuraciones_json:
+          type: object
+          description: Diccionario con configuraciones por categoria
+
+    ImportarConfiguracionResponse:
+      type: object
+      properties:
+        importadas:
+          type: integer
+        actualizadas:
+          type: integer
+        errores:
+          type: integer
+
+paths:
+  # ============================================
+  # USUARIOS
+  # ============================================
+  /usuarios/:
+    get:
+      summary: Listar usuarios
+      description: |
+        Obtiene lista de usuarios con filtros y paginacion.
+
+        **Permiso requerido**: `sistema.administracion.usuarios.ver`
+      tags:
+        - Usuarios
+      parameters:
+        - name: activo
+          in: query
+          schema:
+            type: boolean
+        - name: email_contains
+          in: query
+          schema:
+            type: string
+        - name: nombre_contains
+          in: query
+          schema:
+            type: string
+        - name: grupo_codigo
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioListResponse'
+        '403':
+          description: Sin permiso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Crear usuario
+      description: |
+        Crea un nuevo usuario en el sistema.
+
+        **Permiso requerido**: `sistema.administracion.usuarios.crear`
+      tags:
+        - Usuarios
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioCreate'
+      responses:
+        '201':
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '400':
+          description: Datos invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Sin permiso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /usuarios/{id}/:
+    get:
+      summary: Obtener usuario
+      description: |
+        Obtiene detalle de un usuario especifico.
+
+        **Permiso requerido**: `sistema.administracion.usuarios.ver`
+      tags:
+        - Usuarios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detalle del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '403':
+          description: Sin permiso
+        '404':
+          description: Usuario no encontrado
+
+    put:
+      summary: Actualizar usuario completo
+      description: |
+        Actualiza todos los campos de un usuario.
+
+        **Permiso requerido**: `sistema.administracion.usuarios.editar`
+      tags:
+        - Usuarios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                is_staff:
+                  type: boolean
+      responses:
+        '200':
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '400':
+          description: Datos invalidos
+        '403':
+          description: Sin permiso
+
+    patch:
+      summary: Actualizar usuario parcial
+      description: |
+        Actualiza campos especificos de un usuario.
+
+        **Permiso requerido**: `sistema.administracion.usuarios.editar`
+      tags:
+        - Usuarios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                is_staff:
+                  type: boolean
+      responses:
+        '200':
+          description: Usuario actualizado
+        '400':
+          description: Datos invalidos
+        '403':
+          description: Sin permiso
+
+    delete:
+      summary: Eliminar usuario
+      description: |
+        Elimina un usuario (soft delete).
+
+        **Permiso requerido**: `sistema.administracion.usuarios.eliminar`
+      tags:
+        - Usuarios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Usuario eliminado
+        '403':
+          description: Sin permiso
+        '404':
+          description: Usuario no encontrado
+
+  /usuarios/{id}/suspender/:
+    post:
+      summary: Suspender usuario
+      description: |
+        Suspende un usuario (is_active=FALSE).
+
+        **Permiso requerido**: `sistema.administracion.usuarios.suspender`
+      tags:
+        - Usuarios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuspenderUsuario'
+      responses:
+        '200':
+          description: Usuario suspendido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '400':
+          description: No puede suspenderse a si mismo
+        '403':
+          description: Sin permiso
+
+  /usuarios/{id}/reactivar/:
+    post:
+      summary: Reactivar usuario
+      description: |
+        Reactiva un usuario suspendido.
+
+        **Permiso requerido**: `sistema.administracion.usuarios.reactivar`
+      tags:
+        - Usuarios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Usuario reactivado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '403':
+          description: Sin permiso
+        '404':
+          description: Usuario no encontrado
+
+  /usuarios/{id}/asignar_grupos/:
+    post:
+      summary: Asignar grupos a usuario
+      description: |
+        Asigna grupos de permisos a un usuario.
+        Desactiva grupos anteriores y asigna los nuevos.
+
+        **Permiso requerido**: `sistema.administracion.usuarios.asignar_grupos`
+      tags:
+        - Usuarios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsignarGrupos'
+      responses:
+        '200':
+          description: Grupos asignados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '400':
+          description: Grupo no encontrado
+        '403':
+          description: Sin permiso
+
+  # ============================================
+  # DASHBOARD
+  # ============================================
+  /dashboard/overview/:
+    get:
+      summary: Ver dashboard general
+      description: |
+        Obtiene informacion general del dashboard.
+
+        **Permiso requerido**: `sistema.vistas.dashboards.ver`
+      tags:
+        - Dashboard
+      responses:
+        '200':
+          description: Informacion del dashboard
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardOverview'
+        '403':
+          description: Sin permiso
+
+  /dashboard/exportar/:
+    post:
+      summary: Exportar dashboard
+      description: |
+        Exporta dashboard a PDF o Excel.
+
+        **Permiso requerido**: `sistema.vistas.dashboards.exportar`
+      tags:
+        - Dashboard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportarDashboard'
+      responses:
+        '200':
+          description: Dashboard exportado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportarDashboardResponse'
+        '400':
+          description: Formato invalido
+        '403':
+          description: Sin permiso
+
+  /dashboard/personalizar/:
+    put:
+      summary: Personalizar dashboard
+      description: |
+        Guarda configuracion personalizada de dashboard para el usuario actual.
+
+        **Permiso requerido**: `sistema.vistas.dashboards.personalizar`
+      tags:
+        - Dashboard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonalizarDashboard'
+      responses:
+        '200':
+          description: Dashboard personalizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalizarDashboardResponse'
+        '400':
+          description: Configuracion invalida
+        '403':
+          description: Sin permiso
+
+  /dashboard/compartir/:
+    post:
+      summary: Compartir dashboard
+      description: |
+        Comparte dashboard con otro usuario o grupo.
+
+        **Permiso requerido**: `sistema.vistas.dashboards.compartir`
+      tags:
+        - Dashboard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompartirDashboard'
+      responses:
+        '200':
+          description: Dashboard compartido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompartirDashboardResponse'
+        '400':
+          description: Datos invalidos
+        '403':
+          description: Sin permiso
+
+  # ============================================
+  # CONFIGURACION
+  # ============================================
+  /configuracion/:
+    get:
+      summary: Listar configuraciones
+      description: |
+        Obtiene configuraciones del sistema, opcionalmente filtradas por categoria.
+
+        **Permiso requerido**: `sistema.tecnico.configuracion.ver`
+      tags:
+        - Configuracion
+      parameters:
+        - name: categoria
+          in: query
+          schema:
+            type: string
+            enum: [general, seguridad, notificaciones, integraciones, llamadas, tickets, reportes, sistema]
+      responses:
+        '200':
+          description: Lista de configuraciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Configuracion'
+        '403':
+          description: Sin permiso
+
+  /configuracion/{clave}/:
+    put:
+      summary: Editar configuracion
+      description: |
+        Edita el valor de una configuracion.
+        Se registra en historial para auditoria.
+
+        **Permiso requerido**: `sistema.tecnico.configuracion.editar`
+      tags:
+        - Configuracion
+      parameters:
+        - name: clave
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditarConfiguracion'
+      responses:
+        '200':
+          description: Configuracion actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuracion'
+        '400':
+          description: Configuracion no encontrada
+        '403':
+          description: Sin permiso
+
+  /configuracion/exportar/:
+    get:
+      summary: Exportar configuraciones
+      description: |
+        Exporta todas las configuraciones activas en formato JSON.
+
+        **Permiso requerido**: `sistema.tecnico.configuracion.exportar`
+      tags:
+        - Configuracion
+      responses:
+        '200':
+          description: Configuraciones exportadas
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Configuracion'
+        '403':
+          description: Sin permiso
+
+  /configuracion/importar/:
+    post:
+      summary: Importar configuraciones
+      description: |
+        Importa configuraciones desde JSON.
+        Actualiza existentes y crea nuevas.
+
+        **Permiso requerido**: `sistema.tecnico.configuracion.importar`
+      tags:
+        - Configuracion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportarConfiguracion'
+      responses:
+        '200':
+          description: Configuraciones importadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportarConfiguracionResponse'
+        '403':
+          description: Sin permiso
+
+  /configuracion/{clave}/restaurar/:
+    post:
+      summary: Restaurar configuracion
+      description: |
+        Restaura una configuracion a su valor por defecto.
+
+        **Permiso requerido**: `sistema.tecnico.configuracion.restaurar`
+      tags:
+        - Configuracion
+      parameters:
+        - name: clave
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Configuracion restaurada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuracion'
+        '400':
+          description: Configuracion no encontrada
+        '403':
+          description: Sin permiso

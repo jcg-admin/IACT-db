@@ -1,0 +1,62 @@
+# PMBOK — Project Management Body of Knowledge
+# type: sequential
+# 5 grupos de proceso secuenciales. Monitoring & Controlling es paralelo a todos,
+# pero se modela como paso explícito tras Executing para simplificar el contrato.
+
+id: pm
+type: sequential
+display: "PMBOK — Project Management Body of Knowledge"
+note: >
+  5 grupos de proceso del PMI. Monitoring & Controlling ocurre en paralelo con
+  Planning, Executing y Closing en la práctica, pero el coordinator lo presenta
+  como un paso explícito de revisión entre Executing y Closing.
+  Knowledge Areas (Scope, Schedule, Cost, Quality, Resources, Communications,
+  Risk, Procurement, Stakeholders, Integration) se trabajan dentro de cada grupo.
+
+native_phase_count: 5
+produces:
+  - Project Charter + Stakeholder Register
+  - Project Management Plan (all baselines)
+  - Project Deliverables + Performance Data
+  - Performance Reports + Approved Change Requests
+  - Project Closure Package + Lessons Learned
+consumes:
+  - business-case
+  - project-brief
+  - stakeholder-register
+
+steps:
+  - id: pm:initiating
+    display: "Initiating — Autorizar y definir el proyecto"
+    knowledge_areas: ["Integration Management", "Stakeholder Management"]
+    key_processes: ["Develop Project Charter", "Identify Stakeholders"]
+    output: "Project Charter + Registro de stakeholders"
+    next: [pm:planning]
+
+  - id: pm:planning
+    display: "Planning — Definir scope, schedule, cost y plan de gestión"
+    knowledge_areas: ["Scope", "Schedule", "Cost", "Quality", "Resources", "Communications", "Risk", "Procurement", "Stakeholders", "Integration"]
+    key_processes: ["Collect Requirements", "Define Scope", "Create WBS", "Develop Schedule", "Estimate Costs", "Plan Risk Management"]
+    output: "Project Management Plan aprobado con todas las líneas base"
+    next: [pm:executing]
+
+  - id: pm:executing
+    display: "Executing — Coordinar personas y recursos para ejecutar el plan"
+    knowledge_areas: ["Integration", "Quality", "Resources", "Communications", "Procurement", "Stakeholders"]
+    key_processes: ["Direct & Manage Project Work", "Manage Quality", "Acquire Resources", "Manage Communications", "Conduct Procurements"]
+    output: "Entregables del proyecto + datos de desempeño"
+    next: [pm:monitoring]
+
+  - id: pm:monitoring
+    display: "Monitoring & Controlling — Monitorear, revisar y regular desempeño"
+    knowledge_areas: ["Integration", "Scope", "Schedule", "Cost", "Quality", "Resources", "Risk"]
+    key_processes: ["Monitor & Control Project Work", "Perform Integrated Change Control", "Validate Scope", "Control Schedule", "Control Costs"]
+    output: "Informes de desempeño + solicitudes de cambio aprobadas"
+    next: [pm:closing]
+
+  - id: pm:closing
+    display: "Closing — Finalizar formalmente el proyecto o fase"
+    knowledge_areas: ["Integration", "Procurement"]
+    key_processes: ["Close Project or Phase", "Close Procurements"]
+    output: "Acta de cierre + lecciones aprendidas + archivos del proyecto"
+    next: []

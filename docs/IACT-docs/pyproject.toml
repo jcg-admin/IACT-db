@@ -1,0 +1,158 @@
+[project]
+name = "iact-docs"
+version = "1.1.0"
+description = "IACT - Sistema de Dashboard Analytics | Technical Documentation"
+readme = "readme.rst"
+requires-python = ">=3.11,<3.14"
+authors = [
+    {name = "Equipo de Desarrollo IACT", email = "dev@iact.local"}
+]
+license = {text = "Confidential"}
+keywords = ["documentation", "sphinx", "technical-docs", "analytics", "dashboard"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: Other/Proprietary License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Documentation",
+    "Topic :: Software Development :: Documentation",
+]
+
+# Verified dependencies from current working environment
+<<<<<<< dependabot/pip/sphinx-autodoc-typehints-3.6.1
+dependencies = [
+    "Sphinx>=9,<10",                              # Core documentation engine
+=======
+# Core Sphinx documentation engine (8.2.x — pinned por compatibilidad con autodocsumm==0.2.14
+# que aún no soporta Sphinx 9.x. Si se sube a 9.x, hay que subir también autodocsumm.)
+dependencies = [
+    "Sphinx>=8.2.3,<9.0",                          # Core documentation engine
+>>>>>>> develop
+
+    # Theme & UI
+    "Furo==2025.12.19",                            # Professional documentation theme (supports Sphinx 9)
+    "sphinx-copybutton==0.5.2",                    # Copy button for code blocks
+    "sphinx-design==0.7.0",                        # Card/grid layouts (supports Sphinx 9)
+
+<<<<<<< dependabot/pip/sphinx-autodoc-typehints-3.6.1
+    # Markdown & Content Parsing
+    "myst-parser==5.0.0",                          # Markdown support in Sphinx (supports Sphinx 9)
+=======
+    # Content Parsing (RST only — Markdown removed por decisión de
+    # rebuild de source/, ver F-NEW-5 en source-rebuild-strategy WP)
+>>>>>>> develop
+    "PyYAML==6.0.3",                               # YAML parsing
+
+    # Documentation Features
+    "sphinx-tabs==3.5.0",                          # Tabbed content sections (uso correcto en nuevo source/)
+    "sphinx-prompt==1.10.2",                       # Formatted prompts
+    "sphinx-jinja==2.0.2",                         # Jinja2 support
+    "sphinx-notfound-page==1.1.0",                 # Custom 404 page
+    "sphinx-last-updated-by-git==0.3.8",           # Track update dates from git
+    "sphinx-sitemap==2.9.0",                       # SEO sitemap generation
+
+    # Python API Documentation (Tier 2: Recommended - Phase A enabled)
+    "sphinx-autodoc-typehints==3.6.0",             # Type hints support (Sphinx>=9.0.4, Python>=3.11)
+
+    # Quality & Spell Checking (Tier 2: Recommended - Phase A enabled)
+    "sphinxcontrib-spelling==8.0.2",               # Spell checker (added Phase A)
+
+    # PlantUML Diagrams (R-004 fixed Phase A - now enabled)
+    "sphinxcontrib-plantuml==0.26.0",              # PlantUML diagram support (re-enabled Phase A)
+    "docutils==0.21.2",
+<<<<<<< dependabot/pip/sphinx-autodoc-typehints-3.6.1
+    "markdown-it-py==4.1.0",
+    "mdit-py-plugins==0.5.0",
+    "mdurl==0.1.2",
+=======
+>>>>>>> develop
+    "sphinx-autobuild==2025.8.25",
+    "h11==0.16.0",
+    "html5lib==1.1",
+    "beautifulsoup4==4.14.3",
+    "soupsieve==2.8.3",
+    "cssutils==2.11.1",
+    "dict2css==0.3.0.post1",
+    "standard-imghdr==3.10.14",
+    "tabulate==0.9.0",
+    "imagesize==1.4.1",
+    "Pygments==2.19.2",
+    "accessible-pygments==0.0.5",
+    "mistune==3.1.4",
+    "Babel==2.17.0",
+    "MarkupSafe==3.0.3",
+    "Jinja2==3.1.6",
+    "attrs==25.4.0",
+    "packaging==25.0",
+    "platformdirs==4.5.1",
+    "requests==2.32.5",
+    "urllib3==2.6.3",
+    "certifi==2025.11.12",
+    "idna==3.11",
+    "charset-normalizer==3.4.7",
+    "click==8.3.3",
+    "typing-extensions==4.15.0",
+    "more-itertools==10.8.0",
+    "natsort==8.4.0",
+    "six==1.17.0",
+    "watchfiles==1.1.1",
+    "domdf-python-tools==3.10.0",
+    "deepmerge==2.0",
+    "alabaster==1.0.0",
+    "CacheControl==0.14.4",
+    "filelock==3.20.0",
+    "snowballstemmer==3.0.1",
+    "roman==5.2",
+    "rpds-py==0.30.0",
+    "ruamel.yaml==0.18.16",
+    "jsonschema==4.25.1",
+    "jsonschema-specifications==2025.9.1",
+    "referencing==0.37.0",
+    "apeye==1.4.1",
+    "apeye-core==1.1.5",
+    "msgpack==1.1.2",
+    "picobox==4.0.0",
+    "colorama==0.4.6",
+    "anyio==4.12.0",
+    "starlette==0.50.0",
+    "uvicorn==0.38.0",
+    "websockets==15.0.1",
+    "CacheControl==0.14.4",
+]
+
+[project.optional-dependencies]
+# Development & quality assurance
+dev = [
+    "black>=24.0.0",
+    "isort>=5.13.0",
+    "flake8>=7.0.0",
+    "mypy>=1.8.0",
+    "pytest>=8.0.0",
+]
+
+# All extras
+all = ["iact-docs[dev]"]
+
+[project.urls]
+Repository = "https://github.com/jcg-admin/IACT-docs"
+Documentation = "https://iact-docs.readthedocs.io"
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+# uv configuration
+native-tls = true
+
+[tool.isort]
+profile = "black"
+line_length = 100
+skip_gitignore = true
+
+[tool.black]
+line-length = 100
+target-version = ["py311", "py312"]

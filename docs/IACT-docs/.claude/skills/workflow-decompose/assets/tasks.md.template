@@ -1,0 +1,390 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+feature: [Nombre de la feature]
+breakdown_version: [1.0]
+tasks_creator: [Nombre]
+total_tasks: [N]
+critical_dependencies: [N]
+planned_start: [YYYY-MM-DD HH:MM:SS]
+planned_end: [YYYY-MM-DD HH:MM:SS]
+implementation_owner: [Nombre/equipo]
+```
+
+# Tasks: [Titulo del Proyecto/Feature]
+
+## Propósito
+
+Documentar CÓMO técnicamente implementar el diseño. Desglose en tareas atómicas con comandos exactos y criterios de éxito.
+
+> Objetivo: Objetivo: Crear tareas independientes que un developer pueda ejecutar paso a paso.
+
+---
+
+Basado en: design.md
+
+## Resumen
+
+Total de tareas: XX
+Estimacion total: YY horas
+Fecha inicio estimada: YYYY-MM-DD-HH-MM-SS
+Fecha fin estimada: YYYY-MM-DD-HH-MM-SS
+
+## Estados de tarea
+
+| Estado | Formato | Significado |
+|--------|---------|-------------|
+| `[ ]` | `- [ ] [T-NNN] desc` | Pendiente — disponible para cualquier agente |
+| `[~]` | `- [~] [T-NNN] desc @agent-id (claimed: YYYY-MM-DD HH:MM:SS)` | En progreso — reclamada por un agente |
+| `[x]` | `- [x] [T-NNN] desc @agent-id (done: YYYY-MM-DD HH:MM:SS)` | Completada |
+
+**Protocolo de claim (ejecución paralela):**
+1. Leer task-plan — tomar la primera tarea en `[ ]`
+2. Cambiar a `[~]` con `@{agent-id}` y timestamp actual
+3. Hacer commit antes de ejecutar
+4. Al completar: cambiar a `[x]` con timestamp de done
+5. Si se abandona: revertir a `[ ]` con commit `fix: release abandoned claim T-NNN`
+
+**Recovery de claims huérfanos:**
+Un claim `[~]` con timestamp > 30 min sin commit del agente puede considerarse abandonado.
+Verificar `context/now-{agent-id}.md` — si `status: closed` o no existe, liberar el claim.
+
+## Fases de Implementacion
+
+### FASE: Preparacion (Estimacion: Xh)
+
+- [ ] [T-001] Descripción de la tarea (R-1)
+- [ ] [T-002] Descripción de la tarea (R-1)
+
+> Cada task DEBE referenciar el requirement que satisface: (R-N), (FR-NNN), o (UC-NNN).
+> Marcar [P] si es parallelizable: `- [ ] [T-003] [P] Descripción (R-2)`
+
+**Ejemplo:**
+- [ ] [T-001] Crear estructura de directorios (R-1)
+- [ ] [T-002] [P] Configurar git hooks (R-3)
+- [ ] [T-003] Implementar endpoint login (R-1, FR-001)
+- [ ] [T-004] Escribir tests de autenticación (R-1, UC-002)
+
+### FASE: Implementacion Core (Estimacion: Yh)
+
+TASK-003: [Titulo de tarea - componente principal]
+- Descripcion: [Implementar funcionalidad principal]
+- Archivos afectados:
+ - source/componente/main.rst (NUEVO)
+ - source/componente/helper.rst (NUEVO)
+ - scripts/nuevo_script.py (NUEVO)
+- Comandos a ejecutar:
+ ```bash
+ # Crear archivo principal
+ cat > source/componente/main.rst <<'EOF'
+ [contenido completo del archivo]
+ EOF
+
+ # Crear script
+ cat > scripts/nuevo_script.py <<'EOF'
+ #!/usr/bin/env python3
+ [contenido del script]
+ EOF
+
+ chmod +x scripts/nuevo_script.py
+ ```
+- Criterios de exito:
+ - Archivos creados
+ - Script ejecutable
+ - Build exitoso: make html
+ - Tests pasan (si aplica)
+- Dependencias: TASK-001, TASK-002
+- Estimacion: 45 minutos
+- Estado: [ ] Pendiente
+
+TASK-004: [Titulo de tarea - integracion]
+- Descripcion: [Integrar componente con sistema existente]
+- Archivos afectados:
+ - source/index.rst (MODIFICADO - actualizar toctree)
+ - source/existente/referencias.rst (MODIFICADO - agregar links)
+ - .codex/skills/nuevo_skill/SKILL.md (NUEVO)
+- Comandos a ejecutar:
+ ```bash
+ # Editar index.rst
+ # (instrucciones especificas de que agregar)
+
+ # Crear nuevo skill
+ mkdir -p .codex/skills/nuevo_skill
+ cat > .codex/skills/nuevo_skill/SKILL.md <<'EOF'
+ [contenido del skill]
+ EOF
+ ```
+- Criterios de exito:
+ - Toctree actualizado
+ - Referencias cruzadas funcionan
+ - Linkcheck pasa
+- Dependencias: TASK-003
+- Estimacion: 30 minutos
+- Estado: [ ] Pendiente
+
+TASK-005: [Titulo de tarea]
+...
+
+### FASE: Metadata y Documentacion (Estimacion: Zh)
+
+TASK-010: [Generar metadata]
+- Descripcion: Agregar metadata completa a archivos nuevos
+- Archivos afectados:
+ - source/componente/main.rst (MODIFICADO)
+ - source/componente/helper.rst (MODIFICADO)
+- Comandos a ejecutar:
+ ```bash
+ # Agregar metadata al inicio de cada archivo
+ # (instrucciones especificas)
+ ```
+- Criterios de exito:
+ - Metadata completa en todos los archivos
+ - Campos requeridos presentes
+- Dependencias: TASK-003, TASK-004
+- Estimacion: 20 minutos
+- Estado: [ ] Pendiente
+
+TASK-011: [Actualizar documentacion]
+- Descripcion: Actualizar README y documentacion relacionada
+- Archivos afectados:
+ - README.md (MODIFICADO)
+ - .codex/README.md (MODIFICADO)
+ - CHANGELOG.md (MODIFICADO)
+- Criterios de exito:
+ - Documentacion actualizada
+ - Cambios documentados en CHANGELOG
+- Dependencias: TASK-010
+- Estimacion: 15 minutos
+- Estado: [ ] Pendiente
+
+### FASE: Validacion y Testing (Estimacion: Wh)
+
+TASK-012: [Validar build completo]
+- Descripcion: Ejecutar suite completa de validacion
+- Comandos a ejecutar:
+ ```bash
+ make clean
+ make html
+ make linkcheck
+ bash scripts/validar_estructura.sh
+ ```
+- Criterios de exito:
+ - make html: Exit code 0, sin errores
+ - make linkcheck: Sin enlaces rotos
+ - validar_estructura.sh: Estructura correcta
+- Dependencias: TASK-001 a TASK-011
+- Estimacion: 10 minutos
+- Estado: [ ] Pendiente
+
+TASK-013: [Testing manual]
+- Descripcion: Validar casos de prueba de design.md
+- Casos a probar:
+ - TC-001: [Descripcion del test]
+ - TC-002: [Descripcion del test]
+- Criterios de exito:
+ - Todos los TC pasan
+ - No se detectan regresiones
+- Dependencias: TASK-012
+- Estimacion: 30 minutos
+- Estado: [ ] Pendiente
+
+TASK-014: [Code review / Quality check]
+- Descripcion: Revision de calidad del codigo/contenido
+- Checklist:
+ - [ ] Coherencia terminologica
+ - [ ] Nomenclatura correcta
+ - [ ] Comentarios donde necesario
+ - [ ] No hay TODOs pendientes
+- Criterios de exito:
+ - Checklist completo
+ - Issues resueltos
+- Dependencias: TASK-013
+- Estimacion: 20 minutos
+- Estado: [ ] Pendiente
+
+### FASE: Finalizacion (Estimacion: 30min)
+
+TASK-015: [Commits y cleanup]
+- Descripcion: Commits finales y limpieza
+- Comandos a ejecutar:
+ ```bash
+ # Commit final
+ git add .
+ git commit -m "feat(scope): complete implementation of [feature]"
+
+ # Limpiar archivos temporales
+ rm -f *.tmp
+ ```
+- Criterios de exito:
+ - Commits realizados
+ - No archivos temporales
+ - Git working tree clean
+- Dependencias: TASK-014
+- Estimacion: 10 minutos
+- Estado: [ ] Pendiente
+
+TASK-016: [Documentar en work-log]
+- Descripcion: Crear work-log de la implementacion completa
+- Archivos afectados:
+ - .mywork/work-logs/YYYY-MM-DD-titulo.md (NUEVO)
+- Criterios de exito:
+ - Work-log creado
+ - Decisiones documentadas
+ - Problemas encontrados registrados
+- Dependencias: TASK-015
+- Estimacion: 20 minutos
+- Estado: [ ] Pendiente
+
+TASK-017: [Mover spec a completados]
+- Descripcion: Mover de .mywork/changes/ a .mywork/specs/
+- Comandos a ejecutar:
+ ```bash
+ mv .mywork/changes/YYYY-MM-DD-brief-desc \
+ .mywork/specs/YYYY-MM-DD-brief-desc
+
+ # Actualizar estado en todos los archivos
+ ```
+- Criterios de exito:
+ - Spec en directorio correcto
+ - Estado actualizado a "Completed"
+- Dependencias: TASK-016
+- Estimacion: 5 minutos
+- Estado: [ ] Pendiente
+
+## Orden de Ejecucion
+
+Representacion de dependencias (DAG):
+
+```
+TASK-001
+ v
+TASK-002 <- TASK-003
+ v v
+TASK-004 <----+
+ v
+TASK-005
+ .
+ .
+ v
+TASK-012 (validacion)
+ v
+TASK-013 (testing)
+ v
+TASK-014 (review)
+ v
+TASK-015 -> TASK-016 -> TASK-017
+```
+
+Secuencia lineal recomendada:
+1. TASK-001
+2. TASK-002, TASK-003 (pueden ejecutarse en paralelo)
+3. TASK-004 (requiere 002 y 003 completos)
+4. TASK-005
+5. ...
+6. TASK-012, TASK-013, TASK-014 (validacion)
+7. TASK-015, TASK-016, TASK-017 (finalizacion)
+
+## Checkpoints
+
+CHECKPOINT-1: Despues de TASK-003
+- Validar que componente principal funciona
+- Ejecutar: make html
+- Resultado esperado: Build exitoso
+
+CHECKPOINT-2: Despues de TASK-010
+- Validar que metadata esta completa
+- Verificar: Todos los archivos tienen metadata
+- Resultado esperado: Metadata coverage > 95%
+
+CHECKPOINT-3: Despues de TASK-012
+- Validacion completa
+- Ejecutar: Suite completa
+- Resultado esperado: Todas las validaciones pasan
+
+## Rollback Points
+
+Si falla TASK-003:
+- Revertir commits desde inicio de FASE Implementacion
+- Eliminar archivos: source/componente/main.rst, helper.rst
+- Volver a FASE Preparacion
+
+Si falla TASK-012 (validacion):
+- Diagnosticar error especifico
+- Corregir tarea que causo el error
+- Re-ejecutar desde tarea corregida
+
+Si falla TASK-013 (testing):
+- Revisar design.md
+- Puede requerir volver a FASE 2 (Design)
+- Actualizar tasks.md si necesario
+
+## Estimacion de Tiempo
+
+| Fase | Tareas | Estimacion |
+|------|--------|------------|
+| Preparacion | TASK-001 a TASK-002 | 0.5h |
+| Implementacion Core | TASK-003 a TASK-009 | 4.0h |
+| Metadata/Docs | TASK-010 a TASK-011 | 0.5h |
+| Validacion | TASK-012 a TASK-014 | 1.0h |
+| Finalizacion | TASK-015 a TASK-017 | 0.5h |
+| **TOTAL** | 17 tareas | **6.5h** |
+
+Buffer recomendado: +20% = 7.8h total
+
+## Notas de Implementacion
+
+### Branch Strategy
+```bash
+# Crear branch
+git checkout -b feature/brief-desc
+
+# Trabajar en branch
+# Commits frecuentes cada 2-3 tareas
+
+# Al finalizar:
+git checkout main
+git merge feature/brief-desc
+```
+
+### Commits
+- Hacer commit cada 2-3 tareas completadas
+- Formato: `feat(scope): implement TASK-XXX - [titulo]`
+- Incluir numero de tarea en mensaje
+
+### Manejo de Errores
+- Si tarea falla: Documentar en QUESTIONS.md
+- Si error es critico: Pausar e investigar
+- Si error es menor: Fix y continuar
+- Siempre documentar en work-log
+
+### Comunicacion
+- Anunciar inicio de cada fase
+- Reportar completion de checkpoints
+- Alertar de problemas inmediatamente
+
+## QUESTIONS.md (Pendientes Durante Implementacion)
+
+Si surgen preguntas durante implementacion, documentar aqui:
+
+- Q1: [Pregunta sobre TASK-XXX]
+ - Contexto: [Por que surge]
+ - Opciones: [A, B, C]
+ - Decision: [Pendiente/Tomada]
+
+- Q2: [Pregunta]
+ ...
+
+## Aprobacion
+
+- [ ] Tasks revisadas
+- [ ] Estimaciones validadas
+- [ ] Orden de ejecucion verificado
+- [ ] Aprobado por: [Nombre]
+- [ ] Fecha aprobacion: YYYY-MM-DD-HH-MM-SS
+
+## Historial de Cambios
+
+| Fecha | Cambios | Autor |
+|-------|---------|-------|
+| YYYY-MM-DD-HH-MM-SS | Creacion inicial | [Nombre] |
+| YYYY-MM-DD-HH-MM-SS | Ajuste TASK-005 | [Nombre] |

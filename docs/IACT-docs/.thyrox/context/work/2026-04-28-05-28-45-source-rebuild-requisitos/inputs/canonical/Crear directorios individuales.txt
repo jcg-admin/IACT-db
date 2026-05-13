@@ -1,0 +1,28 @@
+
+
+
+bash
+bash
+
+
+# Crear directorios individuales
+mkdir -p /tmp/iact_regeneracion/fundacionales
+mkdir -p /tmp/iact_regeneracion/partes
+mkdir -p /tmp/iact_regeneracion/templates
+mkdir -p /tmp/iact_regeneracion/ejemplos
+mkdir -p /tmp/iact_regeneracion/indices
+
+echo "✅ Directorios creados:"
+tree -L 2 /tmp/iact_regeneracion/ 2>/dev/null || ls -R /tmp/iact_regeneracion/
+Output
+
+✅ Directorios creados:
+/tmp/iact_regeneracion/:
+ejemplos
+fundacionales
+indices
+partes
+templates
+{fundacionales,partes,templates,ejemplos,indices}
+
+/tmp/iact_regeneracion/eje

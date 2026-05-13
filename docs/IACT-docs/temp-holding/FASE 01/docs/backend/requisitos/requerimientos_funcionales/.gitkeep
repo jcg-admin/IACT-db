@@ -1,0 +1,10 @@
+# Requisitos Funcionales (Functional Requirements)
+
+Esta carpeta contiene documentos RF-XXX siguiendo ISO 29148 Clause 9.6.
+
+Archivos esperados:
+- rf001_api_calcular_stock_minimo.md
+- rf002_servicio_notificacion_email.md
+- etc.
+
+Usa la plantilla: docs/plantillas/template_requisito_funcional.md

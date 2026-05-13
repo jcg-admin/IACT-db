@@ -1,0 +1,78 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+wp: [nombre-del-work-package]
+phase: Phase 6 — SCOPE
+status: [Pendiente aprobación | Aprobado — YYYY-MM-DD]
+```
+
+# Plan — [Título descriptivo del trabajo]
+
+## Scope Statement
+
+**Problema:** [Qué problema concreto resuelve este trabajo. Una oración.]
+
+**Usuarios:** [Quiénes se benefician y cómo lo usan en la práctica.]
+
+**Criterios de éxito:**
+- [Criterio medible 1 — verificable objetivamente]
+- [Criterio medible 2]
+- [Criterio medible 3]
+
+---
+
+## In-Scope
+
+[Lista de features, componentes, o comportamientos explícitamente incluidos en este trabajo.]
+
+- [Feature o componente 1]
+- [Feature o componente 2]
+- [Feature o componente N]
+
+---
+
+## Out-of-Scope
+
+[Lista explícita de lo que NO se hace en este trabajo y por qué. Fundamental para prevenir scope creep.]
+
+| Excluido | Razón |
+|---|---|
+| [Item excluido 1] | [Por qué no entra: fuera de MVP, complejidad alta, fase posterior, etc.] |
+| [Item excluido 2] | [Razón] |
+
+---
+
+## Estimación de esfuerzo
+
+| Componente | Tareas estimadas |
+|---|---|
+| [Componente 1] | [N] |
+| [Componente 2] | [N] |
+| **Total** | **[N] tareas** |
+
+Clasificación: [micro / pequeño / mediano / grande]
+Fases activas: [según tabla de escalabilidad en SKILL.md]
+
+---
+
+## Trazabilidad RC → Tarea
+
+> Incluir esta sección SOLO si el plan deriva de `analysis/` con RC formales.
+> Omitir si el trabajo es mecánico y no tiene RC documentadas.
+
+| Tarea | Archivo | Resuelve RC |
+|-------|---------|-------------|
+| [descripción de tarea] | [archivo afectado] | RC-00N |
+
+Gate: cada RC de prioridad Alta o Media debe tener al menos una fila antes de presentar el plan al usuario.
+
+---
+
+## Link ROADMAP
+
+Ver tracking: [ROADMAP.md — sección correspondiente](../../../../../ROADMAP.md)
+
+---
+
+## Estado de aprobación
+
+- [ ] Scope aprobado por usuario — PENDIENTE

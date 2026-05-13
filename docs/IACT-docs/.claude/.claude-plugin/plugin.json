@@ -1,0 +1,9 @@
+{
+  "name": "thyrox",
+  "version": "1.0.0",
+  "description": "THYROX — Sistema agentic de gestión de proyectos con 12 stages propios (DISCOVER → STANDARDIZE). Provee comandos /thyrox:*, agentes especializados (deep-dive, task-planner, coordinators) y skills metodológicos (workflow-*, methodology skills).",
+  "author": {
+    "name": "NestorMonroy"
+  },
+  "license": "Confidential"
+}

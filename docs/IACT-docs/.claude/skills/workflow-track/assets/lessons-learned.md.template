@@ -1,0 +1,98 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+work_package: [YYYY-MM-DD-HH-MM-SS-nombre]
+phase: [Phase N — PHASE_NAME]
+author: [Nombre]
+status: Borrador
+total_lessons: [N]
+```
+
+# Lessons Learned: [Título del work package]
+
+## Propósito
+
+Capturar qué aprendió el equipo durante este work package — qué funcionó, qué falló, y qué regla generalizable se puede extraer para no repetir el error o para replicar el éxito.
+
+> Diferencia con `final-report.md`: el reporte final mide resultados. Las lecciones capturan conocimiento accionable para el futuro.
+
+---
+
+## Lecciones
+
+### L-NNN: [Título descriptivo — revela qué pasó, no solo que "hubo un problema"]
+
+**Qué pasó**
+
+[Descripción concreta. Qué se hizo, qué consecuencia tuvo.]
+
+**Raíz**
+
+[Por qué ocurrió. La condición que lo permitió, no solo el síntoma.]
+
+**Fix aplicado**
+
+[Qué se cambió para resolver o evitar la recurrencia. Referencia a tarea o archivo si aplica.]
+
+**Regla**
+
+[Lección generalizable. Formato: "Cuando [condición], hacer [acción] porque [razón]."]
+
+---
+
+### L-NNN: [Título]
+
+**Qué pasó**
+
+[...]
+
+**Raíz**
+
+[...]
+
+**Fix aplicado**
+
+[...]
+
+**Regla**
+
+[...]
+
+---
+
+## Patrones identificados
+
+[Si varias lecciones apuntan al mismo problema de fondo, documentarlo aquí.]
+
+| Patrón | Lecciones relacionadas | Acción sistémica |
+|--------|----------------------|------------------|
+| [Nombre del patrón] | L-001, L-002 | [Qué cambiar en el proceso/SKILL/CLAUDE.md] |
+
+---
+
+## Qué replicar
+
+[Lo que funcionó bien y debe preservarse o formalizarse.]
+
+- **[Práctica exitosa 1]**: [Por qué funcionó. Cuándo aplicarla.]
+- **[Práctica exitosa 2]**: [...]
+
+---
+
+## Deuda pendiente
+
+[Problemas identificados que quedaron fuera de scope de este WP.]
+
+| ID | Descripción | Prioridad | Work package sugerido |
+|----|-------------|-----------|----------------------|
+| T-DT-NNN | [Descripción] | [alta/media/baja] | [nombre sugerido] |
+
+---
+
+## Checklist de cierre
+
+- [ ] Cada lección tiene raíz identificada (no solo síntoma)
+- [ ] Cada lección tiene regla generalizable
+- [ ] Patrones sistémicos documentados si aplica
+- [ ] Deuda técnica registrada con prioridad
+- [ ] Documento commiteado en `work/.../lessons-learned.md`

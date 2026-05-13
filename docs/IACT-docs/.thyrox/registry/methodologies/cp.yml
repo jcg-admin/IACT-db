@@ -1,0 +1,115 @@
+# Consulting Process — McKinsey/BCG structured problem-solving approach
+# type: sequential
+# 7-phase consulting engagement methodology. Hypothesis-driven, structured communication.
+# Artefacto central: Recommendation Deck (Pyramid Principle) + Implementation Plan.
+
+id: cp
+type: sequential
+display: "CP — Consulting Process"
+note: >
+  Metodología de consultoría estructurada basada en el modelo McKinsey/BCG.
+  7 fases secuenciales con énfasis en pensamiento hipotético y comunicación estructurada.
+  Herramientas: Issue Tree, MECE, Hypothesis-driven analysis, Pyramid Principle (SCQA),
+  Decision Matrix, Storyboard. Artefacto central: Recommendation Deck.
+
+native_phase_count: 7
+produces:
+  - Engagement Charter
+  - Issue Tree + Data Collection Plan
+  - Key Findings Document
+  - Recommendation Deck (Pyramid Principle)
+  - Implementation Roadmap + Risk Register
+  - Implementation Progress Report
+  - Impact Assessment Report + Knowledge Transfer Package
+consumes:
+  - problem-statement
+  - sponsor-brief
+  - stakeholder-interviews
+
+steps:
+  - id: cp:initiation
+    display: "Initiation — Definir el problema y establecer el engagement"
+    tollgate: "Problem Statement acordado; alcance y entregables definidos con cliente"
+    activities:
+      - "Definir Problem Statement claro y acotado"
+      - "Acordar alcance, entregables y cronograma"
+      - "Identificar stakeholders clave y sponsor ejecutivo"
+      - "Establecer hipótesis inicial (working hypothesis)"
+      - "Crear Work Plan / Project Charter del engagement"
+    output: "Engagement Charter: problem statement, scope, entregables, cronograma, hipótesis inicial"
+    next: [cp:diagnosis]
+
+  - id: cp:diagnosis
+    display: "Diagnosis — Estructurar el problema y recopilar información"
+    tollgate: "Issue Tree completo; datos clave recopilados; hipótesis refinadas"
+    activities:
+      - "Construir Issue Tree (MECE) para descomponer el problema"
+      - "Identificar análisis clave necesarios por rama"
+      - "Diseñar plan de recopilación de datos"
+      - "Realizar entrevistas con stakeholders clave"
+      - "Recopilar datos cuantitativos y cualitativos"
+      - "Refinar hipótesis basándose en hallazgos iniciales"
+    output: "Issue Tree + Data Collection Plan + hallazgos de entrevistas + hipótesis refinadas"
+    next: [cp:structure]
+
+  - id: cp:structure
+    display: "Structure — Analizar datos y sintetizar hallazgos"
+    tollgate: "Análisis completados; hallazgos clave identificados y validados"
+    activities:
+      - "Ejecutar análisis por rama del Issue Tree"
+      - "Construir modelos cuantitativos si aplica"
+      - "Identificar insights y hallazgos clave"
+      - "Validar o refutar hipótesis con evidencia"
+      - "Sintetizar hallazgos con la técnica So What"
+    output: "Analysis workbooks + Key Findings document + hipótesis validadas/refutadas"
+    next: [cp:recommend]
+
+  - id: cp:recommend
+    display: "Recommend — Desarrollar recomendaciones y storyline"
+    tollgate: "Recomendaciones desarrolladas; storyline Pyramid Principle aprobado"
+    activities:
+      - "Generar opciones de recomendación (2-3 alternativas)"
+      - "Evaluar opciones en matriz impacto/esfuerzo/riesgo"
+      - "Seleccionar recomendaciones con justificación MECE"
+      - "Construir storyline con Pyramid Principle (SCQA)"
+      - "Crear storyboard del deck final"
+      - "Validar recomendaciones con sponsor (checkpoint)"
+    output: "Recommendation options + Evaluation matrix + Storyline + Storyboard aprobado"
+    next: [cp:plan]
+
+  - id: cp:plan
+    display: "Plan — Crear plan de implementación detallado"
+    tollgate: "Plan de implementación aprobado con responsables, recursos y KPIs"
+    activities:
+      - "Descomponer recomendaciones en iniciativas accionables"
+      - "Definir roadmap de implementación (quick wins + transformación)"
+      - "Asignar responsables y recursos por iniciativa"
+      - "Identificar y gestionar riesgos de implementación"
+      - "Definir KPIs y métricas de éxito"
+      - "Preparar Recommendation Deck final (Pyramid Principle)"
+    output: "Recommendation Deck + Implementation Roadmap + Risk Register + KPIs"
+    next: [cp:implement]
+
+  - id: cp:implement
+    display: "Implement — Ejecutar recomendaciones (fase de ejecución)"
+    tollgate: "Iniciativas en ejecución; primeros quick wins demostrados"
+    activities:
+      - "Ejecutar plan de implementación por fases"
+      - "Gestionar change management organizacional"
+      - "Monitorear KPIs de implementación"
+      - "Resolver impedimentos y ajustar tácticamente"
+      - "Comunicar progreso a stakeholders"
+    output: "Implementation progress report + lessons learned iniciales + KPIs actualizados"
+    next: [cp:evaluate]
+
+  - id: cp:evaluate
+    display: "Evaluate — Evaluar impacto y cerrar el engagement"
+    tollgate: "Impacto medido vs objetivos; conocimiento transferido al cliente"
+    activities:
+      - "Medir impacto real vs KPIs acordados"
+      - "Documentar valor entregado (ROI si aplica)"
+      - "Transferir conocimiento y capacidades al cliente"
+      - "Identificar áreas de mejora del engagement"
+      - "Capturar lecciones aprendidas para la firma"
+    output: "Impact Assessment Report + Knowledge Transfer Package + Lessons Learned"
+    next: []

@@ -1,0 +1,100 @@
+# BPA — Business Process Analysis
+# type: sequential
+# 6-phase business process improvement methodology. Current state → future state redesign.
+# Artefacto central: Process Model (BPMN) + Gap Analysis + Redesigned Process.
+
+id: bpa
+type: sequential
+display: "BPA — Business Process Analysis"
+note: >
+  Metodología de análisis y mejora de procesos de negocio en 6 fases.
+  Flujo secuencial: documentar estado actual → analizar → diseñar estado futuro → implementar.
+  Herramientas: BPMN 2.0, Value Stream Mapping, Swim Lane Diagrams, ESIA Framework,
+  VA/BVA/NVA classification, Process Mining. Artefacto central: Process Model BPMN.
+
+native_phase_count: 6
+produces:
+  - Process Inventory + Prioritization Matrix
+  - As-Is BPMN Process Model
+  - VA/BVA/NVA Analysis + GAP Analysis
+  - To-Be BPMN Process Model + ESIA Recommendations
+  - SOPs + Training Materials
+  - Process Performance Dashboard + Before/After Comparison
+consumes:
+  - process-scope
+  - stakeholder-interviews
+  - process-metrics
+
+steps:
+  - id: bpa:identify
+    display: "Identify — Identificar y priorizar procesos a analizar"
+    tollgate: "Proceso objetivo seleccionado con caso de negocio justificado"
+    activities:
+      - "Inventariar procesos del área/dominio"
+      - "Priorizar procesos usando matriz impacto/esfuerzo"
+      - "Identificar dolores de negocio asociados al proceso"
+      - "Definir alcance del análisis (start/end del proceso)"
+      - "Establecer métricas de éxito del análisis"
+    output: "Process Inventory + Prioritization Matrix + caso de negocio del proceso objetivo"
+    next: [bpa:map]
+
+  - id: bpa:map
+    display: "Map — Documentar el proceso actual (As-Is)"
+    tollgate: "Process Model As-Is completo y validado con participantes del proceso"
+    activities:
+      - "Realizar process discovery (entrevistas, observación directa)"
+      - "Crear diagrama BPMN del proceso actual (As-Is)"
+      - "Identificar roles/participantes por actividad (swim lanes)"
+      - "Documentar variaciones, excepciones y caminos alternativos"
+      - "Validar el modelo con los dueños del proceso"
+    output: "As-Is BPMN Process Model + Swim Lane Diagram + catálogo de variaciones"
+    next: [bpa:analyze]
+
+  - id: bpa:analyze
+    display: "Analyze — Analizar el proceso y identificar oportunidades"
+    tollgate: "Análisis completado; problemas raíz identificados; GAP analysis documentado"
+    activities:
+      - "Clasificar actividades: VA (Valor Agregado), BVA (Negocio), NVA (Desperdicio)"
+      - "Medir tiempos de ciclo, esperas y tasas de error"
+      - "Aplicar análisis de causa raíz (5 Whys, Ishikawa)"
+      - "Cuantificar impacto de cada problema identificado"
+      - "Identificar benchmarks del sector (si aplica)"
+    output: "VA/BVA/NVA Analysis + Process Metrics + Root Cause Analysis + GAP Analysis"
+    next: [bpa:design]
+
+  - id: bpa:design
+    display: "Design — Diseñar el proceso futuro (To-Be)"
+    tollgate: "Process Model To-Be aprobado; mejoras cuantificadas y plan validado"
+    activities:
+      - "Aplicar principios ESIA (Eliminate, Simplify, Integrate, Automate)"
+      - "Eliminar actividades NVA identificadas"
+      - "Redesignar flujo eliminando cuellos de botella"
+      - "Crear diagrama BPMN del proceso futuro (To-Be)"
+      - "Cuantificar mejora esperada vs baseline"
+      - "Validar el diseño con stakeholders"
+    output: "To-Be BPMN Process Model + ESIA recommendations + mejora esperada cuantificada"
+    next: [bpa:implement]
+
+  - id: bpa:implement
+    display: "Implement — Implementar el proceso rediseñado"
+    tollgate: "Proceso rediseñado operando; primeras métricas post-implementación capturadas"
+    activities:
+      - "Planificar la transición al nuevo proceso"
+      - "Gestionar change management (comunicación, capacitación)"
+      - "Ejecutar implementación piloto o gradual"
+      - "Actualizar SOPs, políticas y herramientas"
+      - "Capturar métricas reales del nuevo proceso"
+    output: "Implementation Log + SOPs actualizados + métricas post-implementación + training materials"
+    next: [bpa:monitor]
+
+  - id: bpa:monitor
+    display: "Monitor — Monitorear y sostener el proceso mejorado"
+    tollgate: "Proceso estabilizado; KPIs dentro de targets sostenidos"
+    activities:
+      - "Monitorear KPIs del proceso vs targets"
+      - "Identificar y resolver desviaciones tempranas"
+      - "Documentar mejoras realizadas vs mejoras esperadas"
+      - "Establecer ciclo de revisión periódica del proceso"
+      - "Capturar lecciones aprendidas para futuros proyectos BPA"
+    output: "Process Performance Dashboard + Comparison Report (before/after) + Lessons Learned"
+    next: []

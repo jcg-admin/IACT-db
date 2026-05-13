@@ -1,0 +1,210 @@
+# routing-rules.yml — Mapeo problema → coordinator
+# Reglas para routing automático del thyrox-coordinator genérico.
+# El thyrox-coordinator usa estas reglas cuando el usuario no especifica metodología.
+
+version: "1.0"
+updated_at: "2026-04-17"
+
+# ─── Schema ──────────────────────────────────────────────────────────────────
+# Cada regla tiene:
+#   trigger_keywords: palabras clave en el input del usuario
+#   problem_type:     categoría del problema
+#   coordinator:      agent recomendado
+#   rationale:        por qué esta metodología es la más adecuada
+# ─────────────────────────────────────────────────────────────────────────────
+
+rules:
+
+  # ── Mejora de procesos ────────────────────────────────────────────────────
+
+  - id: route-lean
+    problem_type: "waste-elimination"
+    coordinator: lean-coordinator
+    trigger_keywords:
+      - "desperdicio"
+      - "waste"
+      - "TIMWOOD"
+      - "value stream"
+      - "flujo de valor"
+      - "muda"
+      - "5S"
+      - "kaizen"
+      - "kanban"
+      - "eliminar tiempos muertos"
+    rationale: "Lean es la metodología óptima para eliminar desperdicios específicos del flujo de valor."
+
+  - id: route-dmaic
+    problem_type: "variation-reduction"
+    coordinator: dmaic-coordinator
+    trigger_keywords:
+      - "variación"
+      - "defectos"
+      - "Six Sigma"
+      - "sigma level"
+      - "DPMO"
+      - "reducir defectos"
+      - "calidad estadística"
+      - "proceso fuera de control"
+      - "tolerancias"
+    rationale: "DMAIC aplica cuando el problema requiere análisis estadístico de variación."
+
+  - id: route-pdca
+    problem_type: "continuous-improvement"
+    coordinator: pdca-coordinator
+    trigger_keywords:
+      - "mejora continua"
+      - "ciclo de mejora"
+      - "PDCA"
+      - "Deming"
+      - "mejora rápida"
+      - "iterar mejoras"
+      - "piloto de mejora"
+    rationale: "PDCA aplica para mejoras iterativas rápidas sin necesidad de análisis estadístico profundo."
+
+  - id: route-bpa
+    problem_type: "process-redesign"
+    coordinator: bpa-coordinator
+    trigger_keywords:
+      - "proceso de negocio"
+      - "rediseño de proceso"
+      - "BPMN"
+      - "as-is to-be"
+      - "flujo de proceso"
+      - "proceso ineficiente"
+      - "VA NVA"
+      - "swim lane"
+      - "mapear proceso"
+      - "optimizar proceso"
+    rationale: "BPA aplica para documentar, analizar y rediseñar procesos de negocio con BPMN."
+
+  # ── Resolución de problemas ───────────────────────────────────────────────
+
+  - id: route-pps
+    problem_type: "structured-problem-solving"
+    coordinator: pps-coordinator
+    trigger_keywords:
+      - "problema recurrente"
+      - "causa raíz"
+      - "5 whys"
+      - "A3"
+      - "Toyota"
+      - "TBP"
+      - "practical problem solving"
+      - "go-and-see"
+      - "gemba"
+      - "resolver problema"
+      - "contramedidas"
+    rationale: "PPS aplica para resolver problemas específicos con rigor estructurado (Go-and-See, A3)."
+
+  - id: route-cp
+    problem_type: "complex-problem-consulting"
+    coordinator: cp-coordinator
+    trigger_keywords:
+      - "problema complejo"
+      - "consultoría"
+      - "issue tree"
+      - "MECE"
+      - "hipótesis"
+      - "Pyramid Principle"
+      - "recomendación ejecutiva"
+      - "McKinsey"
+      - "BCG"
+      - "deck de recomendaciones"
+      - "análisis estratégico de problema"
+    rationale: "CP aplica para problemas complejos que requieren estructura de consultoría y comunicación ejecutiva."
+
+  # ── Gestión de proyectos y desarrollo ─────────────────────────────────────
+
+  - id: route-pm
+    problem_type: "project-management"
+    coordinator: pm-coordinator
+    trigger_keywords:
+      - "gestión de proyecto"
+      - "project management"
+      - "PMBOK"
+      - "PMI"
+      - "project charter"
+      - "WBS"
+      - "cronograma"
+      - "stakeholders proyecto"
+      - "entregables de proyecto"
+      - "control de cambios"
+    rationale: "PMBOK aplica para proyectos formales que necesitan gestión estructurada PMI."
+
+  - id: route-rup
+    problem_type: "software-development"
+    coordinator: rup-coordinator
+    trigger_keywords:
+      - "desarrollo iterativo"
+      - "RUP"
+      - "inception elaboration"
+      - "arquitectura de software"
+      - "milestone LCO"
+      - "milestone LCA"
+      - "ciclo de desarrollo"
+      - "software iterativo"
+    rationale: "RUP aplica para proyectos de desarrollo de software con múltiples iteraciones y milestones arquitectónicos."
+
+  - id: route-rm
+    problem_type: "requirements-management"
+    coordinator: rm-coordinator
+    trigger_keywords:
+      - "gestión de requisitos"
+      - "requirements management"
+      - "elicitación"
+      - "trazabilidad de requisitos"
+      - "SRS"
+      - "BRD"
+      - "change request"
+      - "control de cambios de requisitos"
+    rationale: "RM aplica cuando el foco está en gestionar el ciclo de vida completo de requisitos."
+
+  # ── Análisis y estrategia ─────────────────────────────────────────────────
+
+  - id: route-ba
+    problem_type: "business-analysis"
+    coordinator: ba-coordinator
+    trigger_keywords:
+      - "análisis de negocio"
+      - "business analysis"
+      - "BABOK"
+      - "business case"
+      - "solución de negocio"
+      - "necesidad de negocio"
+      - "análisis de stakeholders"
+      - "evaluación de solución"
+    rationale: "BABOK aplica para análisis de negocio integral con enfoque en valor y necesidades organizacionales."
+
+  - id: route-sp
+    problem_type: "strategic-planning"
+    coordinator: sp-coordinator
+    trigger_keywords:
+      - "planificación estratégica"
+      - "estrategia"
+      - "PESTEL"
+      - "SWOT"
+      - "Balanced Scorecard"
+      - "OKR"
+      - "Strategy Map"
+      - "visión misión"
+      - "objetivos estratégicos"
+      - "ciclo estratégico"
+      - "plan estratégico"
+    rationale: "SP aplica para procesos formales de planificación estratégica con análisis de entorno y formulación de estrategia."
+
+# ─── Resolución de conflictos ─────────────────────────────────────────────────
+# Cuando múltiples reglas hacen match, aplicar estas prioridades:
+
+conflict_resolution:
+  priority_order:
+    - "Si el usuario menciona una metodología explícitamente → usar esa"
+    - "Si hay keywords de múltiples categorías → preguntar al usuario"
+    - "Si el problema es de proceso+datos estadísticos → dmaic > lean"
+    - "Si el problema es de proceso sin estadística → lean > bpa > pdca"
+    - "Si el problema es estratégico+complejo → sp > cp"
+    - "Si el problema es de requisitos+software → rm > rup"
+
+  ambiguous_response: |
+    Detecté que tu problema puede encajar en más de una metodología.
+    Las más relevantes son: {candidates}.
+    Para ayudarte a elegir, consulta: .claude/skills/thyrox/references/methodology-selection-guide.md

@@ -1,0 +1,234 @@
+@startuml CLASS-BACK-020-modelo-llamadas
+!theme plain
+title Modelo de Datos - Módulo de Llamadas
+caption Diagrama ER del sistema de gestión de llamadas telefónicas
+footer Proyecto IACT | Generado: 2025-11-17 | ADR-GOB-004
+
+' =====================================================
+' ENTIDADES PRINCIPALES
+' =====================================================
+
+class Llamada {
+  + id: Integer <<PK>>
+  --
+  + codigo: String(50) <<UK>>
+  + numero_telefono: String(20)
+  + tipo_id: Integer <<FK>>
+  + estado_id: Integer <<FK>>
+  + agente_id: Integer <<FK>>
+  --
+  .. Información del Cliente ..
+  + cliente_nombre: String(200)
+  + cliente_email: Email
+  + cliente_id: Integer
+  --
+  .. Fechas y Tiempos ..
+  + fecha_inicio: DateTime
+  + fecha_fin: DateTime
+  --
+  .. Metadata ..
+  + metadata: JSONB
+  + notas: Text
+  + created_at: DateTime
+  + updated_at: DateTime
+  --
+  + save()
+  + calcular_duracion(): Integer
+  + __str__(): String
+  --
+  Código auto-generado: CALL-{UUID}
+  Almacena información completa de llamada
+}
+
+class EstadoLlamada {
+  + id: Integer <<PK>>
+  --
+  + codigo: String(50) <<UK>>
+  + nombre: String(100)
+  + descripcion: Text
+  + es_final: Boolean
+  + activo: Boolean
+  + created_at: DateTime
+  --
+  Estados posibles de una llamada
+
+  Ejemplos:
+  - ENTRANTE
+  - EN_CURSO
+  - EN_ESPERA
+  - TRANSFERIDA
+  - FINALIZADA
+  - PERDIDA
+}
+
+class TipoLlamada {
+  + id: Integer <<PK>>
+  --
+  + codigo: String(50) <<UK>>
+  + nombre: String(100)
+  + descripcion: Text
+  + activo: Boolean
+  + created_at: DateTime
+  --
+  Tipos de llamadas
+
+  Ejemplos:
+  - ENTRANTE
+  - SALIENTE
+  - INTERNA
+  - CONFERENCIA
+}
+
+class LlamadaTranscripcion {
+  + id: Integer <<PK>>
+  --
+  + llamada_id: Integer <<FK>>
+  + texto: Text
+  + timestamp_inicio: Integer
+  + timestamp_fin: Integer
+  + hablante: String(50)
+  + confianza: Float
+  + created_at: DateTime
+  --
+  Transcripción automática de llamada
+
+  timestamp en segundos desde inicio
+  hablante: 'agente' o 'cliente'
+  confianza: 0.0 - 1.0
+}
+
+class LlamadaGrabacion {
+  + id: Integer <<PK>>
+  --
+  + llamada_id: Integer <<FK>> <<UK>>
+  + archivo_url: URL(500)
+  + formato: String(10)
+  + duracion_segundos: Integer
+  + tamano_bytes: BigInteger
+  + created_at: DateTime
+  --
+  Archivo de grabación de llamada
+
+  Formatos: mp3, wav, opus
+  URL puede ser S3, CDN, local
+}
+
+class User {
+  + id: Integer <<PK>>
+  --
+  + username: String
+  + email: String
+  + first_name: String
+  + last_name: String
+  --
+  Agente que atiende la llamada
+  Usuario del sistema (Django)
+}
+
+' =====================================================
+' RELACIONES
+' =====================================================
+
+' Llamada -> TipoLlamada (N:1)
+Llamada "N" --> "1" TipoLlamada : tipo
+
+' Llamada -> EstadoLlamada (N:1)
+Llamada "N" --> "1" EstadoLlamada : estado
+
+' Llamada -> User (N:1)
+Llamada "N" --> "1" User : agente
+
+' Llamada -> LlamadaTranscripcion (1:N)
+Llamada "1" -- "N" LlamadaTranscripcion : transcripciones
+
+' Llamada -> LlamadaGrabacion (1:1)
+Llamada "1" -- "0..1" LlamadaGrabacion : grabacion
+
+' =====================================================
+' NOTAS
+' =====================================================
+
+note right of Llamada
+  Código auto-generado al guardar:
+  CALL-{12 chars hexadecimal}
+
+  Ejemplo: CALL-A3F2E9B1C4D5
+
+  Duración calculada:
+  fecha_fin - fecha_inicio
+  (solo si fecha_fin no es NULL)
+end note
+
+note top of EstadoLlamada
+  Estados posibles:
+
+  Estados iniciales:
+  - ENTRANTE (llamada entrando)
+
+  Estados intermedios:
+  - EN_CURSO (en conversación)
+  - EN_ESPERA (hold)
+  - TRANSFERIDA (a otro agente)
+
+  Estados finales:
+  - FINALIZADA (completada)
+  - PERDIDA (no atendida)
+end note
+
+note bottom of LlamadaTranscripcion
+  Múltiples segmentos por llamada
+  Ordenados por timestamp_inicio
+
+  Ejemplo:
+  [0-15s] agente: "Bienvenido, ¿cómo puedo ayudarle?"
+  [15-30s] cliente: "Necesito información sobre..."
+  [30-45s] agente: "Por supuesto, déjeme revisar..."
+end note
+
+note bottom of LlamadaGrabacion
+  Relación 1:1 con Llamada
+  Puede no existir si grabación deshabilitada
+
+  URL ejemplos:
+  - https://s3.aws.com/calls/CALL-XXX.mp3
+  - /media/recordings/2025/11/CALL-XXX.wav
+end note
+
+' =====================================================
+' ÍNDICES
+' =====================================================
+
+note left of Llamada
+  Índices:
+  - numero_telefono
+  - agente_id, fecha_inicio
+  - estado_id
+  - fecha_inicio
+
+  Para optimizar búsquedas:
+  - Llamadas por teléfono
+  - Llamadas por agente
+  - Llamadas por estado
+  - Llamadas recientes
+end note
+
+' =====================================================
+' METADATA JSONB
+' =====================================================
+
+note right of Llamada::metadata
+  Campos flexibles en JSONB:
+
+  {
+    "call_sid": "CAxxxx",
+    "from_city": "Buenos Aires",
+    "from_country": "AR",
+    "provider": "twilio",
+    "call_quality": "excellent",
+    "ivr_path": ["menu_1", "submenu_2"],
+    "transfer_count": 2,
+    "hold_time_seconds": 45
+  }
+end note
+
+@enduml

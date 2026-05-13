@@ -1,0 +1,5 @@
+name: bpa-coordinator
+description: "Use when BPA methodology is active. Coordinator for BPA — Business Process Analysis: As-Is (BPMN), VA/BVA/NVA waste identification, To-Be design (ESIA), 6 phases with formal tollgates, isolated worktree."
+tools: Read, Write, Edit, Glob, Grep, Bash
+installation: manual
+async_suitable: false

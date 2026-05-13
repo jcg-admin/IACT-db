@@ -1,0 +1,108 @@
+PROPUESTA REGENERACION - Template 1 de 10
+==========================================
+
+TEMPLATE A REGENERAR:
+TPL_BR_Decision_Tipo_1_2_0.rst
+
+PRIORIDAD: CRITICA (Template mas importante de base cognitiva)
+
+VERSION ACTUAL:
+- Lineas: 2,281
+- Placeholders: 270 (11.8% ratio)
+- Calidad: REGULAR/MALO
+- Problema: Demasiados placeholders genericos
+
+VERSION OBJETIVO:
+- Lineas: 2,000-2,500
+- Placeholders: < 100 (< 5% ratio)
+- Calidad: EXCELENTE
+- Solucion: Ejemplos COMPLETOS de los 5 tipos de BR con dominio IACT
+
+CONTENIDO DETALLADO:
+
+Seccion 1: ENUNCIADO
+- Explicacion teorica (20 lineas)
+- 5 ejemplos COMPLETOS (uno por tipo):
+  * BR-IACT-028: Restriccion (Aprobacion consultas grandes)
+  * BR-IACT-053: Calculo (Tasa de abandono)
+  * BR-IACT-031: Desencadenador (Notificacion sesion expirando)
+  * BR-IACT-046: Inferencia (Marcar sesiones expiradas)
+  * BR-IACT-001: Definicion (Cliente activo)
+
+Seccion 2: DERIVADO DE
+- Teoria (15 lineas)
+- Ejemplo BR-IACT-028 COMPLETO:
+  * BReq padre: BRQ-015
+  * Stakeholder: Maria Rodriguez (Gerente Operaciones)
+  * Quote textual
+  * Contexto completo
+
+Seccion 3: CRITERIOS DE ACEPTACION
+- Teoria Given-When-Then (20 lineas)
+- BR-IACT-028 con 5 CA completos:
+  * CA-1: Sistema calcula count
+  * CA-2: Solicita aprobacion si > 10,000
+  * CA-3: Supervisor recibe notificacion
+  * CA-4: Usuario ve mensaje espera
+  * CA-5: No ejecuta sin aprobacion
+- Cada CA con codigo SQL verificacion
+
+Seccion 4: ANALISIS POR TIPO DE BR
+- Subseccion 4.1: Restriccion (BR-IACT-028 completo)
+  * Que restringe, cuando, validacion SQL, mensaje error
+- Subseccion 4.2: Calculo (BR-IACT-053 completo)
+  * Formula matematica, inputs, outputs, casos especiales, codigo Python
+- Subseccion 4.3: Desencadenador (BR-IACT-031 completo)
+  * Test observabilidad, contenido modal, timing, genera UC
+- Subseccion 4.4: Inferencia (BR-IACT-046 completo)
+  * Test observabilidad, cambio BD, trigger cron, NO genera UC
+- Subseccion 4.5: Definicion (BR-IACT-001 completo)
+  * Termino, criterios, ejemplos, contraejemplos, codigo Python
+
+Seccion 5: GENERA UC
+- Reglas transformacion BR -> UC
+- Ejemplos de cada tipo
+
+Seccion 6: TRAZABILIDAD FORWARD
+- Arbol completo BRQ -> BR -> UC -> FR -> Codigo
+- Ejemplo BR-IACT-028 completo
+
+Seccion 7: IMPACTO DE CAMBIOS
+- Analisis impacto BR-IACT-028
+- 2 escenarios de cambio detallados
+
+Seccion 8: VALIDACION Y TESTING
+- Test manual paso a paso
+- Test unitarios Python (3 tests completos)
+- Test integracion (1 test completo)
+
+Seccion 9: NOTAS Y EXCEPCIONES
+- Excepciones conocidas
+- Decisiones de diseño
+
+Seccion 10: HISTORIAL DE VERSIONES
+- Tabla versionado semantico
+
+CODIGO INCLUIDO:
+- 10+ funciones Python completas
+- 15+ queries SQL completas
+- Todos con comentarios explicativos
+
+CRITERIOS CALIDAD:
+- Ratio placeholders < 5%
+- Codigo funcional 100%
+- Ejemplos IACT consistentes
+- Tablas RST completas (no vacias)
+- Sin cambiar ejemplos entre secciones
+
+TIEMPO ESTIMADO: 8-10 minutos
+TOKENS ESTIMADOS: 8,000
+
+METODOLOGIA:
+1. Generar en /tmp/TPL_BR_Decision_Tipo_1_2_0.rst
+2. Verificar lineas (debe ser 2,000-2,500)
+3. Contar placeholders (debe ser < 100)
+4. Copiar a destino
+5. Validar nomenclatura
+6. Presentar para confirmacion
+

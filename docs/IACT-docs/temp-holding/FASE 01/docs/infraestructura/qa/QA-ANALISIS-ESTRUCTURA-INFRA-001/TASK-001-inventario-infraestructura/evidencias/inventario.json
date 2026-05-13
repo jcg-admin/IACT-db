@@ -1,0 +1,155 @@
+{
+  "fecha_ejecucion": "2025-11-18T20:12:00Z",
+  "tarea": "TASK-001-inventario-infraestructura",
+  "objetivo": "Mapear subdirectorios infrastructure/ y scripts clave",
+  "componentes": [
+    {
+      "nombre": "box",
+      "proposito": "Configuración de máquina virtual base con bases de datos",
+      "archivos_clave": [
+        "Vagrantfile",
+        "bootstrap.sh",
+        "fix_db_connectivity.sh",
+        "verify_connections.sh"
+      ],
+      "scripts_instalacion": [
+        "install/mariadb.sh",
+        "install/postgresql.sh"
+      ],
+      "scripts_test": [
+        "tests/verify_connections.sh"
+      ],
+      "utilidades": [
+        "utils/common.sh",
+        "utils/logging.sh",
+        "utils/validation.sh"
+      ],
+      "configuraciones": [
+        "config/mariadb/50-server.cnf",
+        "config/postgresql/pg_hba.conf",
+        "config/postgresql/postgresql.conf"
+      ]
+    },
+    {
+      "nombre": "cpython",
+      "proposito": "Construcción y gestión de versiones CPython personalizadas",
+      "archivos_clave": [
+        "Vagrantfile",
+        "bootstrap.sh",
+        "config/versions.conf"
+      ],
+      "scripts_build": [
+        "scripts/build_cpython.sh",
+        "scripts/build_wrapper.sh",
+        "scripts/validate_build.sh",
+        "scripts/validate_wrapper.sh"
+      ],
+      "scripts_instalacion": [
+        "scripts/install_prebuilt_cpython.sh",
+        "scripts/feature_install.sh"
+      ],
+      "scripts_mantenimiento": [
+        "scripts/cleanup.sh"
+      ],
+      "utilidades": [
+        "utils/environment.sh",
+        "utils/filesystem.sh",
+        "utils/logger.sh",
+        "utils/name_parser.sh",
+        "utils/network.sh",
+        "utils/retry_handler.sh",
+        "utils/state_manager.sh",
+        "utils/validator.sh"
+      ],
+      "features": [
+        "builder/feature/install.sh",
+        "installer/install.sh"
+      ],
+      "tests": [
+        "tests/test_bootstrap_dependencies.py",
+        "tests/test_build_script_entrypoint.py",
+        "tests/test_cpython_build_system.py",
+        "tests/test_cpython_feature.py"
+      ]
+    },
+    {
+      "nombre": "devcontainer",
+      "proposito": "Configuración y scripts de inicialización para DevContainers",
+      "scripts_lifecycle": [
+        "scripts/on_create.sh",
+        "scripts/post_create.sh",
+        "scripts/post_start.sh",
+        "scripts/init_host.sh",
+        "scripts/update_content.sh"
+      ],
+      "scripts_validacion": [
+        "scripts/check_no_emojis.sh"
+      ],
+      "utilidades": [
+        "utils/core.sh",
+        "utils/database_mariadb.sh",
+        "utils/database_postgres.sh",
+        "utils/logging.sh",
+        "utils/python.sh",
+        "utils/validation.sh"
+      ]
+    },
+    {
+      "nombre": "vagrant",
+      "proposito": "Provisioning de entorno Vagrant con bases de datos",
+      "archivos_clave": [
+        "Vagrantfile",
+        "bootstrap.sh"
+      ],
+      "scripts_instalacion": [
+        "scripts/mariadb_install.sh",
+        "scripts/postgres_install.sh",
+        "scripts/system_prepare.sh"
+      ],
+      "scripts_setup": [
+        "scripts/setup_mariadb_database.sh",
+        "scripts/setup_postgres_database.sh"
+      ],
+      "scripts_test": [
+        "tests/bootstrap_test.sh",
+        "tests/verify_connections.sh",
+        "tests/seed_data.sh"
+      ],
+      "utilidades": [
+        "utils/core.sh",
+        "utils/database.sh",
+        "utils/logging.sh",
+        "utils/validation.sh"
+      ]
+    },
+    {
+      "nombre": "workspace",
+      "proposito": "Configuración del espacio de trabajo del desarrollador",
+      "archivos_clave": [
+        ".env.example",
+        "setup.sh"
+      ]
+    }
+  ],
+  "restricciones_verificadas": {
+    "redis": "No se encontraron referencias a Redis en archivos de configuración",
+    "correo": "No se encontraron configuraciones de envío de correo",
+    "bases_de_datos_soportadas": ["MariaDB", "PostgreSQL"],
+    "sin_sqlite": "Cumple restricción de no usar SQLite"
+  },
+  "dependencias_externas": [
+    "Vagrant",
+    "VirtualBox (implícito en Vagrantfile)",
+    "Python 3.x",
+    "MariaDB/MySQL",
+    "PostgreSQL",
+    "Docker (para DevContainers)"
+  ],
+  "estadisticas": {
+    "total_componentes": 5,
+    "total_scripts_shell": 57,
+    "total_archivos_python": 10,
+    "total_vagrantfiles": 3,
+    "total_archivos_config": 4
+  }
+}

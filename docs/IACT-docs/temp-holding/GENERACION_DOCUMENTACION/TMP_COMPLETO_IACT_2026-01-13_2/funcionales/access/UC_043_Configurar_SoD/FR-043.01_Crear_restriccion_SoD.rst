@@ -1,0 +1,174 @@
+.. meta::
+   :artefacto: FR-043.01
+   :tipo: Requisito Funcional
+   :dominio: requisitos
+   :subdominio: funcionales/access
+   :estado: Aprobado
+   :version: 1.0.0
+   :fecha: 2026-01-07
+   :autor: Equipo IACT
+
+.. _fr-043-01:
+
+==============================================================================
+FR-043.01: Crear restricción SoD
+==============================================================================
+
+----
+
+1. Identificación
+-----------------
+
+.. list-table::
+   :widths: 25 75
+
+   * - **ID**
+     - FR-043.01
+   * - **Nombre**
+     - Crear nueva restricción de Separación de Funciones
+   * - **UC Origen**
+     - UC_043: Configurar Restricciones SoD
+   * - **Paso UC**
+     - Paso 3-9 del flujo normal
+   * - **Módulo**
+     - MOD_Access
+   * - **Prioridad**
+     - Alta
+   * - **Tipo**
+     - Datos
+
+----
+
+2. Especificación
+-----------------
+
+**Declaración:**
+
+   El sistema DEBE permitir crear restricciones SoD que definan pares
+   de funciones mutuamente excluyentes CUANDO el admin configura las
+   reglas de separación de funciones (BR_007).
+
+**Descripción:**
+
+   Proceso de creación:
+   
+   1. Admin selecciona función(es) del Grupo A
+   2. Admin selecciona función(es) del Grupo B
+   3. Ingresa descripción/motivo del conflicto
+   4. Define severidad: HARD (bloquea) o SOFT (advierte)
+   5. Sistema valida que no existan conflictos actuales
+   6. Si pasa validación, crea registro
+   
+   **Estructura de Restricción:**
+   
+   .. list-table::
+      :widths: 25 20 55
+      :header-rows: 1
+   
+      * - Campo
+        - Tipo
+        - Valor
+      * - id
+        - UUID
+        - Generado
+      * - function_a
+        - VARCHAR(20)
+        - Código función A
+      * - function_b
+        - VARCHAR(20)
+        - Código función B
+      * - severity
+        - ENUM
+        - HARD | SOFT
+      * - description
+        - TEXT
+        - Motivo del conflicto
+      * - created_by
+        - UUID
+        - Admin que creó
+
+----
+
+3. Criterio de Aceptación
+-------------------------
+
+::
+
+   DADO admin configurando SoD
+   CUANDO crea una nueva restricción
+   ENTONCES se registra y aplica en futuras asignaciones
+   
+   Escenario 1: Restricción HARD
+   DADO funciones ACC-001 y ACC-005 seleccionadas
+   CUANDO se crea con severidad HARD
+   ENTONCES ningún usuario podrá tener ambas funciones
+   
+   Escenario 2: Restricción SOFT
+   DADO restricción con severidad SOFT
+   CUANDO un admin intenta asignar funciones en conflicto
+   ENTONCES ve advertencia pero puede continuar
+   
+   Escenario 3: Descripción obligatoria
+   DADO formulario de creación SoD
+   CUANDO no se ingresa descripción
+   ENTONCES se muestra "Debe indicar el motivo de la restricción"
+   
+   Escenario 4: Restricción duplicada
+   DADO restricción ACC-001/ACC-005 ya existente
+   CUANDO se intenta crear la misma
+   ENTONCES se muestra "Esta restricción ya existe"
+
+----
+
+4. Reglas y Restricciones
+-------------------------
+
+- **BR aplicables:**
+  - BR_007: Separación de Funciones
+  
+- **CNST aplicables:**
+  - CNST-010: Segregación de funciones
+
+**Bidireccionalidad:**
+
+La restricción A-B implica B-A. Solo se almacena una vez pero
+aplica en ambas direcciones.
+
+----
+
+5. Trazabilidad
+---------------
+
+.. list-table::
+   :widths: 20 80
+
+   * - **BReq**
+     - BReq-004: Cumplimiento de Seguridad
+   * - **UC**
+     - UC_043: Configurar SoD
+   * - **Depende de**
+     - Ninguno
+   * - **Requerido por**
+     - FR-010.02 (validación en asignación)
+   * - **BR**
+     - BR_007
+   * - **CNST**
+     - CNST-010
+   * - **TEST**
+     - TST-FR-043.01 (pendiente)
+
+----
+
+6. Historial
+------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - Versión
+     - Fecha
+     - Cambio
+   * - 1.0.0
+     - 2026-01-07
+     - Versión inicial derivada de UC_043

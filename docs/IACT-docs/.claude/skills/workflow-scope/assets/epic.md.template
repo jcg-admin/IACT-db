@@ -1,0 +1,267 @@
+```yml
+type: Ejemplo
+category: Epic Documentation
+version: 1.0
+purpose: Ejemplo de cómo documentar un epic en THYROX
+goal: Proporcionar template para nuevos epics del proyecto
+updated_at: [YYYY-MM-DD HH:MM:SS]
+```
+
+# Epic Example: User Authentication System
+
+## Epic Information
+
+**Epic ID:** EPIC-001<br>
+**Status:** In Planning<br>
+**Priority:** High<br>
+**Owner:** [Team Name]<br>
+**Start Date:** TBD<br>
+**Target Completion:** TBD
+
+---
+
+## Description
+
+Implementar un sistema completo de autenticación y autorización para la API REST.
+
+Esto incluye:
+- Registro de usuarios
+- Login con credenciales
+- JWT token generation
+- Token refresh
+- Password reset
+- Role-based access control (RBAC)
+- Session management
+
+---
+
+## Business Value
+
+**User Stories:**<br>
+"Como usuario, quiero poder registrarme de forma segura"<br>
+"Como usuario, quiero poder recuperar mi contraseña olvidada"<br>
+"Como administrador, quiero controlar qué usuarios pueden hacer qué"
+
+**Benefits:**<br>
+Aumenta seguridad de la aplicación<br>
+Permite control granular de permisos<br>
+Mejora experiencia del usuario<br>
+Cumple con requisitos de seguridad
+
+---
+
+## Features
+
+### Feature 1: User Registration
+
+**Description:** Permitir que nuevos usuarios se registren<br>
+**Status:** Not Started<br>
+**Tasks:** 5<br>
+**Estimated Points:** 13
+
+**Tasks:**
+- [ ] Create registration endpoint
+- [ ] Add input validation
+- [ ] Send confirmation email
+- [ ] Add tests
+- [ ] Update documentation
+
+### Feature 2: User Login
+
+**Description:** Permite a usuarios existentes hacer login<br>
+**Status:** Not Started<br>
+**Tasks:** 4<br>
+**Estimated Points:** 8
+
+**Tasks:**
+- [ ] Create login endpoint
+- [ ] Validate credentials
+- [ ] Generate JWT token
+- [ ] Add tests
+
+### Feature 3: Token Management
+
+**Description:** Manejar generación, refresh, y validación de tokens<br>
+**Status:** Not Started<br>
+**Tasks:** 6<br>
+**Estimated Points:** 13
+
+**Tasks:**
+- [ ] Implement token generation
+- [ ] Add token validation middleware
+- [ ] Implement refresh tokens
+- [ ] Token expiration handling
+- [ ] Token revocation
+- [ ] Add tests
+
+### Feature 4: Password Reset
+
+**Description:** Permitir a usuarios resetear contraseña olvidada<br>
+**Status:** Not Started<br>
+**Tasks:** 4<br>
+**Estimated Points:** 8
+
+**Tasks:**
+- [ ] Create password reset endpoint
+- [ ] Generate reset tokens
+- [ ] Send reset email
+- [ ] Update password validation
+
+### Feature 5: RBAC Implementation
+
+**Description:** Implementar rol-based access control<br>
+**Status:** Not Started<br>
+**Tasks:** 5<br>
+**Estimated Points:** 13
+
+**Tasks:**
+- [ ] Define roles and permissions
+- [ ] Create authorization middleware
+- [ ] Add role checks to endpoints
+- [ ] Create admin role management
+- [ ] Add tests
+
+---
+
+## Timeline
+
+**Phase 1 (Week 1-2):** User Registration + Login
+- Basic registration and login endpoints
+- JWT token generation
+- Database schema
+
+**Phase 2 (Week 3-4):** Token Management + Password Reset
+- Refresh tokens
+- Token validation
+- Password reset flow
+
+**Phase 3 (Week 5-6):** RBAC Implementation
+- Role definitions
+- Permission checks
+- Admin interface
+
+**Phase 4 (Week 7-8):** Testing + Documentation
+- Comprehensive tests
+- API documentation
+- Integration testing
+
+---
+
+## Dependencies
+
+**Internal:**
+- Database layer must be ready
+- API framework setup
+
+**External:**
+- Email service (para reset tokens)
+- JWT library (incluida en project)
+
+**Blockers:**
+- None identified yet
+
+---
+
+## Success Criteria
+
+- [ ] All endpoints implemented and tested
+- [ ] 100% test coverage for auth module
+- [ ] API documentation complete
+- [ ] Security review passed
+- [ ] Performance benchmarks met
+- [ ] OWASP compliance verified
+
+---
+
+## Acceptance Criteria
+
+**Registro:**<br>
+Usuario puede registrarse con email y contraseña<br>
+Email de confirmación se envía<br>
+Usuario no puede login hasta confirmar email
+
+**Login:**<br>
+Usuario puede hacer login con credenciales<br>
+Token JWT se genera
+Token expira en 1 hora
+
+**Password Reset:**<br>
+Usuario puede solicitar reset<br>
+Email de reset se envía<br>
+Token reset expira en 15 minutos<br>
+Nueva contraseña se valida
+
+**RBAC:**<br>
+Endpoints protegidos requieren rol correcto<br>
+Roles se pueden asignar a usuarios<br>
+Permisos son granulares
+
+---
+
+## Known Issues
+
+- None yet
+
+---
+
+## Risks
+
+**Technical Risk:**
+- Session management complexity
+- Token security
+- Mitigation: Security review + testing
+
+**Timeline Risk:**
+- Estimación puede ser baja
+- Mitigation: Buffer time + agile adjustments
+
+**Security Risk:**
+- Vulnerabilidades en autenticación
+- Mitigation: Penetration testing + code review
+
+---
+
+## Out of Scope
+
+- Multi-factor authentication (Phase 2)
+- Social login integrations (Phase 2)
+- API key management (Phase 2)
+- Custom permission definitions (Phase 2)
+
+---
+
+## Related Documents
+
+- ARCHITECTURE.md - System design
+- CONTRIBUTING.md - How to contribute
+- API.md - API documentation
+- ROADMAP.md - Project roadmap
+
+---
+
+## Communication Plan
+
+**Status Updates:** Weekly team sync<br>
+**Blockers:** Daily standup<br>
+**Issues:** Async in Slack<br>
+**Decisions:** Documented in decisions.md
+
+---
+
+## Review Checklist
+
+Before marking epic as complete:
+
+- [ ] All features implemented
+- [ ] All tests passing
+- [ ] Code review completed
+- [ ] Documentation updated
+- [ ] Security review passed
+- [ ] Performance benchmarks met
+- [ ] Stakeholders approved
+
+---
+
+**Epic Created:** 2026-03-25<br>
+**Last Updated:** 2026-03-25<br>
+**Next Review:** 2026-03-26

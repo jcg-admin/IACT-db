@@ -1,0 +1,73 @@
+```yml
+project: [Nombre del proyecto]
+version: [X.Y.Z]
+created_at: [YYYY-MM-DD HH:MM:SS]
+Commits incluidos: [N]
+author: [Nombre]
+branch: [nombre-rama]
+```
+
+# Changelog: [Nombre del Proyecto]
+
+> Formato basado en [Keep a Changelog](https://keepachangelog.com).
+> Cada entrada se genera desde commits del work package activo.
+> Tipos: `Added` (nuevo), `Changed` (modificado), `Fixed` (corregido), `Removed` (eliminado), `Security` (vulnerabilidad).
+
+---
+
+## [X.Y.Z] — YYYY-MM-DD-HH-MM-SS
+
+### Added
+
+- [Descripción de qué se agregó] ([commit hash abreviado])
+- [Ejemplo: `feat(skill): triple-layer activation con session-start.sh` (a1b2c3d)]
+
+### Changed
+
+- [Descripción de qué cambió en funcionalidad existente] ([hash])
+- [Ejemplo: `refactor(claude): flujo de sesión reescrito como OBLIGATORIO` (b2c3d4e)]
+
+### Fixed
+
+- [Descripción del bug corregido] ([hash])
+- [Ejemplo: `fix(phase1): timestamp de work package ahora usa fecha real` (c3d4e5f)]
+
+### Removed
+
+- [Descripción de qué se eliminó] ([hash])
+
+### Security
+
+- [Descripción de vulnerabilidad corregida] ([hash])
+
+---
+
+## [X.Y.Z-anterior] — YYYY-MM-DD-HH-MM-SS
+
+[Repetir estructura por cada versión/release anterior]
+
+---
+
+## Cómo generar este changelog
+
+```bash
+# Ver commits del work package activo desde el branch base
+git log main..HEAD --oneline --no-merges
+
+# Ver commits por tipo (feat, fix, refactor, docs)
+git log main..HEAD --oneline --no-merges | grep "^[a-f0-9]* feat"
+git log main..HEAD --oneline --no-merges | grep "^[a-f0-9]* fix"
+
+# Ver commits con fecha
+git log main..HEAD --format="%h %ad %s" --date=short --no-merges
+```
+
+---
+
+## Versionado semántico
+
+| Tipo de cambio | Versión que incrementa |
+|----------------|----------------------|
+| Breaking change / incompatibilidad | MAJOR (X.0.0) |
+| Nueva funcionalidad compatible | MINOR (0.Y.0) |
+| Bug fix / corrección menor | PATCH (0.0.Z) |

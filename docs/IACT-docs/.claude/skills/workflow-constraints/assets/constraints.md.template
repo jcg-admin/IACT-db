@@ -1,0 +1,103 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+work_package: [YYYY-MM-DD-HH-MM-SS-nombre]
+current_phase: Phase 4 — CONSTRAINTS
+author: [Nombre]
+status: Borrador
+hard_constraints: [N]
+soft_constraints: [N]
+```
+
+# Constraints: [Nombre del Work Package]
+
+## Propósito
+
+Delimitar el espacio de soluciones válidas antes de diseñar estrategias.
+Una restricción no documentada en este momento se convierte en sorpresa en Phase 10.
+
+> Diferencia clave: HARD constraints eliminan opciones. SOFT constraints las penalizan.
+
+---
+
+## HARD Constraints — No negociables
+
+Condiciones que la solución DEBE cumplir. Violarlas = solución inválida.
+
+### HC-001: [Nombre de la restricción]
+
+**Categoría**: técnica / regulatoria / de negocio / de plataforma
+
+**Descripción**: [Qué está prohibido o qué es obligatorio]
+
+**Origen**: [Por qué existe esta restricción — ley, contrato, arquitectura existente, decisión anterior]
+
+**Evidencia**: [ADR, documento legal, ticket, o persona que la confirmó]
+
+**Impacto en diseño**: [Qué alternativas quedan eliminadas por esta restricción]
+
+---
+
+### HC-002: [Nombre]
+
+[Repetir estructura]
+
+---
+
+## SOFT Constraints — Preferencias con peso
+
+Condiciones que la solución DEBERÍA cumplir. Violarlas tiene coste pero no invalida la solución.
+
+### SC-001: [Nombre de la restricción]
+
+**Peso**: alto / medio / bajo
+
+**Descripción**: [Qué se prefiere]
+
+**Razón**: [Por qué importa]
+
+**Trade-off aceptable**: [Bajo qué condiciones se puede sacrificar esta preferencia]
+
+---
+
+### SC-002: [Nombre]
+
+[Repetir estructura]
+
+---
+
+## Espacio de soluciones resultante
+
+> Qué opciones quedan después de aplicar todas las restricciones.
+
+### Opciones viables
+
+| Opción | Cumple HCs | Cumple SCs | Notas |
+|--------|:----------:|:----------:|-------|
+| [Opción A] | ✓ | ✓✓✓ | [contexto] |
+| [Opción B] | ✓ | ✓✓ | [contexto] |
+| [Opción C] | ✓ | ✓ | [contexto] |
+
+### Opciones descartadas
+
+| Opción | HC que viola | Por qué no aplica una excepción |
+|--------|-------------|--------------------------------|
+| [Opción X] | HC-NNN | [razón] |
+
+---
+
+## Restricciones fuera de scope
+
+[Restricciones que existen en el sistema pero que no aplican a este WP, y por qué.]
+
+| Restricción | Razón de exclusión |
+|-------------|-------------------|
+| [Restricción conocida] | [No aplica porque...] |
+
+---
+
+## Stopping Point Manifest
+
+| SP | Descripción | Estado |
+|----|-------------|--------|
+| SP-01 | Gate 4→5: usuario valida restricciones antes de diseñar estrategia | pendiente |

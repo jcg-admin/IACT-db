@@ -1,0 +1,386 @@
+{
+  "skill_name": "thyrox",
+  "type": "multi-interaction",
+  "evals": [
+    {
+      "id": "MI-01",
+      "category": "continuity",
+      "title": "Reanudar trabajo interrumpido",
+      "prompt": "Ayer estábamos trabajando en la migración de la base de datos, ¿dónde quedamos?",
+      "context_setup": {
+        "description": "Work package con plan.md parcialmente completado",
+        "files": {
+          "context/focus.md": "# Focus\nDirección: migración de base de datos PostgreSQL a nueva versión.\nPhase 6 en progreso. T-002 completado.",
+          "context/now.md": "cold_boot: false\nlast_session: 2026-03-27\ncurrent_work: work/2026-03-25-100000-migracion-db/\nphase: execute",
+          "context/work/2026-03-25-100000-migracion-db/plan.md": "# Plan: Migración DB\n\n- [x] [T-001] Backup de datos existentes (R-01)\n- [x] [T-002] Crear schema nuevo en PostgreSQL 16 (R-01)\n- [ ] [T-003] Migrar tabla usuarios (R-02)\n- [ ] [T-004] Migrar tabla productos (R-02)\n- [ ] [T-005] Verificar integridad de datos (R-03)"
+        }
+      },
+      "expectations": [
+        "Lee o menciona focus.md, now.md, o plan.md",
+        "Identifica el work package activo de migración",
+        "Identifica T-003 como siguiente tarea",
+        "NO propone empezar de nuevo o crear nuevo work package"
+      ],
+      "automated": true,
+      "priority": 1
+    },
+    {
+      "id": "MI-02",
+      "category": "continuity",
+      "title": "Cold boot en proyecto existente",
+      "prompt": "Hola, acabo de abrir el proyecto. ¿En qué estamos?",
+      "context_setup": {
+        "description": "Proyecto con 5 work packages y ROADMAP",
+        "files": {
+          "context/focus.md": "# Focus\n5 work packages completados. Proyecto de e-commerce en desarrollo.\n\n## Próximo\nImplementar sistema de pagos (Phase 3: PLAN pendiente).",
+          "context/now.md": "cold_boot: true\nlast_session: 2026-03-20\ncurrent_work: null\nphase: plan",
+          "ROADMAP.md": "# ROADMAP\n\n## FASE 1: Base\n- [x] Setup proyecto (2026-03-10)\n- [x] Auth system (2026-03-15)\n- [x] CRUD productos (2026-03-18)\n\n## FASE 2: Pagos\n- [ ] Integración Stripe\n- [ ] Checkout flow\n- [ ] Webhooks"
+        }
+      },
+      "expectations": [
+        "Menciona que hay work packages o trabajo existente",
+        "Lee focus.md o now.md o ROADMAP.md",
+        "NO propone crear estructura desde cero",
+        "Identifica que pagos es el próximo trabajo"
+      ],
+      "automated": true,
+      "priority": 1
+    },
+    {
+      "id": "MI-03",
+      "category": "continuity",
+      "title": "Retomar después de días sin trabajar",
+      "prompt": "Hace una semana que no toco esto, ¿qué quedó pendiente?",
+      "context_setup": null,
+      "expectations": [
+        "Lee archivos de estado",
+        "Resume lo pendiente",
+        "Sugiere por dónde retomar"
+      ],
+      "automated": false,
+      "priority": 3
+    },
+    {
+      "id": "MI-04",
+      "category": "mid-phase",
+      "title": "Phase 1 incompleta",
+      "prompt": "Ya hicimos el análisis de requisitos y stakeholders. ¿Qué falta para completar el análisis?",
+      "context_setup": {
+        "files": {
+          ".thyrox/context/focus.md": "Phase 1 ANALYZE en progreso. Requisitos y stakeholders documentados.",
+          ".thyrox/context/now.md": "cold_boot: false\nlast_session: 2026-03-28\ncurrent_work: work/2026-03-28-100000-inventario/\nphase: analyze\nblockers: []",
+          ".thyrox/context/work/2026-03-28-100000-inventario/analysis/requirements.md": "# Requisitos\n- R-01: CRUD productos\n- R-02: Control de stock\n- R-03: Alertas stock bajo",
+          ".thyrox/context/work/2026-03-28-100000-inventario/analysis/stakeholders.md": "# Stakeholders\n- Dueño de tienda (decision maker)\n- 2 empleados (end users)"
+        },
+        "description": "Phase 1 parcialmente completada: requisitos y stakeholders hechos, faltan constraints, context, quality-goals, use-cases"
+      },
+      "expectations": [
+        "Identifica subsecciones faltantes de Phase 1",
+        "NO repite lo que ya se hizo",
+        "Sugiere continuar con las faltantes"
+      ],
+      "automated": true,
+      "priority": 2
+    },
+    {
+      "id": "MI-05",
+      "category": "mid-phase",
+      "title": "Phase 6 interrumpida — continuar desde T-006",
+      "prompt": "Vengo a seguir con las tareas del sistema de autenticación. ¿Cuál es la siguiente?",
+      "context_setup": {
+        "description": "Plan con 5 de 10 tasks completadas",
+        "files": {
+          "context/focus.md": "# Focus\nAuth system en Phase 6. T-005 completado. Siguiente: T-006 refresh tokens.",
+          "context/now.md": "cold_boot: false\nlast_session: 2026-03-27\ncurrent_work: work/2026-03-27-090000-auth-system/\nphase: execute",
+          "context/work/2026-03-27-090000-auth-system/plan.md": "# Plan: Sistema de Autenticación\n\n- [x] [T-001] Setup proyecto base (R-01)\n- [x] [T-002] Schema de usuarios en PostgreSQL (R-01)\n- [x] [T-003] Endpoint POST /auth/register (R-02)\n- [x] [T-004] Endpoint POST /auth/login (R-03)\n- [x] [T-005] JWT token generation (R-04)\n- [ ] [T-006] Refresh tokens con rotación (R-04)\n- [ ] [T-007] Roles y permisos RBAC (R-05)\n- [ ] [T-008] Tests de integración (R-06)\n- [ ] [T-009] Documentación API en docs/ (R-07)\n- [ ] [T-010] Code review final (R-08)"
+        }
+      },
+      "expectations": [
+        "Identifica T-006 como siguiente tarea (no T-001)",
+        "Menciona que T-001 a T-005 están completados",
+        "NO propone re-analizar ni re-descomponer",
+        "Continúa desde donde se quedó"
+      ],
+      "automated": true,
+      "priority": 1
+    },
+    {
+      "id": "MI-06",
+      "category": "mid-phase",
+      "title": "Phase 4 con feedback — spec necesita actualización",
+      "prompt": "El spec que hiciste tiene un problema: no consideraste el caso de usuarios offline. Necesitamos que la app funcione sin conexión.",
+      "context_setup": null,
+      "expectations": [
+        "Actualiza spec.md con el nuevo requisito",
+        "NO rehace todo el spec desde cero",
+        "Identifica impacto en tasks existentes"
+      ],
+      "automated": false,
+      "priority": 3
+    },
+    {
+      "id": "MI-07",
+      "category": "direction-change",
+      "title": "Scope creep durante ejecución",
+      "prompt": "Ah, también necesitamos que el sistema soporte multi-idioma. ¿Lo agregamos a lo que estamos haciendo?",
+      "context_setup": null,
+      "expectations": [
+        "Evalúa impacto del cambio",
+        "Sugiere nuevo work package o regresar a Phase 4",
+        "Documenta el cambio de scope"
+      ],
+      "automated": false,
+      "priority": 2
+    },
+    {
+      "id": "MI-08",
+      "category": "direction-change",
+      "title": "Pivote — cambio de prioridad",
+      "prompt": "Ya no vamos a hacer la migración, cambió la prioridad. Ahora necesitamos un sistema de caché urgente.",
+      "context_setup": null,
+      "expectations": [
+        "Cierra o pausa work package actual",
+        "Crea nuevo work package",
+        "NO pierde el trabajo anterior"
+      ],
+      "automated": false,
+      "priority": 3
+    },
+    {
+      "id": "MI-09",
+      "category": "direction-change",
+      "title": "Decisión revertida",
+      "prompt": "La decisión de usar PostgreSQL no funcionó en producción, volvemos a MongoDB. ¿Cómo documentamos esto?",
+      "context_setup": null,
+      "expectations": [
+        "Sugiere crear nuevo ADR que revierte el anterior",
+        "Documenta el por qué del cambio",
+        "Identifica impacto en work packages activos"
+      ],
+      "automated": false,
+      "priority": 3
+    },
+    {
+      "id": "MI-10",
+      "category": "escalation",
+      "title": "Fix se convierte en epic",
+      "prompt": "Esto empezó como un bug simple pero resulta que el problema está en 3 módulos diferentes. Necesito más estructura.",
+      "context_setup": null,
+      "expectations": [
+        "Escala: crea work package si no existe",
+        "Agrega spec.md para documentar el scope expandido",
+        "Descompone en tasks",
+        "Documenta por qué escaló"
+      ],
+      "automated": false,
+      "priority": 2
+    },
+    {
+      "id": "MI-11",
+      "category": "escalation",
+      "title": "Múltiples work packages activos",
+      "prompt": "Tenemos la migración en progreso y ahora quiero hablar del sistema de caché. ¿Son parte de lo mismo?",
+      "context_setup": null,
+      "expectations": [
+        "Pregunta si son el mismo trabajo o diferente",
+        "Si diferente, sugiere work package separado",
+        "Mantiene focus.md claro sobre cuál es activo"
+      ],
+      "automated": false,
+      "priority": 3
+    },
+    {
+      "id": "MI-12",
+      "category": "escalation",
+      "title": "Trabajo paralelo",
+      "prompt": "Mientras espero el review del PR de autenticación, quiero empezar con el módulo de pagos.",
+      "context_setup": null,
+      "expectations": [
+        "Crea segundo work package",
+        "Mantiene el primero como en progreso",
+        "focus.md refleja ambos"
+      ],
+      "automated": false,
+      "priority": 3
+    },
+    {
+      "id": "MI-13",
+      "category": "error-recovery",
+      "title": "Implementación falló — tests no pasan",
+      "prompt": "Los tests no pasan después de implementar T-006 refresh tokens. El error dice que el token expiry no se calcula bien. ¿Qué hacemos?",
+      "context_setup": {
+        "description": "Plan con error en tarea actual",
+        "files": {
+          "context/focus.md": "# Focus\nAuth system. T-006 refresh tokens FALLÓ.\nError: token expiry calculation incorrect — tests failing.",
+          "context/now.md": "cold_boot: false\nlast_session: 2026-03-28\ncurrent_work: work/2026-03-27-090000-auth-system/\nphase: execute\nblockers: [T-006 failed]",
+          "context/work/2026-03-27-090000-auth-system/plan.md": "# Plan: Sistema de Autenticación\n\n- [x] [T-001] Setup proyecto base (R-01)\n- [x] [T-002] Schema de usuarios (R-01)\n- [x] [T-003] Endpoint register (R-02)\n- [x] [T-004] Endpoint login (R-03)\n- [x] [T-005] JWT generation (R-04)\n- [-] [T-006] Refresh tokens — FAILED: token expiry calculation (R-04)\n- [ ] [T-007] Roles RBAC (R-05)\n- [ ] [T-008] Tests integración (R-06)"
+        }
+      },
+      "expectations": [
+        "Identifica que T-006 falló",
+        "NO continúa con T-007 sin resolver T-006",
+        "Investiga o pregunta sobre el error de token expiry",
+        "Puede sugerir debug o volver a revisar spec"
+      ],
+      "automated": true,
+      "priority": 1
+    },
+    {
+      "id": "MI-14",
+      "category": "error-recovery",
+      "title": "Spec era incorrecto",
+      "prompt": "Descubrimos que el requisito de 'tiempo real' no era necesario. El cliente solo necesita actualizaciones cada 30 segundos.",
+      "context_setup": null,
+      "expectations": [
+        "Actualiza spec.md con la corrección",
+        "Re-evalúa tasks afectadas",
+        "Documenta el cambio"
+      ],
+      "automated": false,
+      "priority": 3
+    },
+    {
+      "id": "MI-15",
+      "category": "error-recovery",
+      "title": "Work package abandonado",
+      "prompt": "Este trabajo del sistema de notificaciones ya no tiene sentido. El producto cambió de dirección. Pero quiero guardar lo que aprendimos.",
+      "context_setup": null,
+      "expectations": [
+        "Cierra work package con status abandoned",
+        "Crea lessons.md con lecciones",
+        "NO borra el trabajo"
+      ],
+      "automated": false,
+      "priority": 3
+    },
+    {
+      "id": "MI-16",
+      "category": "followup",
+      "title": "Review de trabajo existente",
+      "prompt": "Revisa el spec que creé para el sistema de búsqueda. Está en el work package de ayer.",
+      "context_setup": null,
+      "expectations": [
+        "Lee el spec.md del work package indicado",
+        "Da feedback constructivo",
+        "NO crea nuevo work package"
+      ],
+      "automated": false,
+      "priority": 3
+    },
+    {
+      "id": "MI-17",
+      "category": "followup",
+      "title": "Pedir detalle de decisión existente",
+      "prompt": "¿Por qué decidimos usar Redis para el caché en vez de Memcached?",
+      "context_setup": null,
+      "expectations": [
+        "Busca en decisions/ o ADRs",
+        "Si no hay ADR, señala que falta documentación",
+        "NO inventa justificación"
+      ],
+      "automated": false,
+      "priority": 2
+    },
+    {
+      "id": "MI-18",
+      "category": "followup",
+      "title": "Comparar opciones en spec",
+      "prompt": "En el spec tenemos dos approaches para la autenticación: JWT stateless vs sessions con Redis. ¿Cuál recomiendas?",
+      "context_setup": null,
+      "expectations": [
+        "Analiza ambos approaches",
+        "Documenta pros/cons",
+        "Recomienda con justificación"
+      ],
+      "automated": false,
+      "priority": 3
+    },
+    {
+      "id": "MI-19",
+      "category": "maintenance",
+      "title": "Limpiar work packages viejos",
+      "prompt": "Hay work packages de hace 2 meses que ya terminamos. ¿Deberíamos limpiarlos?",
+      "context_setup": null,
+      "expectations": [
+        "Verifica status de work packages",
+        "NO sugiere borrar (git is persistence)",
+        "Puede sugerir actualizar ROADMAP"
+      ],
+      "automated": false,
+      "priority": 3
+    },
+    {
+      "id": "MI-20",
+      "category": "maintenance",
+      "title": "Actualizar ROADMAP con estado real",
+      "prompt": "El ROADMAP no refleja lo que realmente hicimos. Necesito actualizarlo.",
+      "context_setup": null,
+      "expectations": [
+        "Lee work packages y plan.md",
+        "Reconcilia con ROADMAP.md",
+        "Actualiza marcando completados"
+      ],
+      "automated": false,
+      "priority": 3
+    },
+    {
+      "id": "MI-21",
+      "category": "gap-verification",
+      "title": "Segunda interacción de FE-01 — proponer work package",
+      "prompt": "OK, la tienda es de ropa, 500 productos, 2 empleados. Necesito stock, alertas y reportes. Solo web. ¿Qué sigue?",
+      "context_setup": {
+        "description": "Spec con análisis completado de inventario",
+        "files": {
+          "context/focus.md": "# Focus\nSistema de inventario. Phase 1 ANALYZE completado.",
+          "context/now.md": "cold_boot: false\nlast_session: 2026-03-28\ncurrent_work: work/2026-03-28-inventario/\nphase: analyze (completed)",
+          "context/work/2026-03-28-inventario/analysis/requirements.md": "# Análisis: Sistema de Inventario\n\n## Respuestas del usuario\n- Tienda de ropa, 500 productos, 2 empleados\n- Necesita: stock, alertas, reportes, solo web\n- Stack: por definir\n\n## Requisitos identificados\n- R-01: Gestión de productos (CRUD)\n- R-02: Control de stock (entradas/salidas)\n- R-03: Alertas de stock bajo (< umbral configurable)\n- R-04: Reportes básicos (stock actual, movimientos, productos bajo mínimo)"
+        }
+      },
+      "expectations": [
+        "Propone pasar a Phase 2 o Phase 3 (no más análisis)",
+        "NO hace más preguntas de análisis (ya están respondidas)",
+        "Usa los requisitos R-01 a R-04 identificados",
+        "Puede proponer solution strategy o ir directo a plan"
+      ],
+      "automated": true,
+      "priority": 1
+    },
+    {
+      "id": "MI-22",
+      "category": "gap-verification",
+      "title": "Status check con plan.md activo — siguiente tarea específica",
+      "prompt": "¿Cuál es la siguiente tarea que tengo que hacer?",
+      "context_setup": {
+        "description": "Plan con 3 de 7 tasks completadas",
+        "files": {
+          "context/focus.md": "# Focus\nSistema de caché Redis en Phase 6. T-003 completado.",
+          "context/now.md": "cold_boot: false\nlast_session: 2026-03-28\ncurrent_work: work/2026-03-26-cache-system/\nphase: execute",
+          "context/work/2026-03-26-cache-system/plan.md": "# Plan: Sistema de Caché Redis\n\n- [x] [T-001] Evaluar Redis vs Memcached (R-01)\n- [x] [T-002] Instalar y configurar Redis (R-01)\n- [x] [T-003] Implementar cache de sesiones de usuario (R-02)\n- [ ] [T-004] Implementar cache de queries frecuentes a DB (R-03)\n- [ ] [T-005] Configurar TTL por tipo de dato (R-04)\n- [ ] [T-006] Tests de invalidación de caché (R-05)\n- [ ] [T-007] Dashboard de monitoreo hit rate (R-06)"
+        }
+      },
+      "expectations": [
+        "Identifica T-004 como siguiente tarea específica",
+        "Reporta progreso: 3 de 7 completadas",
+        "Menciona el contexto del cache system",
+        "Dice explícitamente qué hacer ahora (T-004)"
+      ],
+      "automated": true,
+      "priority": 1
+    },
+    {
+      "id": "MI-23",
+      "category": "gap-verification",
+      "title": "Descomposición con trazabilidad explícita",
+      "prompt": "Descompón la implementación de un sistema de búsqueda con Elasticsearch. Requisitos: R-01 búsqueda full-text en productos, R-02 filtros facetados por categoría/precio/marca, R-03 autocompletado en barra de búsqueda. Necesito poder rastrear cada tarea hasta su requisito original.",
+      "context_setup": null,
+      "expectations": [
+        "Tareas tienen IDs con formato [T-NNN] o similar",
+        "Cada tarea referencia su requisito (R-01, R-02, o R-03)",
+        "Hay trazabilidad visible entre tasks y requirements",
+        "Orden lógico de implementación"
+      ],
+      "automated": true,
+      "priority": 1
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+work_package: [YYYY-MM-DD-HH-MM-SS-nombre]
+current_phase: Phase 2 — MEASURE
+author: [Nombre]
+status: Borrador
+measurement_date: [YYYY-MM-DD]
+data_source: [Dónde se obtuvieron los datos]
+```
+
+# Baseline: [Nombre del Work Package]
+
+## Propósito
+
+Capturar el estado cuantitativo ANTES de intervenir. Sin baseline no hay forma de medir si la solución mejoró algo.
+
+> Regla: Si no puedes medir la diferencia entre el estado actual y el estado objetivo, no sabes si tu solución funcionó.
+
+---
+
+## Estado Actual (Baseline)
+
+### Métricas principales
+
+| Métrica | Valor actual | Unidad | Método de medición | Fecha |
+|---------|-------------|--------|--------------------|-------|
+| [Nombre métrica] | [valor] | [ms / % / count / etc.] | [cómo se midió] | [YYYY-MM-DD] |
+| [Nombre métrica] | [valor] | | | |
+
+### Contexto de la medición
+
+[Describir las condiciones bajo las cuales se tomaron las mediciones: entorno, carga, configuración. Las condiciones importan — el mismo sistema puede tener métricas muy distintas bajo carga baja vs alta.]
+
+---
+
+## Objetivos (Targets)
+
+| Métrica | Baseline | Target | Delta esperado | Prioridad |
+|---------|----------|--------|---------------|-----------|
+| [Métrica] | [valor actual] | [valor objetivo] | [mejora esperada] | alta/media/baja |
+
+**Criterio de éxito**: [Condición específica y medible que define "terminado con éxito". Ej: "Tiempo de respuesta P95 < 200ms bajo carga de 1000 req/s"]
+
+---
+
+## Método de medición
+
+### Herramientas
+
+| Herramienta | Propósito | Configuración |
+|-------------|-----------|---------------|
+| [Herramienta] | [qué mide] | [cómo se configura] |
+
+### Procedimiento de medición
+
+1. [Paso 1: condiciones de entorno]
+2. [Paso 2: cómo ejecutar la medición]
+3. [Paso 3: cómo interpretar los resultados]
+
+### Reproducibilidad
+
+[Instrucciones para que otra persona reproduzca exactamente las mismas mediciones. Sin esto, los resultados no son verificables.]
+
+---
+
+## Observaciones
+
+[Anomalías, inconsistencias, o condiciones especiales observadas durante la medición. Estas observaciones pueden ser relevantes para la Phase 3 ANALYZE.]
+
+---
+
+## Historial de mediciones
+
+| Fecha | Métrica | Valor | Condiciones | Autor |
+|-------|---------|-------|-------------|-------|
+| [YYYY-MM-DD] | [nombre] | [valor] | [contexto] | [nombre] |

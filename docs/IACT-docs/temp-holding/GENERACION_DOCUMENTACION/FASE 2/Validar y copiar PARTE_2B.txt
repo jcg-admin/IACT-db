@@ -1,0 +1,29 @@
+
+Validar y copiar PARTE_2B
+bash
+
+
+cd /tmp/iact_regeneracion
+
+./validar_nomenclatura.sh partes/PARTE_2B_Construccion_Detallada_IACT_1_0_0.md
+
+cp partes/PARTE_2B_Construccion_Detallada_IACT_1_0_0.md /mnt/user-data/outputs/
+
+echo ""
+echo "✅ PARTE_2B actualizada"
+ls -lh /mnt/user-data/outputs/PARTE_2B_Construccion_Detallada_IACT_1_0_0.md
+Output
+
+=========================================
+VALIDANDO NOMENCLATURA: PARTE_2B_Construccion_Detallada_IACT_1_0_0.md
+=========================================
+[OK] Versionado presente
+[OK] Usa guiones bajos correctamente
+[OK] Prefijo válido: PARTE
+[OK] Extensión válida: .md
+=========================================
+RESULTADO: [OK] Nomenclatura correcta
+=========================================
+
+✅ PARTE_2B actualizada
+-rw-r--r-- 1 999 root 156K Jan  9 02:45 /mnt/user-data/outputs/PARTE_2B_Construccion_Detallada_IACT_1_0_0.md

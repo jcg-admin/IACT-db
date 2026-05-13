@@ -1,0 +1,68 @@
+# RUP — Rational Unified Process
+# type: iterative
+# Cada fase puede repetirse N veces (iteraciones). El avance al siguiente step puede ser
+# "pasar a la siguiente fase" o "repetir la iteración actual".
+# El coordinator presenta ambas opciones cuando methodology_step coincide con una fase.
+
+id: rup
+type: iterative
+display: "RUP — Rational Unified Process"
+note: >
+  4 fases secuenciales, cada una con N iteraciones.
+  En cada iteración se trabajan todas las disciplinas (Requirements, Analysis & Design,
+  Implementation, Test). El avance es por milestone, no por iteración fija.
+
+native_phase_count: 4
+produces:
+  - Vision Document + Risk List (LCO milestone)
+  - Architecture Baseline + Technical Risk Mitigation (LCA milestone)
+  - Beta Release + IOC Report (IOC milestone)
+  - Product Release + Deployment Package (PD milestone)
+consumes:
+  - business-case
+  - stakeholder-requirements
+  - technical-constraints
+
+steps:
+  - id: rup:inception
+    display: "Inception — Visión, alcance y factibilidad"
+    milestone: "LCO — Lifecycle Objectives"
+    milestone_criteria: "Stakeholders alineados en visión y alcance. Riesgos críticos identificados."
+    next: [rup:elaboration]
+    repeat: rup:inception
+    repeat_when: "Los objetivos del ciclo de vida (LCO) no están suficientemente claros para continuar"
+
+  - id: rup:elaboration
+    display: "Elaboration — Arquitectura base y mitigación de riesgos críticos"
+    milestone: "LCA — Lifecycle Architecture"
+    milestone_criteria: "Arquitectura estabilizada. Riesgos técnicos principales mitigados. Plan de construcción realista."
+    next: [rup:construction]
+    repeat: rup:elaboration
+    repeat_when: "La arquitectura no está estabilizada o hay riesgos técnicos sin mitigar"
+
+  - id: rup:construction
+    display: "Construction — Desarrollo incremental hacia capacidad operacional inicial"
+    milestone: "IOC — Initial Operational Capability"
+    milestone_criteria: "Software con funcionalidad suficiente para pruebas beta. Usuarios pueden empezar a evaluar."
+    next: [rup:transition]
+    repeat: rup:construction
+    repeat_when: "Nuevo release incremental requerido antes de la transición"
+
+  - id: rup:transition
+    display: "Transition — Despliegue, entrega y soporte post-lanzamiento"
+    milestone: "PD — Product Release"
+    milestone_criteria: "Producto desplegado y aceptado por usuarios finales. Defectos críticos resueltos."
+    next: []
+    repeat: rup:transition
+    repeat_when: "Ciclo de correcciones post-release o nueva beta antes del release final"
+
+disciplines:
+  - Business Modeling
+  - Requirements
+  - Analysis & Design
+  - Implementation
+  - Test
+  - Deployment
+  - Configuration & Change Management
+  - Project Management
+  - Environment

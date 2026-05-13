@@ -1,0 +1,257 @@
+{
+  "script_name": "validate_shell_constitution.sh",
+  "script_path": "scripts/validation/quality/validate_shell_constitution.sh",
+  "analysis_timestamp": "2025-11-13T09:06:18.935650",
+  "analysis_mode": "standard",
+  "overall_score": 65.0,
+  "constitutional": {
+    "overall_compliance": false,
+    "compliance_score": 87.5,
+    "rule_results": {
+      "1": {
+        "rule_number": 1,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "2": {
+        "rule_number": 2,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "3": {
+        "rule_number": 3,
+        "compliant": false,
+        "score": 0,
+        "violations": [
+          {
+            "rule_number": 3,
+            "line_number": 91,
+            "severity": "high",
+            "description": "Silent error handling with '|| true'",
+            "recommendation": "Use explicit error handling instead"
+          },
+          {
+            "rule_number": 3,
+            "line_number": 93,
+            "severity": "high",
+            "description": "Silent error handling with '|| true'",
+            "recommendation": "Use explicit error handling instead"
+          },
+          {
+            "rule_number": 3,
+            "line_number": 101,
+            "severity": "high",
+            "description": "Silent error handling with '|| true'",
+            "recommendation": "Use explicit error handling instead"
+          },
+          {
+            "rule_number": 3,
+            "line_number": 162,
+            "severity": "high",
+            "description": "Silent error handling with '|| true'",
+            "recommendation": "Use explicit error handling instead"
+          },
+          {
+            "rule_number": 3,
+            "line_number": 171,
+            "severity": "high",
+            "description": "Silent error handling with '|| true'",
+            "recommendation": "Use explicit error handling instead"
+          }
+        ],
+        "recommendations": []
+      },
+      "4": {
+        "rule_number": 4,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "5": {
+        "rule_number": 5,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "6": {
+        "rule_number": 6,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "7": {
+        "rule_number": 7,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "8": {
+        "rule_number": 8,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      }
+    },
+    "total_violations": 5
+  },
+  "quality": {
+    "metrics": {
+      "lines_of_code": 441,
+      "lines_of_comments": 56,
+      "number_of_functions": 14,
+      "max_function_length": 0,
+      "average_function_length": 0.0,
+      "cyclomatic_complexity": 0.0,
+      "comment_ratio": 0.12698412698412698
+    },
+    "code_smells": [],
+    "refactoring_opportunities": [],
+    "quality_score": 100.0
+  },
+  "security": {
+    "issues": [
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 88",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 96",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 133",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 139",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 175",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 206",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 213",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 230",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 265",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 291",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 296",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 301",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 413",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 415",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      }
+    ],
+    "severity_counts": {
+      "critical": 0,
+      "high": 14,
+      "medium": 0,
+      "low": 0
+    },
+    "security_score": 0
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "skill_name": "thyrox",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Quiero crear un sistema de inventario para una tienda pequeña. Manejaría productos, categorías, stock, y alertas cuando un producto está por agotarse. La tienda tiene 2 empleados y unos 500 productos. Ayúdame a empezar.",
+      "expected_output": "Prioriza entender antes de planificar. Hace preguntas para entender el problema. Propone documentar hallazgos. NO genera código de implementación.",
+      "files": [],
+      "expectations": [
+        "Prioriza entender el problema antes de proponer soluciones",
+        "Propone documentar u organizar los hallazgos del análisis",
+        "Hace preguntas para entender requisitos, usuarios o limitaciones",
+        "NO genera código de implementación directamente",
+        "NO salta directo a implementar sin entender primero"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "¿En qué punto estamos del proyecto? ¿Qué debería hacer ahora?",
+      "expected_output": "Lee focus.md y/o now.md y/o ROADMAP.md. Reporta estado actual basado en datos reales. Sugiere siguiente paso concreto basado en la fase actual.",
+      "files": [],
+      "expectations": [
+        "La respuesta contiene datos específicos del proyecto (nombres de fases, porcentajes, tareas pendientes reales — no genéricos)",
+        "La respuesta está basada en datos reales del proyecto, no inventados",
+        "Se sugiere una acción concreta como siguiente paso",
+        "Se identifica en qué fase del SDLC se encuentra el proyecto"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Necesito agregar soporte multi-idioma a la aplicación. Los textos están hardcodeados en español por todo el código. Hay unas 30 pantallas. Descompón esto en tareas que pueda ir haciendo.",
+      "expected_output": "Descompone en tareas con IDs o checkboxes. Orden lógico. Tareas específicas del dominio. Considera la escala. NO cuestiona si el proyecto existe.",
+      "files": [],
+      "expectations": [
+        "Las tareas tienen IDs o checkboxes organizados",
+        "Hay un orden lógico de ejecución (no aleatorio)",
+        "Las tareas son específicas del dominio solicitado (i18n)",
+        "Considera la escala mencionada (30 pantallas) en la descomposición",
+        "NO cuestiona si el proyecto existe — descompone lo que el usuario pidió"
+      ]
+    }
+  ]
+}

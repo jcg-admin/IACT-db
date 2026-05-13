@@ -1,0 +1,102 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+updated_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+requirements_version: [1.0]
+analysis_owner: [Nombre]
+status: [Incompleto/Completo/Validado]
+total_requirements: [N]
+```
+
+# Requirements Analysis: [PROJECT_NAME]
+
+## Propósito
+
+Documentar QUÉ debe hacer el sistema, en dos niveles: requisitos generales y específicos.
+
+> Objetivo: Especificar de forma clara, completa y verificable qué funcionalidades el sistema debe proporcionar.
+
+---
+
+## Requisitos Generales (Level 1)
+
+| ID  | Requirement | Explanation |
+|-----|-------------|-------------|
+| R-1 | [Name]      | [Brief description of what the system must do] |
+| R-2 | [Name]      | [Brief description of what the system must do] |
+| R-3 | [Name]      | [Brief description of what the system must do] |
+
+**Ejemplo:**
+| ID  | Requirement | Explanation |
+|-----|-------------|-------------|
+| R-1 | User Registration | Sistema permite a usuarios crear cuenta con email y contraseña |
+| R-2 | Product Browsing | Sistema permite buscar y navegar catálogo de productos |
+| R-3 | Shopping Cart | Sistema permite agregar/remover productos a carrito |
+
+---
+
+## Requisitos Específicos (Level 2)
+
+### Para R-1: [Requirement Name]
+
+- **[Specific Check 1]**
+  Description of what to verify
+
+- **[Specific Check 2]**
+  Description of what to verify
+
+- **[Specific Check 3]**
+  Description of what to verify
+
+**Ejemplo (Para R-1: User Registration):**
+- **Email Validation**
+  Verificar que email es válido y no duplicado
+  
+- **Password Strength Validation**
+  Verificar que contraseña cumple criterios de seguridad
+  
+- **Account Confirmation**
+  Enviar email de confirmación antes de activar cuenta
+  
+- **Data Encryption**
+  Almacenar datos sensibles encriptados
+
+### Para R-2: [Requirement Name]
+
+[Repetir estructura anterior]
+
+### Para R-3: [Requirement Name]
+
+[Repetir estructura anterior]
+
+---
+
+## Matriz de Trazabilidad (Opcional)
+
+| Requisito | Stakeholder | Priority | Status | Quality Goal |
+|-----------|-------------|----------|--------|-------------|
+| R-1       | User        | High     | Draft  | Usability   |
+| R-2       | User        | High     | Draft  | Performance |
+| R-3       | User        | High     | Draft  | Correctness |
+
+---
+
+## Validación Checklist
+
+- [ ] Todos los requisitos tienen ID único
+- [ ] Nombres breves y claros
+- [ ] Explicaciones concisos
+- [ ] Dos niveles de detalle
+- [ ] Cada requisito es verificable
+- [ ] Orientado al negocio
+- [ ] Conectado a Stakeholders
+- [ ] Conectado a Quality Goals
+
+---
+
+## Siguiente Paso
+
+Una vez completado este documento:
+→ Pasar a `quality-goals.md`
+
+---

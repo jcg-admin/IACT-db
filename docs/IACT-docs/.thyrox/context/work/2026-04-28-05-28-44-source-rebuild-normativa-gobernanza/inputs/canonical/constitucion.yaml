@@ -1,0 +1,176 @@
+# Automation System Configuration
+# Version: 1.0.0
+# Last Updated: 2025-11-14
+# Purpose: Production-ready configuration file for the automation system
+
+# ==============================================================================
+# METADATA
+# ==============================================================================
+metadata:
+  version: 1.0.0
+  last_updated: 2025-11-14
+  description: Automation system configuration
+
+# ==============================================================================
+# PRINCIPLES (5 Core Principles)
+# ==============================================================================
+principles:
+  R1:
+    name: Idempotencia
+    description: All operations must be idempotent
+    enforcement: Operations can be executed multiple times with same result
+
+  R2:
+    name: Sin Emojis
+    description: No emojis or icons in outputs
+    enforcement: All output must be text-only for automation compatibility
+
+  R3:
+    name: Verificacion
+    description: All changes must be verified
+    enforcement: Verification step required after each operation
+
+  R4:
+    name: Documentacion
+    description: All changes must be documented
+    enforcement: Documentation update required for all modifications
+
+  R5:
+    name: Trazabilidad
+    description: Complete traceability of changes
+    enforcement: All changes must be logged with context and metadata
+
+# ==============================================================================
+# RULES (6 Operational Rules)
+# ==============================================================================
+rules:
+  rule_1:
+    name: Exit Codes
+    description: Standardized exit codes for all operations
+    implementation:
+      success: 0
+      failure: 1
+      warnings: 2
+
+  rule_2:
+    name: JSON Output Format
+    description: Agent results must use JSON format
+    implementation: All agent outputs structured as valid JSON
+
+  rule_3:
+    name: Logging Standards
+    description: Logging to STDERR, results to STDOUT
+    implementation:
+      logs: STDERR
+      results: STDOUT
+
+  rule_4:
+    name: Configuration Validation
+    description: Configuration validation before execution
+    implementation: Validate all config files before running operations
+
+  rule_5:
+    name: Graceful Degradation
+    description: Graceful degradation on errors
+    implementation: Continue execution with reduced functionality on non-critical errors
+
+  rule_6:
+    name: Parallel Execution
+    description: Parallel execution where possible
+    implementation: Maximize parallelization for independent operations
+
+# ==============================================================================
+# AGENT CONFIGURATION (8 Real Automation Agents)
+# ==============================================================================
+agent_configuration:
+  schema_validator_agent:
+    schemas_dir: schemas/
+    validation_mode: strict
+    output_format: json
+    fail_on_warnings: false
+
+  devcontainer_validator_agent:
+    devcontainer_config: .devcontainer/devcontainer.json
+    check_extensions: true
+    check_features: true
+    output_format: json
+
+  metrics_collector_agent:
+    metrics_output: /tmp/automation_metrics.json
+    track_execution_time: true
+    track_success_rate: true
+    retention_days: 30
+
+  coherence_analyzer_agent:
+    ui_path: frontend/src/components
+    api_path: api/callcentersite
+    analysis_depth: full
+    report_mismatches: true
+    output_format: json
+
+  constitution_validator_agent:
+    rules_to_check:
+      - R1  # Branch protection
+      - R2  # No emojis
+      - R3  # UI/API coherence
+      - R4  # Database router
+      - R5  # Test execution
+      - R6  # DevContainer validation
+    enforcement_mode: strict
+
+  ci_pipeline_orchestrator_agent:
+    config_file: .ci-local.yaml
+    max_concurrent_jobs: 10
+    fail_fast: true
+    smart_detection: true
+
+  pdca_agent:
+    dora_metrics_enabled: true
+    pdca_cycle_tracking: true
+    improvement_suggestions: true
+    output_format: json
+
+  business_rules_validator_agent:
+    docs_dir: docs/gobernanza/requisitos/REGLAS_NEGOCIO
+    check_structure: true
+    check_categorization: true
+    check_examples: true
+    check_references: true
+    check_matrices: true
+    output_format: json
+
+  compliance_validator_agent:
+    spec_file: docs/gobernanza/requisitos/REGLAS_NEGOCIO/ESPECIFICACION_TESTS_COMPLIANCE.md
+    check_coverage: true
+    check_structure: true
+    check_naming: true
+    check_levels: true
+    output_format: json
+
+# ==============================================================================
+# METRICS CONFIGURATION
+# ==============================================================================
+metrics_configuration:
+  enable_metrics: true
+  metrics_output: /tmp/automation_metrics.json
+  track_execution_time: true
+  track_success_rate: true
+
+# ==============================================================================
+# EVOLUTION GUIDELINES
+# ==============================================================================
+evolution_guidelines:
+  schema_versioning:
+    description: Use semantic versioning for schema changes
+    breaking_changes: Increment major version for breaking changes
+    backward_compatibility: Maintain compatibility within major versions
+
+  backward_compatibility:
+    description: Requirements for backward compatibility
+    policy: New minor versions must support previous minor version configurations
+    deprecation_notice: Provide at least one minor version deprecation notice
+
+  migration_path:
+    description: Migration path documentation requirements
+    requirement: All breaking changes must include migration documentation
+    location: Document migration steps in CHANGELOG.md and migration guides

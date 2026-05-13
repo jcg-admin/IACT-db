@@ -1,0 +1,84 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+work_package: [YYYY-MM-DD-HH-MM-SS-nombre]
+current_phase: Phase 12 — STANDARDIZE
+author: [Nombre]
+status: Borrador
+fase_number: [N]
+```
+
+# Final Report: [Nombre del Work Package]
+
+## Resumen ejecutivo
+
+[3-5 líneas: qué se entregó, cuál fue el impacto medible, qué aprendió el equipo.]
+
+---
+
+## Objetivo del WP
+
+[Reproducir el objetivo de Phase 1 DISCOVER — una sola frase precisa.]
+
+**Criterio de éxito original**: [Criterio definido en el baseline de Phase 2]
+
+---
+
+## Métricas — Baseline vs Resultado
+
+| Métrica | Baseline | Target | Resultado | Delta real | ¿Cumplido? |
+|---------|----------|--------|-----------|-----------|-----------|
+| [Métrica 1] | [valor] | [target] | [valor final] | [Δ] | ✓ / ✗ |
+| [Métrica 2] | [valor] | [target] | [valor final] | [Δ] | ✓ / ✗ |
+
+**Análisis del delta**: [Por qué se logró o no se logró el target. Sin excusas — análisis causal.]
+
+---
+
+## Fases completadas
+
+| Phase | Nombre | Artefacto principal | Estado |
+|-------|--------|---------------------|--------|
+| 1 | DISCOVER | `discover/{nombre}-analysis.md` | ✓ |
+| 2 | MEASURE | `measure/baseline.md` | ✓ / omitida |
+| 3 | ANALYZE | `analyze/{nombre}-synthesis.md` | ✓ / omitida |
+| 4 | CONSTRAINTS | `constraints/{nombre}-constraints.md` | ✓ / omitida |
+| 5 | STRATEGY | `strategy/{nombre}-strategy.md` | ✓ / omitida |
+| 6 | PLAN | `{nombre}-plan.md` | ✓ |
+| 7 | DESIGN/SPECIFY | `{nombre}-design.md` | ✓ / omitida |
+| 8 | PLAN EXECUTION | `{nombre}-task-plan.md` | ✓ |
+| 9 | PILOT/VALIDATE | `pilot/{nombre}-pilot-report.md` | ✓ / omitida |
+| 10 | EXECUTE | `{nombre}-execution-log.md` | ✓ |
+| 11 | TRACK/EVALUATE | `{nombre}-lessons-learned.md` | ✓ |
+| 12 | STANDARDIZE | `{nombre}-patterns.md` | ✓ |
+
+---
+
+## Deuda técnica
+
+| TD creada | Prioridad | WP recomendado |
+|-----------|-----------|----------------|
+| [descripción] | alta/media/baja | [próximo WP sugerido] |
+
+| TD resuelta (de WPs anteriores) | WP de origen |
+|----------------------------------|--------------|
+| [descripción] | FASE N |
+
+---
+
+## Lecciones aplicables al siguiente WP
+
+[3-5 puntos concretos. No generalizaciones — observaciones específicas de este WP que cambian cómo se abordará el siguiente.]
+
+1. **[Lección]** — [Acción concreta derivada]
+2. **[Lección]** — [Acción concreta derivada]
+
+---
+
+## Estado de cierre
+
+- [ ] Todos los artefactos de fase creados y commitados
+- [ ] `ROADMAP.md` actualizado con esta FASE como completada
+- [ ] Deuda técnica registrada en `technical-debt.md`
+- [ ] Patrones documentados en `patterns.md`
+- [ ] `now.md` limpiado (sin estado residual)

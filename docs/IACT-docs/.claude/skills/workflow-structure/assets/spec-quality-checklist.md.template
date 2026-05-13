@@ -1,0 +1,78 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+feature: [FEATURE_NAME]
+epic: [context/epics/YYYY-MM-DD-nombre/]
+Iteración: [1/2]
+status: [Pendiente/Pasó/Falló]
+```
+
+# Spec Quality Checklist: [FEATURE_NAME]
+
+## Propósito
+
+Validar calidad de la especificación ANTES de descomponer en tasks. Si hay items fallidos, iterar la spec (máximo 2 veces). Si persisten, documentar y obtener aprobación explícita.
+
+> Gate: Phase 4 (STRUCTURE) → Phase 5 (DECOMPOSE). No avanzar con items fallidos sin aprobación.
+
+---
+
+## Completitud [Spec §Requirements]
+
+- [ ] Todos los requisitos funcionales documentados (R-N o FR-NNN)
+- [ ] Requisitos no-funcionales identificados (performance, seguridad, escalabilidad)
+- [ ] Criterios de éxito definidos y medibles (SC-NNN)
+- [ ] Scope claramente delimitado (qué incluye Y qué excluye)
+- [ ] Dependencias identificadas
+- [ ] Assumptions documentadas
+
+## Claridad [Spec §Requirements + §Use Cases]
+
+- [ ] Cada requisito es específico (no vago: "rápido", "bueno", "fácil")
+- [ ] Sin términos ambiguos sin definir
+- [ ] Cada requisito tiene un solo significado posible
+- [ ] **Zero [NEEDS CLARIFICATION] markers sin resolver** → Si hay, iterar spec antes de continuar
+
+## Consistencia
+
+- [ ] Requisitos no se contradicen entre sí
+- [ ] Terminología es consistente (misma palabra = mismo concepto)
+- [ ] Prioridades no entran en conflicto
+- [ ] Alineado con constitution.md (si existe)
+
+## Medibilidad
+
+- [ ] Cada criterio de éxito es verificable objetivamente
+- [ ] Se puede determinar si un requisito "pasó" o "falló"
+- [ ] Métricas definidas donde aplica (tiempo de respuesta, cobertura, etc.)
+
+## Cobertura
+
+- [ ] Flujos principales documentados
+- [ ] Flujos alternativos y edge cases considerados
+- [ ] Escenarios de error definidos
+- [ ] Todos los stakeholders tienen sus necesidades representadas
+
+---
+
+## Resultado
+
+**Items totales:** [N]<br>
+**Items pasados:** [N]<br>
+**Items fallidos:** [N]
+
+### Si hay items fallidos:
+
+1. Documentar qué falla y por qué
+2. Actualizar spec para resolver
+3. Re-ejecutar checklist (iteración 2)
+4. Si persisten: obtener aprobación explícita del usuario antes de continuar
+
+### Items fallidos (si aplica):
+
+| Item | Razón de fallo | Acción |
+|------|---------------|--------|
+| | | |
+
+---
+
+**Última actualización:** [YYYY-MM-DD HH:MM:SS]

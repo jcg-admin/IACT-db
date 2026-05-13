@@ -1,0 +1,291 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "br-compliance",
+    "title": "Business Rules Compliance Dashboard - IACT Call Center",
+    "tags": ["business-rules", "compliance", "call-center"],
+    "timezone": "America/Mexico_City",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "BR-C01: Average Handle Time (AHT) - Últimas 24h",
+        "type": "timeseries",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "avg(call_duration_seconds_sum / call_duration_seconds_count) by (agent)",
+            "legendFormat": "{{agent}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 300, "color": "yellow"},
+                {"value": 420, "color": "red"}
+              ]
+            }
+          }
+        },
+        "description": "Regla BR-C01: Tiempo promedio de manejo de llamadas. Verde <5min, Amarillo 5-7min, Rojo >7min"
+      },
+      {
+        "id": 2,
+        "title": "BR-C04: First Call Resolution (FCR) - Últimas 24h",
+        "type": "gauge",
+        "gridPos": {"x": 12, "y": 0, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(calls_resolved_first_contact_total) / sum(calls_total) * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 60, "color": "yellow"},
+                {"value": 70, "color": "green"}
+              ]
+            }
+          }
+        },
+        "description": "Regla BR-C04: Porcentaje de llamadas resueltas en primer contacto. Meta: >70%"
+      },
+      {
+        "id": 3,
+        "title": "BR-C07: Tasa de Abandono - Últimas 24h",
+        "type": "stat",
+        "gridPos": {"x": 18, "y": 0, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(calls_abandoned_total) / sum(calls_incoming_total) * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 5, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        },
+        "description": "Regla BR-C07: Porcentaje de llamadas abandonadas. Meta: <5%"
+      },
+      {
+        "id": 4,
+        "title": "BR-R02: Agentes Disponibles vs Total",
+        "type": "bar",
+        "gridPos": {"x": 0, "y": 8, "w": 8, "h": 8},
+        "targets": [
+          {
+            "expr": "count(agent_status{status='disponible'})",
+            "legendFormat": "Disponibles",
+            "refId": "A"
+          },
+          {
+            "expr": "count(agent_status)",
+            "legendFormat": "Total",
+            "refId": "B"
+          }
+        ],
+        "description": "Regla BR-R02: Validación de agentes disponibles para recibir llamadas"
+      },
+      {
+        "id": 5,
+        "title": "BR-D02: Llamadas con Tiempo de Espera >5min",
+        "type": "table",
+        "gridPos": {"x": 8, "y": 8, "w": 8, "h": 8},
+        "targets": [
+          {
+            "expr": "sum(calls_queue_time_seconds_bucket{le='300'}) by (queue_name)",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "description": "Regla BR-D02: Desencadenador - Llamadas que exceden 5 minutos de espera y requieren escalación"
+      },
+      {
+        "id": 6,
+        "title": "BR-I01: Clasificación de Rendimiento de Agentes",
+        "type": "piechart",
+        "gridPos": {"x": 16, "y": 8, "w": 8, "h": 8},
+        "targets": [
+          {
+            "expr": "count(agent_performance_classification) by (classification)",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          },
+          "pieType": "pie",
+          "displayLabels": ["percent"]
+        },
+        "description": "Regla BR-I01: Inferencia - Clasificación automática de rendimiento (Excelente/Bueno/Aceptable/Requiere Mejora)"
+      },
+      {
+        "id": 7,
+        "title": "BR-R08: Cumplimiento LFPDPPP - Grabaciones con Consentimiento",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 16, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "sum(recordings_with_consent_total) / sum(recordings_total) * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 99, "color": "yellow"},
+                {"value": 100, "color": "green"}
+              ]
+            }
+          }
+        },
+        "description": "Regla BR-R08: Compliance LFPDPPP - Todas las grabaciones deben tener consentimiento. Meta: 100%"
+      },
+      {
+        "id": 8,
+        "title": "BR-D01: Notificaciones Fallidas a Agentes",
+        "type": "timeseries",
+        "gridPos": {"x": 8, "y": 16, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "rate(agent_notification_failures_total[5m])",
+            "legendFormat": "Notificaciones fallidas/min",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 0.1, "color": "yellow"},
+                {"value": 1, "color": "red"}
+              ]
+            }
+          }
+        },
+        "description": "Regla BR-D01: Desencadenador - Monitoreo de fallos en notificaciones WebSocket a agentes"
+      },
+      {
+        "id": 9,
+        "title": "BR-R10: Intentos de Cierre sin Clasificación",
+        "type": "stat",
+        "gridPos": {"x": 16, "y": 16, "w": 8, "h": 6},
+        "targets": [
+          {
+            "expr": "sum(increase(call_close_without_classification_attempts_total[1h]))",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 10, "color": "yellow"},
+                {"value": 50, "color": "red"}
+              ]
+            }
+          }
+        },
+        "description": "Regla BR-R10: Restricción - Detectar intentos de cerrar llamadas sin clasificación (violación de regla)"
+      },
+      {
+        "id": 10,
+        "title": "Alertas Activas - Violaciones de Reglas de Negocio",
+        "type": "alertlist",
+        "gridPos": {"x": 0, "y": 22, "w": 24, "h": 8},
+        "options": {
+          "showOptions": "current",
+          "maxItems": 20,
+          "sortOrder": 3,
+          "dashboardAlerts": true,
+          "alertName": "",
+          "dashboardTitle": "",
+          "tags": ["business-rules"]
+        },
+        "description": "Lista de alertas activas relacionadas con violaciones de reglas de negocio"
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "iconColor": "blue",
+          "tags": ["deployment"]
+        },
+        {
+          "name": "Business Rules Changes",
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "iconColor": "purple",
+          "tags": ["business-rules-change"]
+        }
+      ]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "equipo",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(agent_status, team)",
+          "multi": true,
+          "includeAll": true,
+          "label": "Equipo",
+          "refresh": 1
+        },
+        {
+          "name": "agente",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(agent_status{team=~'$equipo'}, agent)",
+          "multi": true,
+          "includeAll": true,
+          "label": "Agente",
+          "refresh": 1
+        }
+      ]
+    },
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    }
+  },
+  "overwrite": true
+}

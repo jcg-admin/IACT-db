@@ -1,0 +1,391 @@
+@startuml permisos_granular_arquitectura
+' Diagrama de Arquitectura en Capas - Sistema de Permisos Granular
+' Fecha: 2025-11-09
+' Referencia: docs/adr/adr_2025_010_orm_sql_hybrid_permissions.md
+
+' Centralized PlantUML style system (Phase C: Consolidated)
+!include ../../../_static/plantuml-styles.puml
+
+' Architecture layer colors and component stereotypes now from consolidated styles:
+' - See plantuml-styles.puml Section 3 for COLOR_* definitions
+' - See plantuml-styles.puml Section 8 for component stereotype colors
+' - See plantuml-styles.puml Section 10 for rectangle stereotype colors
+' - LAYER and COMPONENT macros defined in Section 14
+
+title Sistema de Permisos Granular - Arquitectura en Capas
+caption Estrategia Híbrida: ORM (desarrollo/testing) + SQL (producción optimizada)
+
+' =============================================================================
+' CAPA 1: PRESENTACIÓN (Frontend)
+' =============================================================================
+
+LAYER("CAPA 1: PRESENTACIÓN"<<presentation>>,#E8F5E9) {
+
+  package "React Application" {
+    COMPONENT("Components") <<frontend>> [
+      <b>Dashboard</b>
+      <b>UserManagement</b>
+      <b>PermissionAdmin</b>
+      --
+      Protegidos con:
+      <PermissionGate>
+    ]
+
+    COMPONENT("Custom Hooks") <<frontend>> [
+      <b>usePermisos()</b>
+      <b>useMenu()</b>
+      <b>useCapacidades()</b>
+      --
+      Caché local de permisos
+      Refresh automático
+    ]
+
+    COMPONENT("API Client") <<frontend>> [
+      <b>PermisosClient</b>
+      --
+      HTTP requests
+      JWT authentication
+      Error handling
+    ]
+  }
+
+  note right of Components
+    **Frontend SPA (React/Vue/Angular)**
+
+    - Verifica permisos en cliente
+    - Protege rutas y componentes
+    - Caché de capacidades (5 min TTL)
+    - Menú dinámico por permisos
+
+    **Seguridad**:
+    Validación client-side es UX,
+    NO seguridad real
+    (verificación server-side siempre)
+  end note
+}
+
+' =============================================================================
+' CAPA 2: API REST (Application Layer)
+' =============================================================================
+
+LAYER("CAPA 2: API REST"<<application>>,#FFFDE7) {
+
+  package "Django REST Framework" {
+
+    COMPONENT("ViewSets") <<api>> [
+      <b>FuncionViewSet</b>
+      <b>CapacidadViewSet</b>
+      <b>GrupoPermisoViewSet</b>
+      <b>PermisoExcepcionalViewSet</b>
+      <b>AuditoriaPermisoViewSet</b>
+      <b>VerificacionPermisoViewSet</b>
+      --
+      CRUD completo + custom actions
+    ]
+
+    COMPONENT("Serializers") <<api>> [
+      <b>Input validation</b>
+      <b>Output formatting</b>
+      <b>Nested serializers</b>
+      --
+      Valida unicidad
+      Valida foreign keys
+      Transforma datos
+    ]
+
+    COMPONENT("Middleware") <<api>> [
+      <b>AuthenticationMiddleware</b>
+      <b>AuditMiddleware</b>
+      <b>PermissionMiddleware</b>
+      --
+      JWT validation
+      Auto-auditing
+      CORS, CSRF
+    ]
+
+    COMPONENT("Decorators") <<api>> [
+      <b>@require_permission</b>
+      <b>@audit_action</b>
+      --
+      Protección declarativa
+      DRY principle
+    ]
+  }
+
+  note right of ViewSets
+    **Endpoints REST**
+
+    GET/POST  /api/permisos/funciones/
+    GET/POST  /api/permisos/capacidades/
+    GET/POST  /api/permisos/grupos/
+    GET/POST  /api/permisos/excepcionales/
+    GET       /api/permisos/auditoria/
+
+    **Verificación (SQL functions)**:
+    GET /api/permisos/verificar/:id/capacidades/
+    GET /api/permisos/verificar/:id/tiene-permiso/
+    GET /api/permisos/verificar/:id/menu/
+    GET /api/permisos/verificar/:id/grupos/
+  end note
+}
+
+' =============================================================================
+' CAPA 3: SERVICIO / DOMINIO (Business Logic)
+' =============================================================================
+
+LAYER("CAPA 3: SERVICIOS Y DOMINIO"<<domain>>,#F1F8E9) {
+
+  package "Business Logic" {
+
+    COMPONENT("UserManagementService") <<service>> [
+      <b>usuario_tiene_permiso()</b>
+      <b>asignar_grupo_a_usuario()</b>
+      <b>revocar_grupo_de_usuario()</b>
+      <b>obtener_capacidades_de_usuario()</b>
+      <b>otorgar_permiso_excepcional()</b>
+      <b>obtener_grupos_de_usuario()</b>
+      --
+      Validaciones de negocio
+      Transacciones atómicas
+      Auditoría automática
+    ]
+
+    COMPONENT("Django ORM Models") <<orm>> [
+      <b>Funcion</b>
+      <b>Capacidad</b>
+      <b>GrupoPermiso</b>
+      <b>UsuarioGrupo</b>
+      <b>PermisoExcepcional</b>
+      <b>AuditoriaPermiso</b>
+      --
+      Relaciones M2M
+      Validaciones Django
+      Signals
+    ]
+
+    COMPONENT("Business Rules") <<service>> [
+      <b>RN-PERM-001</b>: Usuario múltiples grupos
+      <b>RN-PERM-002</b>: Expiración automática
+      <b>RN-PERM-003</b>: Validación capacidades
+      <b>RN-PERM-004</b>: Auditoría obligatoria
+      <b>RN-PERM-005</b>: Grupos inactivos NO asignables
+    ]
+  }
+
+  note right of UserManagementService
+    **Capa de Servicio**
+
+    - Lógica de negocio centralizada
+    - Transacciones ACID
+    - Validaciones complejas
+    - Auditoría integrada
+
+    **Uso**:
+    - Development: ORM puro
+    - Testing: ORM + mocks
+    - Production: ORM + SQL híbrido
+  end note
+}
+
+' =============================================================================
+' CAPA 4: PERSISTENCIA (Data Access)
+' =============================================================================
+
+LAYER("CAPA 4: PERSISTENCIA"<<persistence>>,#C8E6C9) {
+
+  package "Data Access Layer" {
+
+    COMPONENT("Django ORM") <<orm>> [
+      <b>select_related()</b>
+      <b>prefetch_related()</b>
+      <b>QuerySets optimizados</b>
+      --
+      **Ventajas**:
+      - Portabilidad
+      - Testing fácil
+      - Desarrollo rápido
+
+      **Performance**:
+      - CRUD: 30-50ms (p95)
+      - Queries complejos: 50-100ms
+    ]
+
+    COMPONENT("SQL Views") <<sql>> [
+      <b>vista_capacidades_usuario</b>
+      <b>vista_grupos_usuario</b>
+      --
+      **Ventajas**:
+      - Queries optimizadas
+      - Índices específicos
+
+      **Performance**:
+      - Lectura agregada: 10-20ms (p95)
+    ]
+
+    COMPONENT("SQL Functions") <<sql>> [
+      <b>usuario_tiene_permiso()</b>
+      <b>obtener_capacidades_usuario()</b>
+      <b>obtener_grupos_usuario()</b>
+      <b>verificar_permiso_y_auditar()</b>
+      <b>obtener_menu_usuario()</b>
+      --
+      **Ventajas**:
+      - Ultra-rápido (hot path)
+      - Operaciones atómicas
+
+      **Performance**:
+      - Verificación: 5-10ms (p95)
+      - Menú: 20-40ms (p95)
+    ]
+  }
+
+  note right of "SQL Functions"
+    **Estrategia Híbrida**
+
+    **Usar ORM cuando**:
+    - Desarrollo/prototipado
+    - Testing
+    - Admin/CRUD
+    - Latencia < 50ms aceptable
+
+    **Usar SQL Views cuando**:
+    - Reads frecuentes
+    - Agregaciones complejas
+    - Reportes
+
+    **Usar SQL Functions cuando**:
+    - Hot path (verificación)
+    - Generación de menú
+    - Operaciones atómicas
+    - Latencia < 10ms requerido
+  end note
+}
+
+' =============================================================================
+' CAPA 5: BASE DE DATOS
+' =============================================================================
+
+LAYER("CAPA 5: BASE DE DATOS"<<presentation>>,#FFCCBC) {
+  database "PostgreSQL 16" as postgres {
+    folder "Tables (8)" {
+      [auth_user]
+      [funciones]
+      [capacidades]
+      [funcion_capacidades]
+      [grupos_permisos]
+      [grupo_capacidades]
+      [usuarios_grupos]
+      [permisos_excepcionales]
+      [auditoria_permisos]
+    }
+
+    folder "Views (2)" {
+      [vista_capacidades_usuario]
+      [vista_grupos_usuario]
+    }
+
+    folder "Functions (5)" {
+      [usuario_tiene_permiso]
+      [obtener_capacidades_usuario]
+      [obtener_grupos_usuario]
+      [verificar_permiso_y_auditar]
+      [obtener_menu_usuario]
+    }
+
+    folder "Indexes" {
+      [idx_usuarios_grupos_vigencia]
+      [idx_permisos_exc_vigencia]
+      [idx_capacidades_codigo_activa]
+      [idx_auditoria_usuario_time]
+      [idx_auditoria_cap_time]
+    }
+  }
+
+  note right of postgres
+    **PostgreSQL 16**
+
+    Features usadas:
+    - JSONB para contexto adicional
+    - PL/pgSQL para funciones
+    - Materialized views (futuro)
+    - Partitioning en auditoría (futuro)
+
+    **Constraints**:
+    - UNIQUE (usuario_id, grupo_id)
+    - CHECK para enums
+    - Foreign keys con CASCADE
+
+    **Performance**:
+    - Índices B-Tree
+    - VACUUM automático
+    - Analyze periódico
+  end note
+}
+
+' =============================================================================
+' FLUJO DE DATOS Y RELACIONES
+' =============================================================================
+
+' Frontend -> API
+[API Client] --> [ViewSets] : HTTP/JSON\n(JWT Bearer)
+
+' API -> Service
+[ViewSets] --> [Serializers] : Validate
+[Serializers] --> [UserManagementService] : Business Logic
+
+' Service -> Data Access (ORM)
+[UserManagementService] --> [Django ORM Models] : CRUD Operations
+[UserManagementService] --> [Business Rules] : Validate
+
+' Service -> Data Access (SQL)
+[UserManagementService] ..> [SQL Functions] : Hot Path\n(5-10ms)
+[ViewSets] ..> [SQL Functions] : Verificación\nDirecta
+
+' Data Access -> Database
+[Django ORM] --> postgres : ORM Queries\n(30-50ms)
+[SQL Views] --> postgres : Optimized\nReads (10-20ms)
+[SQL Functions] --> postgres : Native SQL\n(5-10ms)
+
+' Middleware intercepta todas las requests
+[API Client] --> [Middleware] : Intercept
+[Middleware] --> [ViewSets] : Authenticate\n& Authorize
+
+' Auditoría transversal
+[UserManagementService] --> [auditoria_permisos] : Log all actions
+[Middleware] --> [auditoria_permisos] : Auto-audit
+
+' =============================================================================
+' NOTAS ADICIONALES
+' =============================================================================
+
+note bottom of postgres
+  **Decisión de Arquitectura**
+
+  ADR-2025-010: Estrategia Híbrida ORM + SQL
+
+  **Trade-offs**:
+  - Mantenibilidad (ORM) vs Performance (SQL)
+  - Portabilidad (ORM) vs Optimización (SQL)
+  - Testability (ORM) vs Speed (SQL)
+
+  **Resultado**:
+  AMBOS - Usar la herramienta correcta
+  para cada caso
+
+  Ver: docs/adr/adr_2025_010_orm_sql_hybrid_permissions.md
+end note
+
+legend right
+  |= Color |= Capa |
+  | <back:#E8F5E9>     </back> | Presentación (Frontend) |
+  | <back:#FFFDE7>     </back> | Aplicación (API REST) |
+  | <back:#F1F8E9>     </back> | Dominio (Business Logic) |
+  | <back:#C8E6C9>     </back> | Persistencia (Data Access) |
+  | <back:#FFCCBC>     </back> | Base de Datos |
+  |= Línea |= Tipo |
+  | → | Llamada síncrona |
+  | ⤏ | Llamada asíncrona |
+  | ..> | Llamada optimizada (SQL) |
+endlegend
+
+@enduml

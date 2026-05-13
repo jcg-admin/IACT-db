@@ -1,0 +1,297 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+feature: [Nombre de la feature]
+design_version: [1.0]
+designer: [Nombre]
+components: [N]
+external_dependencies: [N]
+status: [En progreso/Completo/Validado]
+assigned_reviewer: [Nombre]
+```
+
+# Design: [Titulo del Proyecto/Feature]
+
+## Propósito
+
+Documentar CÓMO arquitectónicamente implementar los requisitos. Decisiones arquitectónicas, componentes, relaciones.
+
+> Objetivo: Objetivo: Traducir requisitos en decisiones técnicas implementables.
+
+---
+
+Basado en: requirements-analysis.md
+
+## 1. Vision General
+
+[Overview de alto nivel de la solucion propuesta. Como se resuelve el problema planteado en requirements-analysis.md]
+
+## 2. Decisiones Arquitectonicas
+
+DA-001: [Titulo de la decision]
+- Contexto: [Por que surge esta decision, que problema resuelve]
+- Decision: [Que se decidio hacer]
+- Alternativas consideradas:
+ - Alternativa A: [Descripcion] - Rechazada porque [razon]
+ - Alternativa B: [Descripcion] - Rechazada porque [razon]
+- Consecuencias:
+ - Positivas: [Beneficios]
+ - Negativas: [Trade-offs, costos]
+- Referencias: RF-001, RF-003 (de requirements-analysis.md)
+
+DA-002: [Titulo de la decision]
+...
+
+## 3. Componentes Afectados
+
+### 3.1 Nuevos Componentes
+
+| Componente | Ubicacion | Proposito |
+|------------|-----------|-----------|
+| [Nombre] | source/path/to/component.rst | [Para que sirve] |
+| [Nombre] | scripts/new_script.py | [Para que sirve] |
+
+### 3.2 Componentes Modificados
+
+| Componente | Ubicacion | Cambios |
+|------------|-----------|---------|
+| [Nombre] | source/path/existing.rst | [Que se modifica] |
+| [Nombre] | source/index.rst | [Que se modifica] |
+
+### 3.3 Componentes Deprecados
+
+| Componente | Ubicacion | Razon | Plan migracion |
+|------------|-----------|-------|----------------|
+| [Nombre] | source/old/file.rst | [Por que se depreca] | [Como migrar] |
+
+## 4. Estructura de Archivos
+
+```
+proyecto/
++-- source/
+| +-- nuevo_capitulo/
+| | +-- index.rst (NUEVO)
+| | +-- seccion_1.rst (NUEVO)
+| | +-- seccion_2.rst (NUEVO)
+| +-- existente/
+| +-- index.rst (MODIFICADO)
++-- scripts/
+| +-- nuevo_script.py (NUEVO)
++-- .codex/
+ +-- skills/
+ +-- nuevo_skill/
+ +-- SKILL.md (NUEVO)
+```
+
+## 5. Interfaces y Contratos
+
+### 5.1 Interface entre Componente A y B
+
+```
+Input: [Formato de entrada]
+Output: [Formato de salida]
+Contrato: [Garantias y precondiciones]
+```
+
+### 5.2 API Publica
+
+```python
+def funcion_publica(param1: tipo, param2: tipo) -> tipo:
+ """
+ Descripcion de la funcion.
+
+ Args:
+ param1: Descripcion
+ param2: Descripcion
+
+ Returns:
+ Descripcion del retorno
+ """
+```
+
+## 6. Flujos de Datos
+
+### 6.1 Flujo Principal
+
+<!-- Cuando el flujo tiene ≥3 participantes o lógica condicional: usar sequenceDiagram. Para flujos lineales simples, descripción textual es suficiente. -->
+
+```mermaid
+sequenceDiagram
+    actor Usuario
+    participant CompA as Componente A
+    participant CompB as Componente B
+
+    Usuario->>+CompA: Acción principal
+    CompA->>+CompB: Procesamiento
+    CompB-->>-CompA: Resultado
+    CompA-->>-Usuario: Respuesta
+```
+
+### 6.2 Flujos Secundarios
+
+<!-- Cuando hay ≥2 flujos alternativos con bifurcaciones: usar flowchart. -->
+
+[Describir otros flujos importantes]
+
+## 7. Dependencias
+
+### 7.1 Dependencias Internas
+
+- Componente X depende de Componente Y
+- Skill A usa referencias de project-context
+
+### 7.2 Dependencias Externas
+
+- [Libreria externa 1] version X.Y.Z
+- [Servicio externo] con API key
+
+### 7.3 Dependencias de Datos
+
+- Requiere que archivo X exista
+- Asume estructura de directorio Y
+
+## 8. Impacto
+
+### 8.1 Cambios Breaking
+
+| Cambio | Afecta a | Accion requerida |
+|--------|----------|------------------|
+| [Cambio 1] | [Usuarios/Componentes] | [Que deben hacer] |
+| [Cambio 2] | [Usuarios/Componentes] | [Que deben hacer] |
+
+### 8.2 Plan de Migracion
+
+Si hay cambios breaking:
+
+1. [Paso 1 de migracion]
+2. [Paso 2 de migracion]
+3. [Paso 3 de migracion]
+
+### 8.3 Backward Compatibility
+
+- [ ] Mantiene compatibilidad con version anterior
+- [ ] Requiere migracion manual
+- [ ] Provide migration script
+
+## 9. Plan de Rollback
+
+Si la implementacion falla:
+
+### 9.1 Pasos de Rollback
+
+1. [Paso 1 para revertir]
+2. [Paso 2 para revertir]
+3. [Paso 3 para revertir]
+
+### 9.2 Criterios de Rollback
+
+Ejecutar rollback si:
+- [Condicion 1]
+- [Condicion 2]
+
+### 9.3 Estado Post-Rollback
+
+Despues del rollback, el sistema queda:
+- [Estado esperado]
+
+## 10. Testing
+
+### 10.1 Casos de Prueba
+
+TC-001: [Titulo del caso]
+- Descripcion: [Que se prueba]
+- Precondiciones: [Estado inicial]
+- Input: [Entrada de prueba]
+- Pasos:
+ 1. [Paso 1]
+ 2. [Paso 2]
+- Output esperado: [Resultado esperado]
+- Referencias: RF-001 (requirements-analysis.md)
+
+TC-002: [Titulo del caso]
+...
+
+### 10.2 Criterios de Validacion
+
+- [x] Todos los RF de requirements-analysis.md cubiertos
+- [x] Build exitoso sin errores
+- [x] Linkcheck pasa
+- [ ] Metadata completa
+- [ ] Documentacion actualizada
+
+### 10.3 Testing Manual vs Automatico
+
+| Aspecto | Tipo | Como se valida |
+|---------|------|----------------|
+| Build Sphinx | Automatico | make html |
+| Estructura | Automatico | validar_estructura.sh |
+| Calidad traduccion | Manual | Revision experto |
+| Usabilidad | Manual | User testing |
+
+## 11. Performance y Escalabilidad
+
+### 11.1 Consideraciones de Performance
+
+- Build time esperado: [X segundos]
+- Memoria requerida: [Y MB]
+
+### 11.2 Optimizaciones
+
+- [Optimizacion 1]
+- [Optimizacion 2]
+
+## 12. Seguridad
+
+### 12.1 Consideraciones de Seguridad
+
+- [Aspecto seguridad 1]
+- [Aspecto seguridad 2]
+
+### 12.2 Secrets Management
+
+- [Como se manejan secrets]
+- [Donde se almacenan]
+
+## 13. Documentacion
+
+### 13.1 Documentacion a Crear/Actualizar
+
+- [ ] README.md
+- [ ] SKILL.md de nuevo skill
+- [ ] work-log de implementacion
+- [ ] Actualizar CHANGELOG.md
+
+### 13.2 Comentarios en Codigo
+
+- Docstrings en todas las funciones publicas
+- Comentarios para logica compleja
+
+## 14. Referencias
+
+### 14.1 Documentos Relacionados
+
+- requirements-analysis.md (este proyecto)
+- [Otro documento de diseño relacionado]
+
+### 14.2 Recursos Externos
+
+- [Documentacion tecnica consultada]
+- [Stack Overflow, blogs, etc]
+
+### 14.3 Decisiones que Afectan Otras Areas
+
+- DA-001 afecta a: [Area X]
+- DA-003 depende de: [Decision anterior Y]
+
+## 15. Aprobacion
+
+- [ ] Revisado por: [Nombre]
+- [ ] Aprobado por: [Nombre]
+- [ ] Fecha de aprobacion: YYYY-MM-DD-HH-MM-SS
+
+## Historial de Cambios
+
+| Fecha | Version | Cambios | Autor |
+|-------|---------|---------|-------|
+| YYYY-MM-DD-HH-MM-SS | 0.1 | Creacion inicial | [Nombre] |
+| YYYY-MM-DD-HH-MM-SS | 0.2 | [Cambios realizados] | [Nombre] |

@@ -1,0 +1,148 @@
+.. meta::
+   :artefacto: FR-006.02
+   :tipo: Requisito Funcional
+   :dominio: requisitos
+   :subdominio: funcionales/users
+   :estado: Aprobado
+   :version: 1.0.0
+   :fecha: 2026-01-07
+   :autor: Equipo IACT
+
+.. _fr-006-02:
+
+=========================================
+FR-006.02: Verificar unicidad de username
+=========================================
+
+
+1. Identificación
+-----------------
+
+.. list-table::
+   :widths: 25 75
+
+   * - **ID**
+     - FR-006.02
+   * - **Nombre**
+     - Verificar que el username no exista en el sistema
+   * - **UC Origen**
+     - UC_006: Crear Usuario
+   * - **Paso UC**
+     - Paso 6 del flujo normal
+   * - **Módulo**
+     - MOD_Users
+   * - **Prioridad**
+     - Alta
+   * - **Tipo**
+     - Validación
+
+----
+
+2. Especificación
+-----------------
+
+**Declaración:**
+
+   El sistema DEBE verificar que el username propuesto no exista en la
+   base de datos CUANDO se validan los campos del formulario (BR_013).
+
+**Descripción:**
+
+   El proceso de verificación:
+   
+   1. Normaliza el username (lowercase, trim)
+   2. Consulta tabla ``users`` buscando coincidencia exacta
+   3. Incluye usuarios activos e inactivos en la búsqueda
+   4. Si existe, retorna error y sugiere alternativas
+   5. Si no existe, permite continuar
+   
+   **Verificación en Tiempo Real:**
+   
+   Opcionalmente, el frontend puede verificar disponibilidad mientras
+   el usuario escribe (debounce 500ms) para mejorar UX.
+
+----
+
+3. Criterio de Aceptación
+-------------------------
+
+::
+
+   DADO un username propuesto en el formulario
+   CUANDO el sistema verifica unicidad
+   ENTONCES confirma disponibilidad o indica duplicado
+   
+   Escenario 1: Username disponible
+   DADO username = "nuevo.usuario"
+   CUANDO se verifica en BD
+   ENTONCES retorna disponible = true
+   Y se permite continuar con creación
+   
+   Escenario 2: Username ya existe (activo)
+   DADO username = "juan.perez" que existe con status ACTIVE
+   CUANDO se verifica
+   ENTONCES se muestra "Username no disponible"
+   Y se sugieren alternativas: "juan.perez1", "juan.perez_2"
+   
+   Escenario 3: Username existe pero inactivo
+   DADO username que existe con status INACTIVE
+   CUANDO se verifica
+   ENTONCES también se rechaza (no se reutilizan usernames)
+   Y se muestra "Username no disponible"
+   
+   Escenario 4: Case insensitive
+   DADO username existente = "Juan.Perez"
+   CUANDO se intenta crear "juan.perez"
+   ENTONCES se rechaza como duplicado
+
+----
+
+4. Reglas y Restricciones
+-------------------------
+
+- **BR aplicables:**
+  - BR_013: Username único en todo el sistema
+  
+- **CNST aplicables:** Ninguna específica
+
+**Índice de BD:**
+
+La tabla ``users`` debe tener índice único en campo ``username``
+normalizado (lowercase) para garantizar unicidad a nivel de BD.
+
+----
+
+5. Trazabilidad
+---------------
+
+.. list-table::
+   :widths: 20 80
+
+   * - **BReq**
+     - BReq-004: Cumplimiento de Seguridad
+   * - **UC**
+     - UC_006: Crear Usuario
+   * - **Depende de**
+     - FR-006.01
+   * - **Requerido por**
+     - FR-006.03
+   * - **BR**
+     - BR_013
+   * - **TEST**
+     - TST-FR-006.02 (pendiente)
+
+----
+
+6. Historial
+------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - Versión
+     - Fecha
+     - Cambio
+   * - 1.0.0
+     - 2026-01-07
+     - Versión inicial derivada de UC_006

@@ -1,0 +1,364 @@
+@startuml ACT-[DOMINIO]-[###]-[descripcion]
+/'
+INSTRUCCIONES PARA DIAGRAMA DE ACTIVIDAD
+=========================================
+
+Este template crea un diagrama de actividad UML siguiendo el estándar definido
+en ADR-GOB-008: Diagramas UML de Casos de Uso (sección de diagramas de actividad).
+
+NOMENCLATURA:
+- Archivo: ACT-DOMINIO-###-descripcion.puml
+- DOMINIO: BACK, FRONT, DEVOPS, QA, AI, GOB
+- ###: Número secuencial 001-999
+- descripcion: Descripción en snake_case
+
+PROPÓSITO:
+Los diagramas de actividad ILUSTRAN los flujos de casos de uso complejos.
+Complementan (no reemplazan) la especificación textual del caso de uso.
+
+CUÁNDO CREAR UN DIAGRAMA DE ACTIVIDAD:
+- El caso de uso tiene >= 3 flujos alternos
+- Hay condicionales anidadas
+- Hay bucles o iteraciones
+- Hay decisiones complejas con múltiples caminos
+- La especificación textual es difícil de visualizar
+
+ELEMENTOS PRINCIPALES:
+- start / stop: Inicio y fin
+- :Actividad;: Una acción o paso
+- if/then/else/endif: Condicionales
+- while/endwhile: Bucles
+- fork/fork again/end fork: Actividades paralelas
+- partition: Agrupación por actor/sistema
+- note: Notas explicativas
+
+BUENAS PRÁCTICAS:
+- Una actividad por línea
+- Verbos en infinitivo o presente
+- Nombres claros y concisos
+- Incluir condiciones específicas en if
+'/
+
+!theme plain
+
+/' ============================================
+   TÍTULO Y METADATA
+   ============================================
+'/
+
+title Diagrama de Actividad: [Nombre del Caso de Uso]
+
+/' OPCIONAL: Agregar metadatos en header '/
+header
+<b>UC-[DOMINIO]-[###]</b>: [VERBO Objeto]
+Versión: 1.0.0 | Fecha: [YYYY-MM-DD]
+end header
+
+/' ============================================
+   INICIO DEL FLUJO
+   ============================================
+'/
+
+start
+
+/' ============================================
+   ACTIVIDADES SIMPLES
+   ============================================
+   Sintaxis: :Descripción de la actividad;
+
+   Ejemplos:
+   :Usuario accede al módulo de solicitudes;
+   :Sistema muestra catálogo de productos;
+   :Solicitante selecciona producto;
+'/
+
+:Primera actividad del flujo;
+
+:Segunda actividad del flujo;
+
+/' ============================================
+   CONDICIONAL SIMPLE (IF-THEN-ELSE)
+   ============================================
+   Sintaxis:
+   if (¿Condición?) then (etiqueta_si)
+     :Actividad si verdadero;
+   else (etiqueta_no)
+     :Actividad si falso;
+   endif
+
+   Ejemplo:
+   if (¿Usuario autenticado?) then (sí)
+     :Sistema muestra dashboard;
+   else (no)
+     :Sistema redirige a login;
+   endif
+'/
+
+if (¿Condición 1?) then (sí)
+  :Actividad cuando condición es verdadera;
+
+else (no)
+  :Actividad cuando condición es falsa;
+
+endif
+
+/' ============================================
+   CONDICIONALES ANIDADAS
+   ============================================
+   Se pueden anidar múltiples niveles de if
+'/
+
+:Actividad antes de decisión compleja;
+
+if (¿Primera condición?) then (sí)
+  :Actividad si primera condición es verdadera;
+
+  if (¿Segunda condición?) then (sí)
+    :Actividad si ambas condiciones son verdaderas;
+
+  else (no)
+    :Actividad si primera es verdadera pero segunda es falsa;
+
+  endif
+
+else (no)
+  :Actividad si primera condición es falsa;
+
+endif
+
+/' ============================================
+   MÚLTIPLES CAMINOS (SWITCH-LIKE)
+   ============================================
+   Para múltiples opciones, use if-elseif-else
+'/
+
+:Actividad que genera múltiples opciones;
+
+if (¿Opción A?) then (A)
+  :Procesar opción A;
+
+elseif (¿Opción B?) then (B)
+  :Procesar opción B;
+
+elseif (¿Opción C?) then (C)
+  :Procesar opción C;
+
+else (ninguna)
+  :Procesar caso por defecto;
+
+endif
+
+/' ============================================
+   BUCLES (WHILE)
+   ============================================
+   Sintaxis:
+   while (¿Condición?) is (etiqueta_continuar)
+     :Actividad en el bucle;
+   endwhile (etiqueta_salir)
+
+   Ejemplo:
+   while (¿Hay más artículos?) is (sí)
+     :Procesar artículo;
+     :Agregar a carrito;
+   endwhile (no)
+'/
+
+while (¿Hay más elementos para procesar?) is (sí)
+  :Procesar elemento;
+  :Actualizar contador;
+endwhile (no)
+
+:Actividad después del bucle;
+
+/' ============================================
+   ACTIVIDADES PARALELAS (FORK-JOIN)
+   ============================================
+   Cuando múltiples actividades suceden en paralelo
+
+   Sintaxis:
+   fork
+     :Actividad paralela 1;
+   fork again
+     :Actividad paralela 2;
+   fork again
+     :Actividad paralela 3;
+   end fork
+'/
+
+:Actividad antes de bifurcación;
+
+fork
+  :Tarea paralela 1;
+  :Continuación de tarea 1;
+fork again
+  :Tarea paralela 2;
+  :Continuación de tarea 2;
+fork again
+  :Tarea paralela 3;
+end fork
+
+:Actividad después de sincronización (todas terminaron);
+
+/' ============================================
+   PARTICIONES (SWIMLANES)
+   ============================================
+   Para separar responsabilidades por actor o sistema
+
+   Sintaxis:
+   partition "Nombre de la Partición" {
+     :Actividades en esta partición;
+   }
+'/
+
+partition "Actor: Usuario" {
+  :Usuario ingresa credenciales;
+  :Usuario hace clic en Login;
+}
+
+partition "Sistema: Backend" {
+  :Sistema valida formato;
+  :Sistema consulta base de datos;
+
+  if (¿Credenciales válidas?) then (sí)
+    :Sistema genera token;
+  else (no)
+    :Sistema genera mensaje de error;
+    stop
+  endif
+}
+
+partition "Sistema: Frontend" {
+  :Sistema muestra dashboard;
+}
+
+/' ============================================
+   PUNTOS DE PARADA
+   ============================================
+   - stop: Terminación del flujo
+   - end: Terminación exitosa (alternativa a stop)
+   - kill: Terminación abrupta/error
+
+   Puede haber múltiples stop en diferentes caminos
+'/
+
+if (¿Proceso completado exitosamente?) then (sí)
+  :Mostrar mensaje de éxito;
+  stop
+
+else (no)
+  :Registrar error;
+  :Notificar usuario;
+  kill
+
+endif
+
+/' ============================================
+   NOTAS EXPLICATIVAS
+   ============================================
+   OPCIONAL: Agregue notas para clarificar pasos complejos
+'/
+
+:Actividad compleja que requiere explicación;
+
+note right
+  Esta actividad realiza:
+  1. Validación de formato
+  2. Verificación de duplicados
+  3. Cálculo de totales
+end note
+
+/' ============================================
+   EJEMPLO COMPLETO: UC-BACK-004 Solicitar Producto Químico
+   ============================================
+
+   @startuml ACT-BACK-004-solicitar-producto-quimico
+   !theme plain
+   title Diagrama de Actividad: Solicitar Producto Químico
+
+   start
+
+   partition "Solicitante" {
+     :Solicitante accede al módulo de solicitudes;
+   }
+
+   partition "Sistema" {
+     :Sistema muestra catálogo de productos;
+   }
+
+   partition "Solicitante" {
+     :Solicitante selecciona producto químico;
+   }
+
+   partition "Sistema" {
+     if (¿Producto disponible en inventario?) then (sí)
+       :Sistema muestra información del producto;
+       :Sistema muestra cantidad disponible;
+
+     else (no)
+       if (¿Existen productos alternativos?) then (sí)
+         :Sistema muestra productos alternativos;
+
+         partition "Solicitante" {
+           if (¿Selecciona alternativa?) then (sí)
+             :Selecciona producto alternativo;
+           else (no)
+             :Solicitante cancela solicitud;
+             stop
+           endif
+         }
+
+       else (no)
+         :Sistema muestra mensaje "Producto no disponible";
+         :Sistema ofrece opción de solicitar inclusión;
+
+         partition "Solicitante" {
+           if (¿Solicita inclusión en catálogo?) then (sí)
+             :Envía solicitud de nuevo producto;
+             :Caso de uso termina;
+             stop
+           else (no)
+             stop
+           endif
+         }
+       endif
+     endif
+   }
+
+   partition "Solicitante" {
+     :Solicitante ingresa cantidad deseada;
+     :Solicitante ingresa justificación;
+     :Solicitante confirma solicitud;
+   }
+
+   partition "Sistema" {
+     :Sistema valida datos ingresados;
+
+     if (¿Datos válidos?) then (sí)
+       :Sistema registra solicitud en base de datos;
+       :Sistema asigna número de solicitud;
+       :Sistema genera notificación al comprador;
+       :Sistema envía confirmación al solicitante;
+       :Sistema muestra mensaje de éxito;
+       stop
+
+     else (no)
+       :Sistema muestra errores de validación;
+
+       partition "Solicitante" {
+         if (¿Corregir datos?) then (sí)
+           :Corrige datos;
+           backward :Sistema valida datos ingresados;
+         else (no)
+           :Cancela solicitud;
+           stop
+         endif
+       }
+     endif
+   }
+
+   @enduml
+
+   ============================================
+'/
+
+@enduml

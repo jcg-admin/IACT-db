@@ -1,0 +1,166 @@
+.. meta::
+   :artefacto: FR-002.03
+   :tipo: Requisito Funcional
+   :dominio: requisitos
+   :subdominio: funcionales/auth
+   :estado: Aprobado
+   :version: 1.0.0
+   :fecha: 2026-01-07
+   :autor: Equipo IACT
+
+.. _fr-002-03:
+
+=============================================
+FR-002.03: Limpiar datos de sesión en cliente
+=============================================
+
+
+1. Identificación
+-----------------
+
+.. list-table::
+   :widths: 25 75
+
+   * - **ID**
+     - FR-002.03
+   * - **Nombre**
+     - Limpiar datos de sesión en cliente
+   * - **UC Origen**
+     - UC_002: Cerrar Sesion
+   * - **Paso UC**
+     - Paso 6-7 del flujo normal
+   * - **Módulo**
+     - MOD_Auth
+   * - **Prioridad**
+     - Alta
+   * - **Tipo**
+     - Interfaz
+
+----
+
+2. Especificación
+-----------------
+
+**Declaración:**
+
+   El sistema DEBE limpiar todos los datos de sesión almacenados en el
+   cliente CUANDO se completa el proceso de cierre de sesión.
+
+**Descripción:**
+
+   El frontend debe ejecutar las siguientes acciones de limpieza:
+   
+   **Datos a Limpiar:**
+   
+   1. Token JWT almacenado (localStorage/sessionStorage)
+   2. Datos de usuario en estado de la aplicación (Redux/Context)
+   3. Caché de permisos/roles
+   4. Preferencias de sesión temporales
+   5. Cualquier dato sensible en memoria
+   
+   **Acciones Post-Limpieza:**
+   
+   1. Resetear estado de autenticación a 'logged_out'
+   2. Limpiar headers de Authorization pendientes
+   3. Cancelar requests en curso
+   4. Redirigir a pantalla de login
+   5. Mostrar mensaje "Sesión cerrada exitosamente"
+
+----
+
+3. Criterio de Aceptación
+-------------------------
+
+::
+
+   DADO un cierre de sesión exitoso en backend
+   CUANDO el frontend recibe confirmación
+   ENTONCES se limpian todos los datos locales
+   
+   Escenario 1: Limpieza completa
+   DADO usuario con sesión activa en el navegador
+   CUANDO cierra sesión
+   ENTONCES localStorage no contiene token
+   Y sessionStorage está vacío de datos de usuario
+   Y el estado Redux/Context está reseteado
+   
+   Escenario 2: Redirección a login
+   DADO limpieza de datos completada
+   CUANDO se termina el proceso
+   ENTONCES el usuario ve la pantalla de login
+   Y se muestra mensaje de confirmación
+   
+   Escenario 3: Requests pendientes cancelados
+   DADO requests API en curso durante logout
+   CUANDO se inicia el cierre de sesión
+   ENTONCES los requests pendientes se cancelan
+   Y no generan errores visibles al usuario
+
+----
+
+4. Reglas y Restricciones
+-------------------------
+
+- **BR aplicables:** Ninguna específica
+  
+- **CNST aplicables:**
+  - CNST-005: Seguridad (no dejar datos sensibles)
+
+**Implementación Frontend:**
+
+.. code-block:: javascript
+
+   // Ejemplo de limpieza requerida
+   const handleLogout = async () => {
+     // 1. Llamar endpoint de logout
+     await api.post('/auth/logout');
+     
+     // 2. Limpiar storage
+     localStorage.removeItem('access_token');
+     sessionStorage.clear();
+     
+     // 3. Resetear estado
+     dispatch({ type: 'RESET_AUTH' });
+     
+     // 4. Redirigir
+     navigate('/login', { 
+       state: { message: 'Sesión cerrada exitosamente' }
+     });
+   };
+
+----
+
+5. Trazabilidad
+---------------
+
+.. list-table::
+   :widths: 20 80
+
+   * - **BReq**
+     - BReq-004: Cumplimiento de Seguridad
+   * - **UC**
+     - UC_002: Cerrar Sesion
+   * - **Depende de**
+     - FR-002.01, FR-002.02
+   * - **Requerido por**
+     - Ninguno
+   * - **CNST**
+     - CNST-005
+   * - **TEST**
+     - TST-FR-002.03 (pendiente)
+
+----
+
+6. Historial
+------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - Versión
+     - Fecha
+     - Cambio
+   * - 1.0.0
+     - 2026-01-07
+     - Versión inicial derivada de UC_002

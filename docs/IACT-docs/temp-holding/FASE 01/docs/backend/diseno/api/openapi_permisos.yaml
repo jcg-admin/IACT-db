@@ -1,0 +1,927 @@
+openapi: 3.0.3
+info:
+  title: Sistema de Permisos Granulares API
+  version: 1.0.0
+  description: |
+    API REST para el sistema de permisos granulares del Call Center.
+
+    ## Autenticación
+
+    Todos los endpoints requieren autenticación mediante JWT Bearer token:
+
+    ```
+    Authorization: Bearer <token>
+    ```
+
+    ## Performance
+
+    - SQL Functions: 5-10ms (verificación de permisos)
+    - SQL Views: 10-20ms (listado de capacidades)
+    - ORM: 30-50ms (operaciones CRUD)
+
+    ## Códigos de Capacidades
+
+    Formato: `dominio.subdominio.funcion.accion`
+
+    Ejemplos:
+    - `sistema.vistas.dashboards.ver`
+    - `sistema.vistas.reportes.crear`
+    - `sistema.administracion.usuarios.editar`
+
+  contact:
+    name: Equipo de Desarrollo
+    email: dev@callcenter.com
+  license:
+    name: Propietario
+    url: https://callcenter.com/license
+
+servers:
+  - url: http://localhost:8000
+    description: Desarrollo local
+  - url: https://api.callcenter.com
+    description: Producción
+
+tags:
+  - name: Funciones
+    description: Gestión de funciones del sistema
+  - name: Capacidades
+    description: Gestión de capacidades (permisos atómicos)
+  - name: Grupos
+    description: Gestión de grupos de permisos
+  - name: Excepcionales
+    description: Permisos excepcionales (conceder/revocar)
+  - name: Verificación
+    description: Verificación de permisos de usuarios
+  - name: Auditoría
+    description: Consulta de auditoría de permisos
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Funcion:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        codigo:
+          type: string
+          maxLength: 200
+          example: "vistas.dashboards"
+        nombre:
+          type: string
+          maxLength: 200
+          example: "Dashboards"
+        descripcion:
+          type: string
+          nullable: true
+        dominio:
+          type: string
+          maxLength: 100
+          example: "vistas"
+        activa:
+          type: boolean
+          default: true
+        capacidades:
+          type: array
+          items:
+            $ref: '#/components/schemas/Capacidad'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    FuncionList:
+      type: object
+      properties:
+        id:
+          type: integer
+        codigo:
+          type: string
+        nombre:
+          type: string
+        dominio:
+          type: string
+        activa:
+          type: boolean
+        total_capacidades:
+          type: integer
+
+    Capacidad:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        codigo:
+          type: string
+          maxLength: 200
+          example: "sistema.vistas.dashboards.ver"
+        nombre:
+          type: string
+          maxLength: 200
+          example: "Ver Dashboards"
+        descripcion:
+          type: string
+          nullable: true
+        activa:
+          type: boolean
+          default: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    CapacidadList:
+      type: object
+      properties:
+        id:
+          type: integer
+        codigo:
+          type: string
+        nombre:
+          type: string
+        activa:
+          type: boolean
+
+    GrupoPermiso:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        codigo:
+          type: string
+          maxLength: 100
+          example: "agentes_nivel_1"
+        nombre:
+          type: string
+          maxLength: 200
+          example: "Agentes Nivel 1"
+        descripcion:
+          type: string
+          nullable: true
+        activo:
+          type: boolean
+          default: true
+        capacidades:
+          type: array
+          items:
+            $ref: '#/components/schemas/Capacidad'
+          readOnly: true
+        total_usuarios:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    GrupoPermisoCreate:
+      type: object
+      required:
+        - codigo
+        - nombre
+      properties:
+        codigo:
+          type: string
+          maxLength: 100
+        nombre:
+          type: string
+          maxLength: 200
+        descripcion:
+          type: string
+        activo:
+          type: boolean
+          default: true
+        capacidades_codigos:
+          type: array
+          items:
+            type: string
+          example: ["sistema.vistas.dashboards.ver", "sistema.vistas.reportes.ver"]
+
+    GrupoPermisoList:
+      type: object
+      properties:
+        id:
+          type: integer
+        codigo:
+          type: string
+        nombre:
+          type: string
+        activo:
+          type: boolean
+        total_capacidades:
+          type: integer
+        total_usuarios:
+          type: integer
+
+    PermisoExcepcional:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        usuario:
+          type: object
+          properties:
+            id:
+              type: integer
+            username:
+              type: string
+            email:
+              type: string
+        capacidad:
+          $ref: '#/components/schemas/Capacidad'
+        tipo:
+          type: string
+          enum: [conceder, revocar]
+        motivo:
+          type: string
+        fecha_inicio:
+          type: string
+          format: date-time
+        fecha_fin:
+          type: string
+          format: date-time
+          nullable: true
+        asignado_por:
+          type: object
+          properties:
+            id:
+              type: integer
+            username:
+              type: string
+        activo:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    PermisoExcepcionalCreate:
+      type: object
+      required:
+        - usuario_id
+        - capacidad_codigo
+        - tipo
+        - motivo
+      properties:
+        usuario_id:
+          type: integer
+        capacidad_codigo:
+          type: string
+        tipo:
+          type: string
+          enum: [conceder, revocar]
+        motivo:
+          type: string
+        fecha_fin:
+          type: string
+          format: date-time
+          nullable: true
+
+    AuditoriaPermiso:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        usuario:
+          type: object
+          properties:
+            id:
+              type: integer
+            username:
+              type: string
+        capacidad_codigo:
+          type: string
+        resultado:
+          type: boolean
+        ip_address:
+          type: string
+          nullable: true
+        user_agent:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+
+    UsuarioCapacidadesResponse:
+      type: object
+      properties:
+        usuario_id:
+          type: integer
+        capacidades:
+          type: array
+          items:
+            type: string
+          example: ["sistema.vistas.dashboards.ver", "sistema.vistas.reportes.ver"]
+        total:
+          type: integer
+
+    VerificarPermisoResponse:
+      type: object
+      properties:
+        usuario_id:
+          type: integer
+        capacidad:
+          type: string
+        tiene_permiso:
+          type: boolean
+        origen:
+          type: string
+          enum: [grupo, excepcional_conceder, excepcional_revocar, ninguno]
+          nullable: true
+
+    MenuResponse:
+      type: object
+      additionalProperties:
+        type: object
+        additionalProperties:
+          type: array
+          items:
+            type: string
+      example:
+        "vistas":
+          "dashboards": ["ver"]
+          "reportes": ["ver", "crear", "editar"]
+        "administracion":
+          "usuarios": ["ver", "crear"]
+
+    GruposResponse:
+      type: object
+      properties:
+        usuario_id:
+          type: integer
+        grupos:
+          type: array
+          items:
+            type: object
+            properties:
+              codigo:
+                type: string
+              nombre:
+                type: string
+              total_capacidades:
+                type: integer
+        total:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        detail:
+          type: string
+          nullable: true
+        code:
+          type: string
+          nullable: true
+
+paths:
+  # =============================================================================
+  # FUNCIONES
+  # =============================================================================
+
+  /api/permisos/funciones/:
+    get:
+      tags: [Funciones]
+      summary: Listar funciones
+      description: Obtiene listado de todas las funciones del sistema
+      operationId: listFunciones
+      parameters:
+        - name: activa
+          in: query
+          schema:
+            type: boolean
+          description: Filtrar por funciones activas
+        - name: dominio
+          in: query
+          schema:
+            type: string
+          description: Filtrar por dominio
+      responses:
+        '200':
+          description: Lista de funciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FuncionList'
+        '401':
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: "Sin permiso (requiere: sistema.administracion.funciones.ver)"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags: [Funciones]
+      summary: Crear función
+      description: Crea una nueva función en el sistema
+      operationId: createFuncion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Funcion'
+      responses:
+        '201':
+          description: Función creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Funcion'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: "Sin permiso (requiere: sistema.administracion.funciones.crear)"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/permisos/funciones/{id}/:
+    get:
+      tags: [Funciones]
+      summary: Obtener función
+      description: Obtiene detalles de una función específica
+      operationId: retrieveFuncion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detalles de la función
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Funcion'
+        '404':
+          description: Función no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags: [Funciones]
+      summary: Actualizar función
+      description: Actualiza una función existente
+      operationId: updateFuncion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Funcion'
+      responses:
+        '200':
+          description: Función actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Funcion'
+        '403':
+          description: "Sin permiso (requiere: sistema.administracion.funciones.editar)"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags: [Funciones]
+      summary: Eliminar función
+      description: Elimina una función del sistema
+      operationId: destroyFuncion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Función eliminada
+        '403':
+          description: "Sin permiso (requiere: sistema.administracion.funciones.eliminar)"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # =============================================================================
+  # CAPACIDADES
+  # =============================================================================
+
+  /api/permisos/capacidades/:
+    get:
+      tags: [Capacidades]
+      summary: Listar capacidades
+      description: Obtiene listado de todas las capacidades disponibles
+      operationId: listCapacidades
+      parameters:
+        - name: activa
+          in: query
+          schema:
+            type: boolean
+          description: Filtrar por capacidades activas
+        - name: codigo__contains
+          in: query
+          schema:
+            type: string
+          description: Búsqueda por código (contiene)
+      responses:
+        '200':
+          description: Lista de capacidades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CapacidadList'
+
+    post:
+      tags: [Capacidades]
+      summary: Crear capacidad
+      description: Crea una nueva capacidad
+      operationId: createCapacidad
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Capacidad'
+      responses:
+        '201':
+          description: Capacidad creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Capacidad'
+
+  /api/permisos/capacidades/{id}/:
+    get:
+      tags: [Capacidades]
+      summary: Obtener capacidad
+      operationId: retrieveCapacidad
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detalles de la capacidad
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Capacidad'
+
+  # =============================================================================
+  # GRUPOS
+  # =============================================================================
+
+  /api/permisos/grupos/:
+    get:
+      tags: [Grupos]
+      summary: Listar grupos de permisos
+      description: Obtiene listado de todos los grupos de permisos
+      operationId: listGrupos
+      responses:
+        '200':
+          description: Lista de grupos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GrupoPermisoList'
+
+    post:
+      tags: [Grupos]
+      summary: Crear grupo de permisos
+      description: Crea un nuevo grupo y asigna capacidades
+      operationId: createGrupo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrupoPermisoCreate'
+      responses:
+        '201':
+          description: Grupo creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrupoPermiso'
+
+  /api/permisos/grupos/{id}/:
+    get:
+      tags: [Grupos]
+      summary: Obtener grupo de permisos
+      operationId: retrieveGrupo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detalles del grupo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrupoPermiso'
+
+    put:
+      tags: [Grupos]
+      summary: Actualizar grupo
+      operationId: updateGrupo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrupoPermisoCreate'
+      responses:
+        '200':
+          description: Grupo actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrupoPermiso'
+
+  # =============================================================================
+  # PERMISOS EXCEPCIONALES
+  # =============================================================================
+
+  /api/permisos/excepcionales/:
+    get:
+      tags: [Excepcionales]
+      summary: Listar permisos excepcionales
+      description: Obtiene listado de permisos excepcionales (concedidos y revocados)
+      operationId: listExcepcionales
+      parameters:
+        - name: usuario_id
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por usuario
+        - name: tipo
+          in: query
+          schema:
+            type: string
+            enum: [conceder, revocar]
+          description: Filtrar por tipo
+        - name: activo
+          in: query
+          schema:
+            type: boolean
+          description: Filtrar por activos
+      responses:
+        '200':
+          description: Lista de permisos excepcionales
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PermisoExcepcional'
+
+    post:
+      tags: [Excepcionales]
+      summary: Conceder/Revocar permiso excepcional
+      description: Concede o revoca un permiso específico a un usuario
+      operationId: createExcepcional
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermisoExcepcionalCreate'
+      responses:
+        '201':
+          description: Permiso excepcional creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermisoExcepcional'
+
+  # =============================================================================
+  # VERIFICACIÓN
+  # =============================================================================
+
+  /api/permisos/verificar/{usuario_id}/capacidades/:
+    get:
+      tags: [Verificación]
+      summary: Obtener todas las capacidades de un usuario
+      description: |
+        Obtiene TODAS las capacidades que tiene un usuario (desde grupos y excepcionales).
+
+        **Performance**: 10-20ms (SQL function)
+      operationId: getCapacidades
+      parameters:
+        - name: usuario_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del usuario
+      responses:
+        '200':
+          description: Lista de capacidades del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioCapacidadesResponse'
+        '404':
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/permisos/verificar/{usuario_id}/tiene-permiso/:
+    get:
+      tags: [Verificación]
+      summary: Verificar si usuario tiene permiso específico
+      description: |
+        Verifica si un usuario tiene una capacidad específica.
+
+        **Performance**: 5-10ms (SQL function)
+      operationId: tienePermiso
+      parameters:
+        - name: usuario_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: capacidad
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "Código de la capacidad (ej: sistema.vistas.dashboards.ver)"
+          example: "sistema.vistas.dashboards.ver"
+      responses:
+        '200':
+          description: Resultado de la verificación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificarPermisoResponse'
+
+  '/api/permisos/verificar/{usuario_id}/menu/':
+    get:
+      tags: [Verificación]
+      summary: Generar menú dinámico para usuario
+      description: |
+        Genera estructura de menú basada en las capacidades del usuario.
+
+        **Performance**: 20-40ms (SQL function)
+      operationId: getMenu
+      parameters:
+        - name: usuario_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Estructura de menú del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuResponse'
+
+  /api/permisos/verificar/{usuario_id}/grupos/:
+    get:
+      tags: [Verificación]
+      summary: Obtener grupos activos de un usuario
+      description: |
+        Obtiene todos los grupos activos asignados a un usuario.
+
+        **Performance**: 10-20ms (SQL view)
+      operationId: getGrupos
+      parameters:
+        - name: usuario_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de grupos del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GruposResponse'
+
+  # =============================================================================
+  # AUDITORÍA
+  # =============================================================================
+
+  /api/permisos/auditoria/:
+    get:
+      tags: [Auditoría]
+      summary: Consultar auditoría de permisos
+      description: Obtiene registros de auditoría de verificaciones de permisos
+      operationId: listAuditoria
+      parameters:
+        - name: usuario_id
+          in: query
+          schema:
+            type: integer
+          description: Filtrar por usuario
+        - name: capacidad_codigo
+          in: query
+          schema:
+            type: string
+          description: Filtrar por capacidad
+        - name: resultado
+          in: query
+          schema:
+            type: boolean
+          description: Filtrar por resultado (true=concedido, false=denegado)
+        - name: fecha_desde
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filtrar desde fecha
+        - name: fecha_hasta
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filtrar hasta fecha
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+          description: Límite de resultados
+      responses:
+        '200':
+          description: Lista de registros de auditoría
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditoriaPermiso'

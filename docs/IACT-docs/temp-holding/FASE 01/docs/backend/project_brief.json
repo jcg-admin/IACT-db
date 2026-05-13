@@ -1,0 +1,29 @@
+{
+  "project_description": "Implementar tests TDD completos para todas las técnicas de prompting en scripts/coding/ai/agents/base/",
+  "requirements": [
+    "Generar tests unitarios con cobertura 80%+ para cada técnica de prompting",
+    "Usar pytest como framework de testing",
+    "Aplicar TDD estricto siguiendo la metodología del proyecto",
+    "Documentar cada test con docstrings claros",
+    "Incluir tests para casos edge y manejo de errores"
+  ],
+  "modules_to_test": [
+    "auto_cot_agent.py",
+    "self_consistency.py",
+    "chain_of_verification.py",
+    "tree_of_thoughts.py",
+    "fundamental_techniques.py",
+    "knowledge_techniques.py",
+    "optimization_techniques.py",
+    "prompt_templates.py",
+    "search_optimization_techniques.py",
+    "specialized_techniques.py",
+    "structuring_techniques.py"
+  ],
+  "priority": "HIGH",
+  "target_completion": "2025-11-14",
+  "techniques_to_apply": [
+    "Auto-CoT (Automatic Chain-of-Thought)",
+    "Self-Consistency (Multiple reasoning paths)"
+  ]
+}

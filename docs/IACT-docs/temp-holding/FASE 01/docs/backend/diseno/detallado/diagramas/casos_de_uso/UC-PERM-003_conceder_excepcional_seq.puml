@@ -1,0 +1,150 @@
+@startuml UC-PERM-003 Conceder Permiso Excepcional
+!theme plain
+title UC-PERM-003: Conceder Permiso Excepcional\nFlujo Principal
+
+actor "Administrador" as admin
+participant "UI" as ui
+participant "API" as api
+participant "Permission\nDecorator" as dec
+participant "Permisos\nService" as svc
+database "PostgreSQL" as db
+participant "Cache" as cache
+participant "Notification" as notif
+
+== Solicitud de Concesión ==
+
+admin -> ui: Accede a Permisos Excepcionales
+ui -> api: GET /api/usuarios/456/
+api -> db: SELECT * FROM usuarios WHERE id=456
+db --> api: Usuario data
+api --> ui: HTTP 200: usuario
+ui --> admin: Muestra perfil con capacidades actuales
+
+admin -> ui: Busca capacidad "reportes.exportar"
+ui -> api: GET /api/capacidades/?search=reportes.exportar
+api -> db: SELECT * FROM capacidades\nWHERE codigo ILIKE '%reportes.exportar%'
+db --> api: capacidades[]
+api --> ui: HTTP 200: capacidades
+ui --> admin: Muestra capacidades disponibles
+
+admin -> ui: Selecciona "sistema.vistas.reportes.exportar"
+admin -> ui: Ingresa motivo (min 20 chars):\n"Necesita exportar reportes urgentes..."
+admin -> ui: Establece fecha_fin: 2025-01-15
+admin -> ui: Confirma concesión
+
+== Validación y Creación ==
+
+ui -> api: POST /api/permisos/excepcionales/\n{\n  usuario_id: 456,\n  capacidad_codigo: "...",\n  tipo: "conceder",\n  motivo: "...",\n  fecha_fin: "2025-01-15T23:59:59Z"\n}
+activate api
+
+api -> dec: @require_permission(\n  'sistema.administracion.permisos\n  .excepcionales.conceder')
+activate dec
+dec -> db: SELECT usuario_tiene_permiso(1, '...')
+db --> dec: TRUE
+dec --> api: ✓ Permiso concedido
+deactivate dec
+
+alt Usuario ya tiene la capacidad
+  api -> db: SELECT * FROM vista_capacidades_usuario\nWHERE usuario_id=456\n  AND capacidad_codigo='...'
+  db --> api: 1 row found (ya tiene)
+  api --> ui: HTTP 400: "Usuario ya tiene capacidad\n(origen: grupo 'Coordinadores')"
+  ui --> admin: Muestra advertencia
+  admin -> ui: Decide cancelar o continuar
+end
+
+api -> svc: conceder_permiso_excepcional(...)
+activate svc
+
+svc -> db: BEGIN TRANSACTION
+activate db
+
+== Verificar si existe registro previo inactivo ==
+
+svc -> db: SELECT * FROM permisos_excepcionales\nWHERE usuario_id=456\n  AND capacidad_id=...\n  AND tipo='conceder'\n  AND activo=FALSE
+alt Existe registro inactivo
+  db --> svc: 1 row (inactivo)
+  svc -> db: UPDATE permisos_excepcionales\nSET activo=TRUE,\n  motivo='...',\n  fecha_inicio=NOW(),\n  fecha_fin='...',\n  asignado_por_id=1
+else No existe
+  db --> svc: 0 rows
+  svc -> db: INSERT INTO permisos_excepcionales\n(usuario_id, capacidad_id, tipo,\n motivo, fecha_fin, asignado_por_id, activo)\nVALUES (456, ..., 'conceder', '...', '...', 1, TRUE)
+end
+
+db --> svc: Record created/updated
+
+== Auditoría ==
+
+svc -> db: INSERT INTO auditoria_permisos\n(usuario_id, accion, capacidad_codigo,\n detalle, realizado_por_id)\nVALUES (456, 'CONCEDER_EXCEPCIONAL', '...',\n '{"motivo": "...", "fecha_fin": "..."}', 1)
+db --> svc: Auditoría registrada
+
+svc -> db: COMMIT
+deactivate db
+
+== Invalidación de Cache ==
+
+svc -> cache: DEL permisos:user:456
+svc -> cache: DEL capacidades:user:456
+svc -> cache: DEL menu:user:456
+cache --> svc: Cache invalidado
+
+== Notificación ==
+
+svc -> notif: send_notification(\n  to_user=456,\n  type='PERMISO_CONCEDIDO',\n  data={capacidad: '...',\n    motivo: '...',\n    fecha_expiracion: '2025-01-15'})
+notif -->> svc: [Async] Email enviado
+
+svc --> api: {\n  id: 789,\n  usuario_id: 456,\n  capacidad: '...',\n  fecha_fin: '...'\n}
+deactivate svc
+
+api --> ui: HTTP 201 Created:\n{\n  "success": true,\n  "data": {...}\n}
+deactivate api
+
+ui --> admin: ✓ "Permiso excepcional concedido"
+
+== Usuario Utiliza Nueva Capacidad ==
+
+participant "Usuario\n#456" as user
+
+user -> ui: Accede a módulo de reportes
+ui -> api: GET /api/verificar/456/tiene-permiso/\n?capacidad=sistema.vistas.reportes.exportar
+api -> db: SELECT usuario_tiene_permiso(456, '...')
+
+note right of db
+  SQL verifica en orden:
+  1. Revocaciones excepcionales → NO
+  2. Concesiones excepcionales → ✓ SÍ (encontrado)
+  3. Grupos → (no se evalúa)
+
+  RESULTADO: TRUE (origen: excepcional_conceder)
+end note
+
+db --> api: TRUE
+api --> ui: HTTP 200: {tiene_permiso: true,\n  origen: "excepcional_conceder"}
+ui --> user: ✓ Acceso concedido\n(muestra botón "Exportar")
+
+== Expiración Automática (Job Programado) ==
+
+participant "Scheduler\nCron Job" as cron
+
+note over cron
+  Job ejecuta cada hora:
+  Revisa permisos excepcionales
+  con fecha_fin < NOW()
+end note
+
+cron -> db: UPDATE permisos_excepcionales\nSET activo=FALSE\nWHERE fecha_fin < NOW()\n  AND activo=TRUE
+db --> cron: 1 row updated (permiso de usuario 456)
+
+cron -> cache: DEL permisos:user:456
+cache --> cron: Cache invalidado
+
+cron -> notif: send_notification(\n  to_user=456,\n  type='PERMISO_EXPIRADO',\n  data={capacidad: '...'})
+notif -->> cron: Email enviado
+
+note over user
+  Próxima vez que usuario
+  intente exportar reportes:
+
+  tiene_permiso = FALSE
+  (permiso expirado)
+end note
+
+@enduml

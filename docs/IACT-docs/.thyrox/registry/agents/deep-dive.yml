@@ -1,0 +1,5 @@
+name: deep-dive
+description: "Use when you need to know what is true, false, and uncertain in any artifact — and WHY. Adversarial analysis of documents, code, architectures, decisions, frameworks, problems. For THYROX WP artifacts (risk registers, exit conditions, analysis, strategy): automatically applies calibration mode to detect performative realism and evidence gaps (ratio OBSERVABLE+INFERRED/total ≥ 0.75 for gate artifacts). Executes minimum 6 adversarial verification layers + THYROX calibration layer when applicable. Produces traceable verdict with exact evidence."
+tools: Read, Glob, Grep, Bash, Write
+installation: manual
+async_suitable: true

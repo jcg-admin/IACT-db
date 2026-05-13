@@ -1,0 +1,41 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+type: fix
+Bug ID: [ID del bug, ej: BUG-456]
+severity: [Critical/High/Medium/Low]
+reported_by: [Nombre]
+fixed_by: [Nombre]
+files_modified: [N]
+tests_added: [SI/NO]
+Verificado: [SI/NO]
+```
+
+fix(scope): short description of the bug fix
+
+Explain the bug:
+- What was broken
+- What symptom did users see
+- Root cause analysis
+
+Explain the fix:
+- What changed to fix the issue
+- Why this fix works
+- Any edge cases handled
+- Testing performed
+
+Before:
+[code or behavior that was broken]
+
+After:
+[code or behavior that's now working]
+
+Fixes:
+- Issue: [description]
+- Regression risk: [low/medium/high]
+- Testing: [manual/automated/both]
+
+Examples:
+fix(auth): handle null user in token validation
+fix(api): fix race condition in concurrent requests
+fix(build): correct broken reference in sphinx config
+fix(database): prevent null foreign key inserts

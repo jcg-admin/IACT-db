@@ -1,0 +1,41 @@
+@startuml UC-002_registrar_llamada_entrante
+!define RECTANGLE_BORDER_COLOR #2C3E50
+!define USECASE_BACKGROUND_COLOR #ECF0F1
+!define ACTOR_BORDER_COLOR #34495E
+
+skinparam actorBorderColor ACTOR_BORDER_COLOR
+skinparam usecaseBorderColor RECTANGLE_BORDER_COLOR
+skinparam usecaseBackgroundColor USECASE_BACKGROUND_COLOR
+skinparam rectangleBorderColor RECTANGLE_BORDER_COLOR
+
+left to right direction
+
+actor "Agente de Servicio" as Agente <<Usuario>>
+actor "Sistema Telefónico" as PBX <<Sistema Externo>>
+actor "CRM" as CRM <<Sistema Externo>>
+
+rectangle "Sistema IACT" {
+  usecase "UC-002\nRegistrar Llamada\nEntrante" as UC002
+  usecase "UC-002a\nCapturar Datos\nde Llamada" as UC002a
+  usecase "UC-002b\nIdentificar Cliente" as UC002b
+  usecase "UC-002c\nAsignar Categoría" as UC002c
+  usecase "UC-002d\nSincronizar con CRM" as UC002d
+
+  UC002 .> UC002a : <<include>>
+  UC002 .> UC002b : <<include>>
+  UC002 .> UC002c : <<include>>
+  UC002 .> UC002d : <<extend>>
+}
+
+Agente --> UC002 : registra
+PBX --> UC002 : envía datos
+UC002d --> CRM : sincroniza
+
+note right of UC002
+  Actor primario: Agente de Servicio
+  Nivel: Usuario
+  Prioridad: Alta
+  Frecuencia: 500-1000 llamadas/día
+end note
+
+@enduml

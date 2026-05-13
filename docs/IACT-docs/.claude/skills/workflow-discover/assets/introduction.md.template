@@ -1,0 +1,76 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+analysis_version: [1.0]
+author: [Nombre]
+status: [Borrador/En revisión/Aprobado]
+```
+
+# Introduction and Goals: [PROJECT_NAME]
+
+## Propósito
+
+Establece el contexto general del proyecto. Define QUÉ es el sistema, POR QUÉ existe, PARA QUIÉN, y cuál es su objetivo general.
+
+> Objetivo: Proporcionar una visión clara que sienta las bases para todas las demás subsecciones del análisis.
+
+---
+
+## Visión General
+
+[2-3 párrafos describiendo:]
+- Qué es el sistema
+- Por qué existe
+- Para quién
+- Objetivo general
+
+**Ejemplo:**
+"El objetivo general del ecommerce es permitir que clientes compren productos en línea de forma segura, rápida y confiable. El sistema cubre todo el ciclo de vida de una compra: desde navegación de productos, carrito, checkout, procesamiento de pagos, hasta seguimiento de pedidos."
+
+---
+
+## Próximas Subsecciones
+
+Este documento es el inicio de PHASE 2: ANALYZE. Las subsecciones que siguen son:
+
+1. **Requirements Analysis** (`requirements-analysis.md`)
+   - Requisitos funcionales y no-funcionales
+   
+2. **Quality Goals** (`quality-goals.md`)
+   - Qué tan bien debe funcionar el sistema
+   
+3. **Stakeholders** (`stakeholders.md`)
+   - Quiénes se ven afectados y qué necesitan
+   
+4. **Basic Usage** (`basic-usage.md`)
+   - Cómo funciona el sistema operacionalmente
+   
+5. **Constraints** (`constraints.md`)
+   - Qué limita la solución
+   
+6. **Context** (`context.md`)
+   - Límites y sistemas externos
+
+---
+
+## Mapa epistémico
+
+> Completar al finalizar Stage 1 DISCOVER. Distingue lo observado de lo inferido.
+
+| Categoría | Claims |
+|-----------|--------|
+| **Observaciones directas** (PROVEN) | *(Lista de claims derivados de tool output citado)* |
+| **Inferencias calibradas** (INFERRED) | *(Lista de claims derivados de evidencia + razonamiento explícito)* |
+| **Especulaciones marcadas** (SPECULATIVE) | *(Lista de hipótesis para validar en stages posteriores)* |
+
+**Ratio de calibración:** X observaciones + Y inferencias / Z total claims = [%]
+
+> Claims SPECULATIVE no pueden fundamentar gates de stage (I-012).
+> Claims con Confianza=baja y Origen=heredado deben re-verificarse en Stage N+1 (I-013).
+
+---
+
+## Siguiente Paso
+
+Una vez completado este documento:
+→ Pasar a `requirements-analysis.md`

@@ -1,0 +1,5 @@
+name: pdca-coordinator
+description: "Use when PDCA methodology is active. Coordinator for PDCA — continuous improvement cycle (Plan/Do/Check/Act), 4 stages with methodology_step updates, isolated worktree."
+tools: Read, Write, Edit, Glob, Grep, Bash
+installation: manual
+async_suitable: false

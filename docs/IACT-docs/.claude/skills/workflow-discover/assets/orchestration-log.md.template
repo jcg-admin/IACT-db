@@ -1,0 +1,52 @@
+# Orchestration Log — {{WP_NAME}}
+
+> Historial de activaciones de coordinators de metodología en este WP.
+> Trazabilidad de qué coordinator se usó, cuándo, y qué produjo.
+
+```yml
+created_at: {{CREATED_AT}}
+project: {{PROJECT_NAME}}
+work_package: {{WP_ID}}
+phase: Phase 1 — DISCOVER
+author: {{AUTHOR}}
+status: Activo
+```
+
+---
+
+## Log de activaciones
+
+### Formato de entrada
+
+```
+## [YYYY-MM-DD HH:MM] {coordinator-name} — {event}
+
+**Evento:** activated | step-completed | completed | paused | resumed | failed
+**Step:** {methodology_step} (ej: lean:measure)
+**Trigger:** {qué lo activó — usuario, routing-rules, otro coordinator}
+**Artefacto:** {archivo producido si aplica}
+**Nota:** {contexto adicional si es relevante}
+```
+
+---
+
+## Historial
+
+_(vacío — primer entry cuando se active un coordinator)_
+
+---
+
+## Resumen de ejecución
+
+| Coordinator | Estado | Inicio | Fin | Pasos completados | Artefactos |
+|-------------|--------|--------|-----|-------------------|------------|
+| _(vacío)_ | — | — | — | 0 | 0 |
+
+---
+
+## Notas de orquestación
+
+Registrar aquí decisiones tomadas durante la orquestación multi-coordinator:
+- ¿Por qué se eligió esta combinación de metodologías?
+- ¿Hubo conflictos de artefactos? ¿Cómo se resolvieron?
+- ¿El routing automático funcionó correctamente o hubo intervención manual?

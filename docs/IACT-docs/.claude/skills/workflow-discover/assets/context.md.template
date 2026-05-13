@@ -1,0 +1,153 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+context_version: [1.0]
+owner: [Nombre]
+external_systems: [N]
+integration_updated_at: [YYYY-MM-DD HH:MM:SS]
+```
+
+# Context: [PROJECT_NAME]
+
+## Propósito
+
+Documentar DÓNDE se inserta el sistema en el ecosistema. Define límites (scope) e integraciones con sistemas externos.
+
+> Objetivo: Objetivo: Que todos entiendan los límites del sistema y cómo se conecta con el mundo externo.
+
+---
+
+## Scope / Boundaries
+
+### Dentro del Sistema
+
+- [Component/Feature 1]
+- [Component/Feature 2]
+- [Component/Feature 3]
+
+**Ejemplo:**
+- User authentication and authorization
+- Product catalog management
+- Shopping cart functionality
+- Order processing
+- Inventory tracking
+
+### Fuera del Sistema (External Dependencies)
+
+- [External Service 1]
+- [External Service 2]
+- [External Service 3]
+
+**Ejemplo:**
+- Payment processing (Stripe/PayPal)
+- Shipping logistics (FedEx/UPS)
+- Email delivery (SendGrid)
+- Analytics (Google Analytics)
+
+---
+
+## Business Context
+
+| External System | Data Exchange | Business Value |
+|-----------------|---------------|-----------------|
+| [System Name] | [Data flowing] | [Business benefit] |
+| [System Name] | [Data flowing] | [Business benefit] |
+| [System Name] | [Data flowing] | [Business benefit] |
+
+**Ejemplo:**
+| External System | Data Exchange | Business Value |
+|-----------------|---------------|-----------------|
+| Customer Portal | Orders, Reviews | Generate revenue |
+| Supplier System | Stock levels | Ensure product availability |
+| Payment Provider | Transactions | Secure payment processing |
+| Shipping Partner | Order details | Deliver to customers |
+| Analytics DB | User data | Business intelligence |
+
+---
+
+## Technical Context
+
+| External System | Interface | Technology | Direction |
+|-----------------|-----------|-----------|-----------|
+| [System] | [API type] | [Protocol] | [Inbound/Outbound] |
+| [System] | [API type] | [Protocol] | [Inbound/Outbound] |
+| [System] | [API type] | [Protocol] | [Inbound/Outbound] |
+
+**Ejemplo:**
+| External System | Interface | Technology | Direction |
+|-----------------|-----------|-----------|-----------|
+| Customer Portal | REST API | HTTPS | Inbound |
+| Stripe (Payments) | REST API | HTTPS, OAuth2 | Outbound |
+| Supplier API | SOAP | SOAP/XML | Outbound |
+| Message Queue | Publisher/Subscriber | RabbitMQ | Bidirectional |
+| Data Warehouse | SQL | PostgreSQL | Outbound |
+
+---
+
+## Diagrama de Contexto
+
+<!-- Crear diagrama cuando hay ≥2 sistemas externos. Para 1 sistema externo, descripción textual es suficiente. Usar los sistemas identificados en la tabla "Technical Context" arriba. -->
+
+```mermaid
+flowchart LR
+    ExtA["[External System A]\n(Inbound)"]
+    ExtB["[External System B]\n(Outbound)"]
+    ExtC["[External System C]\n(Bidirectional)"]
+
+    subgraph Sys["[PROJECT_NAME]"]
+        Core["Core System"]
+    end
+
+    ExtA --> Core
+    Core --> ExtB
+    Core <--> ExtC
+```
+
+[Reemplazar nodos con los sistemas reales del proyecto — ver tabla "Technical Context" arriba. Usar `-->` para unidireccional, `<-->` para bidireccional.]
+
+---
+
+## Data Flows
+
+### Inbound Data Flows
+
+[From external systems to our system]
+
+**Ejemplo:**
+- Customer browses → Web Portal sends search queries → System returns products
+- Payment confirmation → Stripe sends webhook → System updates order status
+
+### Outbound Data Flows
+
+[From our system to external systems]
+
+**Ejemplo:**
+- Order created → System sends inventory update → Supplier system updates stock
+- User purchase → System sends data → Analytics warehouse
+
+### Bidirectional Data Flows
+
+[Both directions]
+
+**Ejemplo:**
+- Order sync with warehouse → Warehouse sends updates, we send confirmations
+
+---
+
+## Validación Checklist
+
+- [ ] Scope/boundaries claramente definidos
+- [ ] Business context identificado
+- [ ] Technical context identificado
+- [ ] Sistemas externos específicos (no genéricos)
+- [ ] Datos intercambiados claros
+- [ ] Protocolos específicos documentados
+- [ ] Direcciones de flujo claras
+- [ ] Diagrama de contexto visual
+
+---
+
+## Siguiente Paso
+
+Una vez completado este documento y toda PHASE 1: ANALYZE:
+→ Pasar a PHASE 2: SOLUTION_STRATEGY

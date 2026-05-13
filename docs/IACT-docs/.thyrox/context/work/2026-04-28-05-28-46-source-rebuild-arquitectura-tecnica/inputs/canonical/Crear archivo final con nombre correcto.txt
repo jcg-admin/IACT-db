@@ -1,0 +1,28 @@
+bash
+
+
+# Crear archivo final con nombre correcto
+cat > /tmp/iact_regeneracion/partes/PARTE_2A_Fundamentos_Transformacion_IACT_1_0_0.md << 'ENDHEADER'
+---
+proyecto: IACT
+documento: PARTE_2A
+titulo: Fundamentos y Patrones de Transformación
+version: 1.0.0
+fecha: 2026-01-09
+prerequisito: PARTE_1_Identificar_Reglas_Negocio_IACT_1_0_0.md
+siguiente: PARTE_2B_Construccion_Detallada_IACT_1_0_0.md
+estado: ACTUALIZADO
+---
+
+ENDHEADER
+
+# Agregar contenido actualizado (sin primera línea que era el título viejo)
+tail -n +2 /tmp/iact_regeneracion/partes/PARTE_2A_temp.md >> \
+   /tmp/iact_regeneracion/partes/PARTE_2A_Fundamentos_Transformacion_IACT_1_0_0.md
+
+echo "✅ Archivo PARTE_2A generado con nombre correcto"
+wc -l /tmp/iact_regeneracion/partes/PARTE_2A_Fundamentos_Transformacion_IACT_1_0_0.md
+Output
+
+✅ Archivo PARTE_2A generado con nombre correcto
+3745 /tmp/iact_regeneracion/partes/PARTE_2A_Fundamentos_Transformaci

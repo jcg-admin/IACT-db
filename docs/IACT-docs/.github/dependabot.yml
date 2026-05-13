@@ -1,0 +1,56 @@
+version: 2
+
+updates:
+  # Dependencias Python (pyproject.toml + uv.lock)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "automated"
+    reviewers:
+      - "NestorMonroy"
+    assignees:
+      - "NestorMonroy"
+    groups:
+      sphinx-ecosystem:
+        patterns:
+          - "Sphinx"
+          - "sphinx-*"
+          - "sphinxcontrib-*"
+          - "myst-parser"
+          - "Furo"
+          - "autodocsumm"
+      build-tools:
+        patterns:
+          - "uv"
+          - "pip"
+          - "setuptools"
+          - "wheel"
+      patches:
+        update-types:
+          - "patch"
+
+  # GitHub Actions (versión de actions/checkout, setup-python, etc.)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "chore(actions)"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automated"
+    reviewers:
+      - "NestorMonroy"
+    groups:
+      actions-all:
+        patterns:
+          - "*"

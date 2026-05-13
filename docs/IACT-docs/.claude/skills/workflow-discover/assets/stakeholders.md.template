@@ -1,0 +1,159 @@
+```yml
+created_at: [YYYY-MM-DD HH:MM:SS]
+project: [Nombre del proyecto]
+stakeholder_map_version: [1.0]
+owner: [Nombre]
+total_stakeholders: [N]
+last_reviewed_at: [YYYY-MM-DD HH:MM:SS]
+```
+
+# Stakeholders: [PROJECT_NAME]
+
+## Propósito
+
+Identificar QUIÉN usa el sistema y QUÉ necesita. Documentar roles, necesidades, y cómo se conectan con quality goals.
+
+> Objetivo: Asegurar que todas las necesidades de stakeholders estén documentadas y consideradas en el diseño.
+
+---
+
+## Matriz de Stakeholders
+
+| Role | Description | Goal / Intention |
+|------|-------------|------------------|
+| [Role Name] | [What they do] | [What they need] |
+| [Role Name] | [What they do] | [What they need] |
+| [Role Name] | [What they do] | [What they need] |
+
+**Ejemplo:**
+| Role | Description | Goal / Intention |
+|------|-------------|------------------|
+| End User / Shopper | Browses products and completes purchases | Complete purchases quickly and securely |
+| Product Manager | Manages ecommerce strategy and features | Clear product vision, realistic timelines |
+| Software Developer | Implements the ecommerce platform | Understand architecture, easy to implement |
+| System Administrator | Operates and maintains the platform | Easy deployment, monitoring, troubleshooting |
+| QA Tester | Tests functionality and quality | Clear test scenarios, reproducible bugs |
+| Security Officer | Ensures security compliance | Clear security architecture, data protection |
+
+---
+
+## Mapa de Stakeholders
+
+<!-- Crear cuando hay ≥3 roles con relaciones entre sí. Para 1-2 roles, la matriz es suficiente. Agrupar por tipo de relación con el sistema. -->
+
+```mermaid
+mindmap
+    root((Sistema))
+        Internos
+            [Role 1]
+            [Role 2]
+        Externos
+            [Role 3]
+            [Role 4]
+        Regulatorios
+            [Role 5]
+```
+
+[Adaptar con los roles identificados en la "Matriz de Stakeholders" — eliminar grupos que no apliquen]
+
+---
+
+## Descripción Detallada de Cada Rol
+
+### [Role Name]
+
+**Quién es:**
+[Description of who fills this role]
+
+**Qué hace:**
+[What they do with the system]
+
+**Qué necesita:**
+[What they expect or require]
+
+**Relación con Quality Goals:**
+- [Quality Goal] - [How this stakeholder benefits]
+- [Quality Goal] - [How this stakeholder benefits]
+
+**Ejemplo (End User):**
+
+**Quién es:**
+Customers who want to buy products online
+
+**Qué hace:**
+Browse catalog, add products to cart, checkout
+
+**Qué necesita:**
+- Quick checkout process
+- Secure payment
+- Order tracking
+- Good user experience
+
+**Relación con Quality Goals:**
+- Performance - Quick searches and checkout
+- Security - Safe payment processing
+- Correctness - Right prices and orders
+
+### [Additional roles...]
+
+[Repetir estructura anterior para cada rol importante]
+
+---
+
+## Conflictos y Trade-offs
+
+**Conflict 1: [Role A] vs [Role B]**
+- Issue: [What they want is different]
+- Stakeholder A wants: [Goal]
+- Stakeholder B wants: [Goal]
+- Resolution: [How we resolve]
+- Decision: [Priority]
+
+**Ejemplo:**
+**Conflict: Developer vs Security Officer**
+- Issue: Developer wants simple architecture, Security Officer needs robust security
+- Developer wants: Simple code, easy implementation
+- Security Officer wants: Comprehensive validation, encryption
+- Resolution: Secure but maintainable architecture
+- Decision: Priority 1 is Security, secure patterns that are also maintainable
+
+[Agregar más conflictos si aplica]
+
+---
+
+## Alineamiento con Quality Goals
+
+| Stakeholder | Quality Goal | How We Address |
+|-------------|--------------|----------------|
+| [Stakeholder] | [QG] | [How this addresses their needs] |
+| [Stakeholder] | [QG] | [How this addresses their needs] |
+
+**Ejemplo:**
+| Stakeholder | Quality Goal | How We Address |
+|-------------|--------------|----------------|
+| End User | Security | End-to-end encryption, 2FA |
+| End User | Performance | Cached searches, CDN for images |
+| Developer | Maintainability | Clean code, patterns, documentation |
+| Security Officer | Compliance | Audit logs, encryption at rest, encryption in transit |
+
+---
+
+## Validación Checklist
+
+- [ ] Todos los stakeholders identificados
+- [ ] Roles claros (no nombres de personas)
+- [ ] Descripciones concisas
+- [ ] Metas claramente articuladas
+- [ ] Metas verificables
+- [ ] Conectado a Quality Goals
+- [ ] Conflictos identificados
+- [ ] Conflictos resueltos
+
+---
+
+## Siguiente Paso
+
+Una vez completado este documento:
+→ Pasar a `basic-usage.md`
+
+---

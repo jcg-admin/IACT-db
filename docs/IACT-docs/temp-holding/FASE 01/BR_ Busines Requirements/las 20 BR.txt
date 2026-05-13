@@ -1,0 +1,45 @@
+
+## Las 20 BR del Sistema IACT
+
+|BR|Nombre|Tipo|CNST Relacionado|
+|---|---|---|---|
+|BR_001|Fuente Inmutable|Restricción|CNST_003|
+|BR_002|ETL Batch Nocturno|Desencadenador|CNST_004|
+|BR_003|Usuario Inactivo 90d|Inferencia|—|
+|BR_004|Comunicaciones Internas|Restricción|CNST_001|
+|BR_005|Sesión Única|Restricción|CNST_002|
+|BR_006|RBAC Flat NIST|Hecho|CNST_005|
+|BR_007|Separación Funciones SoD|Restricción|CNST_005|
+|BR_008|Permisos con Vencimiento|Restricción|CNST_005|
+|BR_009|Bajas Lógicas|Restricción|CNST_005|
+|BR_010|Auditoría Inmutable|Restricción|CNST_009|
+|BR_011|Límites Exportación|Restricción|CNST_007|
+|BR_012|Usuario-Segmento Único|Hecho|—|
+|BR_013|Username Único|Hecho|—|
+|BR_014|Alerta por Umbral|Desencadenador|—|
+|BR_015|Bloqueo Intentos Fallidos|Desencadenador|CNST_005|
+|BR_016|Tasa Abandono|Cálculo|—|
+|BR_017|Tiempo Promedio Espera|Cálculo|—|
+|BR_018|Índice Eficiencia|Cálculo|—|
+|BR_019|Retención 2 Años|Restricción|CNST_006|
+|BR_020|Clasificación Datos|Restricción|CNST_010|
+
+### Resumen por Tipo (TXM_03)
+
+|Tipo|Cantidad|BR|
+|---|---|---|
+|**Restricción**|10|BR_001, 004, 005, 007, 008, 009, 010, 011, 019, 020|
+|**Desencadenador**|3|BR_002, 014, 015|
+|**Hecho**|3|BR_006, 012, 013|
+|**Inferencia**|1|BR_003|
+|**Cálculo**|3|BR_016, 017, 018|
+
+### Las 5 BR que me faltaron en v2.0.9
+
+|BR|Nombre|Tipo|
+|---|---|---|
+|BR_016|Tasa Abandono|Cálculo|
+|BR_017|Tiempo Promedio Espera|Cálculo|
+|BR_018|Índice Eficiencia|Cálculo|
+|BR_019|Retención 2 Años|Restricción|
+|BR_020|Clasificación Datos|Restricción|

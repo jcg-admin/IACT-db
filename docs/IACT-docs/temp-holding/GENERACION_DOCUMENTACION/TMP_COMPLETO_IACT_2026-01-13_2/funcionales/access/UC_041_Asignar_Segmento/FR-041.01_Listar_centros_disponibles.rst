@@ -1,0 +1,159 @@
+.. meta::
+   :artefacto: FR-041.01
+   :tipo: Requisito Funcional
+   :dominio: requisitos
+   :subdominio: funcionales/access
+   :estado: Aprobado
+   :version: 1.0.0
+   :fecha: 2026-01-07
+   :autor: Equipo IACT
+
+.. _fr-041-01:
+
+==============================================================================
+FR-041.01: Listar centros disponibles
+==============================================================================
+
+----
+
+1. Identificación
+-----------------
+
+.. list-table::
+   :widths: 25 75
+
+   * - **ID**
+     - FR-041.01
+   * - **Nombre**
+     - Listar centros de atención disponibles
+   * - **UC Origen**
+     - UC_041: Asignar Segmento de Datos
+   * - **Paso UC**
+     - Paso 2-3 del flujo normal
+   * - **Módulo**
+     - MOD_Access
+   * - **Prioridad**
+     - Alta
+   * - **Tipo**
+     - Proceso
+
+----
+
+2. Especificación
+-----------------
+
+**Declaración:**
+
+   El sistema DEBE mostrar los centros de atención disponibles junto
+   con los ya asignados al usuario CUANDO el admin accede a la
+   asignación de segmentos.
+
+**Descripción:**
+
+   El sistema presenta:
+   
+   **Centros Ya Asignados:**
+   
+   - Código del centro
+   - Nombre del centro
+   - Región/Zona
+   - Fecha de asignación
+   - Quién asignó
+   
+   **Centros Disponibles:**
+   
+   - Catálogo completo de centros activos
+   - Agrupados por región
+   - Indicador si ya está asignado
+   - Checkbox para selección múltiple
+   
+   **Estructura de Centros:**
+   
+   Los centros corresponden a los centros de atención del IACT
+   (Centro Norte, Centro Sur, etc.) según BR_012.
+
+----
+
+3. Criterio de Aceptación
+-------------------------
+
+::
+
+   DADO un admin en pantalla de asignación de segmentos
+   CUANDO se carga para un usuario
+   ENTONCES ve centros asignados y disponibles
+   
+   Escenario 1: Vista inicial
+   DADO usuario con 2 centros asignados
+   CUANDO se carga la pantalla
+   ENTONCES se muestran los 2 centros en "Asignados"
+   Y el catálogo completo en "Disponibles"
+   
+   Escenario 2: Centros agrupados por región
+   DADO catálogo de centros
+   CUANDO se muestra
+   ENTONCES están agrupados: Norte, Centro, Sur, etc.
+   Y se puede expandir/colapsar cada grupo
+   
+   Escenario 3: Centro ya asignado
+   DADO centro "Centro Norte" ya asignado
+   CUANDO aparece en lista de disponibles
+   ENTONCES está marcado como "Ya asignado"
+   Y no se puede seleccionar nuevamente
+   
+   Escenario 4: Selección múltiple
+   DADO lista de centros disponibles
+   CUANDO admin selecciona varios
+   ENTONCES se habilita botón "Asignar seleccionados"
+
+----
+
+4. Reglas y Restricciones
+-------------------------
+
+- **BR aplicables:**
+  - BR_012: Segmentación Usuario-Centro
+  
+- **CNST aplicables:** Ninguna específica
+
+**Catálogo de Centros:**
+
+Los centros se mantienen en tabla maestra y corresponden a la
+estructura organizacional del IACT.
+
+----
+
+5. Trazabilidad
+---------------
+
+.. list-table::
+   :widths: 20 80
+
+   * - **BReq**
+     - BReq-003: Segmentación de Datos
+   * - **UC**
+     - UC_041: Asignar Segmento
+   * - **Depende de**
+     - Ninguno
+   * - **Requerido por**
+     - FR-041.02
+   * - **BR**
+     - BR_012
+   * - **TEST**
+     - TST-FR-041.01 (pendiente)
+
+----
+
+6. Historial
+------------
+
+.. list-table::
+   :widths: 15 15 70
+   :header-rows: 1
+
+   * - Versión
+     - Fecha
+     - Cambio
+   * - 1.0.0
+     - 2026-01-07
+     - Versión inicial derivada de UC_041

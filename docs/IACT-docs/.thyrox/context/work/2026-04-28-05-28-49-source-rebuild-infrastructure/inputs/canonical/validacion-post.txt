@@ -1,0 +1,18 @@
+Archivos después de eliminación:
+-rw-r--r-- 1 root root 13964 Nov 18 10:10 /home/user/IACT/docs/infraestructura/CHANGELOG-cpython.md
+-rw-r--r-- 1 root root  2656 Nov 18 12:15 /home/user/IACT/docs/infraestructura/INDEX.md
+-rw-r--r-- 1 root root  7523 Nov 18 12:15 /home/user/IACT/docs/infraestructura/README.md
+-rw-r--r-- 1 root root 13915 Nov 18 10:10 /home/user/IACT/docs/infraestructura/TASK-017-layer3_infrastructure_logs.md
+-rw-r--r-- 1 root root 10592 Nov 18 10:10 /home/user/IACT/docs/infraestructura/ambientes_virtualizados.md
+-rw-r--r-- 1 root root 24979 Nov 18 10:10 /home/user/IACT/docs/infraestructura/cpython_builder.md
+-rw-r--r-- 1 root root 24626 Nov 18 10:10 /home/user/IACT/docs/infraestructura/cpython_development_guide.md
+-rw-r--r-- 1 root root 17891 Nov 18 10:10 /home/user/IACT/docs/infraestructura/estrategia_git_hooks.md
+-rw-r--r-- 1 root root 48759 Nov 18 10:10 /home/user/IACT/docs/infraestructura/estrategia_migracion_shell_scripts.md
+-rw-r--r-- 1 root root 17514 Nov 18 10:10 /home/user/IACT/docs/infraestructura/implementation_report.md
+-rw-r--r-- 1 root root  7521 Nov 18 10:10 /home/user/IACT/docs/infraestructura/matriz_trazabilidad_rtm.md
+-rw-r--r-- 1 root root 19962 Nov 18 10:10 /home/user/IACT/docs/infraestructura/shell_scripts_constitution.md
+-rw-r--r-- 1 root root 20618 Nov 18 10:10 /home/user/IACT/docs/infraestructura/storage_architecture.md
+---
+Versiones autorizadas intactas:
+-rw-r--r-- 1 root root 33176 Nov 18 10:10 /home/user/IACT/docs/infraestructura/specs/SPEC_INFRA_001_cpython_precompilado.md
+-rw-r--r-- 1 root root 2656 Nov 18 12:15 /home/user/IACT/docs/infraestructura/INDEX.md

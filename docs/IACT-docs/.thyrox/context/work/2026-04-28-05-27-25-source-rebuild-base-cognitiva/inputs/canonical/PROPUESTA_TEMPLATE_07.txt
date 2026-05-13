@@ -1,0 +1,43 @@
+PROPUESTA REGENERACION - Template 7 de 10
+==========================================
+
+TEMPLATE A REGENERAR:
+TPL_UC_Actor_Secundario_1_3_0.rst
+
+PRIORIDAD: MEDIA (Template para documentar actores secundarios)
+
+VERSION ACTUAL v1_2_0:
+- Lineas: 170
+- Placeholders: 31 (18.2% ratio)
+- Calidad: MALO
+- Problema: Sin codigo, muy pocos ejemplos IACT (4 referencias)
+
+VERSION OBJETIVO v1_3_0:
+- Lineas: 350-450
+- Placeholders: < 20 (< 5% ratio)
+- Calidad: EXCELENTE
+- Solucion: Diagrama actores, tabla responsabilidades, flujo completo
+
+CONTENIDO:
+
+Introduccion (40 lineas)
+- Cuando usar este template
+- Diferencia actor principal vs secundario
+
+Diagrama de Actores (60 lineas)
+- Diagrama ASCII completo
+- Relaciones entre actores
+
+Tabla de Responsabilidades (100 lineas)
+- Que hace cada actor secundario
+- En que pasos participa
+- Como interactua
+
+Flujo con Interacciones (150 lineas)
+- Flujo completo mostrando interaccion
+- Codigo de notificaciones
+- Mensajes entre actores
+
+Ejemplo: UC-RPT-02 Aprobar Consulta Grande
+- Actor Principal: Supervisor
+- Actor Secundario: Analista solicitante, Sistema Analytics

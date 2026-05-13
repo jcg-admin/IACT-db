@@ -1,0 +1,158 @@
+{
+  "script_name": "post_start.sh",
+  "script_path": "infrastructure/devcontainer/scripts/post_start.sh",
+  "analysis_timestamp": "2025-11-13T09:06:18.978966",
+  "analysis_mode": "standard",
+  "overall_score": 86.0,
+  "constitutional": {
+    "overall_compliance": false,
+    "compliance_score": 87.5,
+    "rule_results": {
+      "1": {
+        "rule_number": 1,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "2": {
+        "rule_number": 2,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "3": {
+        "rule_number": 3,
+        "compliant": false,
+        "score": 0,
+        "violations": [
+          {
+            "rule_number": 3,
+            "line_number": 356,
+            "severity": "high",
+            "description": "Silent error handling with '|| true'",
+            "recommendation": "Use explicit error handling instead"
+          },
+          {
+            "rule_number": 3,
+            "line_number": 359,
+            "severity": "high",
+            "description": "Silent error handling with '|| true'",
+            "recommendation": "Use explicit error handling instead"
+          },
+          {
+            "rule_number": 3,
+            "line_number": 362,
+            "severity": "high",
+            "description": "Silent error handling with '|| true'",
+            "recommendation": "Use explicit error handling instead"
+          },
+          {
+            "rule_number": 3,
+            "line_number": 365,
+            "severity": "high",
+            "description": "Silent error handling with '|| true'",
+            "recommendation": "Use explicit error handling instead"
+          },
+          {
+            "rule_number": 3,
+            "line_number": 368,
+            "severity": "high",
+            "description": "Silent error handling with '|| true'",
+            "recommendation": "Use explicit error handling instead"
+          }
+        ],
+        "recommendations": []
+      },
+      "4": {
+        "rule_number": 4,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "5": {
+        "rule_number": 5,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "6": {
+        "rule_number": 6,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "7": {
+        "rule_number": 7,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      },
+      "8": {
+        "rule_number": 8,
+        "compliant": true,
+        "score": 100.0,
+        "violations": [],
+        "recommendations": []
+      }
+    },
+    "total_violations": 5
+  },
+  "quality": {
+    "metrics": {
+      "lines_of_code": 383,
+      "lines_of_comments": 71,
+      "number_of_functions": 9,
+      "max_function_length": 0,
+      "average_function_length": 0.0,
+      "cyclomatic_complexity": 0.0,
+      "comment_ratio": 0.185378590078329
+    },
+    "code_smells": [],
+    "refactoring_opportunities": [],
+    "quality_score": 100.0
+  },
+  "security": {
+    "issues": [
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 112",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 123",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      },
+      {
+        "type": "potential_command_injection",
+        "severity": "high",
+        "location": "line 133",
+        "description": "Unquoted variable in command substitution",
+        "cwe_id": "CWE-78",
+        "recommendation": "Quote variables to prevent injection",
+        "exploitability": "medium"
+      }
+    ],
+    "severity_counts": {
+      "critical": 0,
+      "high": 3,
+      "medium": 0,
+      "low": 0
+    },
+    "security_score": 70
+  }
+}

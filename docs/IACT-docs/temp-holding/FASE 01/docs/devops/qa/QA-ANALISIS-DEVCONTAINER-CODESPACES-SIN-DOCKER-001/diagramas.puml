@@ -1,0 +1,13 @@
+@startuml
+actor "Desarrollador" as Dev
+participant "GitHub Codespaces\n(VS Code)" as CS
+node "DevContainer\n(service: app)" as DC
+database "PostgreSQL\n(db_postgres)" as PG
+database "MariaDB\n(db_mariadb)" as MA
+
+Dev -> CS: Abre workspace (sin Docker local)
+CS -> DC: Provisiona contenedor via docker-compose
+DC -> PG: Healthcheck + migraciones usando credenciales .env
+DC -> MA: Healthcheck + pruebas de conectividad
+DC -> Dev: Expone 8000/5432/3306 para debugging y SQLTools
+@enduml
