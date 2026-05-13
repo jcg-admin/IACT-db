@@ -5,7 +5,7 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_rpt_centros_transferencia.sql
-    Version         : 2.1.2
+    Version         : 2.2.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
@@ -82,6 +82,17 @@ BEGIN
         , b.no_digito_telefono
         , b.llamadas_entre_semana
         , b.llamadas_fines_semana
+        -- Cuartil de actividad del centro en el periodo (T4.2 — FASE 4).
+        -- Q1 = centros de mayor volumen total, Q4 = menor volumen total.
+        -- NULL para centros centinela (CASO_NULL, etc.) — no se rankean.
+        -- Implementado como LEFT JOIN con subquery de cuartiles (no NTILE directo):
+        --   NTILE(4) OVER(ORDER BY SUM() OVER()) está prohibido en MariaDB 10.11
+        --   (window function anidada en ORDER BY de otra window → ERROR de sintaxis).
+        --   La subquery cr calcula el cuartil POR CENTRO (GROUP BY centro) y lo
+        --   propaga a todas las filas del centro via LEFT JOIN. Todas las filas del
+        --   mismo centro tienen el mismo cuartil_centro (verificado: cuartiles_distintos=1
+        --   para todos los centros. Con 28 centros en nacional_A: 7 por cuartil).
+        , cr.cuartil_centro
     FROM base_ivr_detalle b
     LEFT JOIN (
         SELECT
@@ -93,6 +104,30 @@ BEGIN
         GROUP BY fecha
     ) AS totales
         ON totales.fecha = b.fecha
+    -- Subquery para cuartiles por centro (agrupada por centro, no por fecha).
+    -- Excluye centinelas: no tienen cuartil de actividad significativo.
+    -- JOIN por (trimestre, segmento, centro) garantiza unicidad del cuartil.
+    LEFT JOIN (
+        SELECT
+            trimestre
+            , segmento
+            , centro_transferencia
+            , NTILE(4) OVER (
+                PARTITION BY trimestre, segmento
+                ORDER BY SUM(total_llamadas) DESC
+              )                              AS cuartil_centro
+        FROM base_ivr_detalle
+        WHERE trimestre = p_quarter
+          AND (p_segmento = 'todas' OR segmento = p_segmento)
+          AND centro_transferencia NOT IN (
+              'CASO_NULL', 'CASO_ERROR_CEROS',
+              'ERROR_CARACTER_INICIAL', 'CLIENTE_COLGO'
+          )
+        GROUP BY trimestre, segmento, centro_transferencia
+    ) AS cr
+        ON  cr.trimestre            = b.trimestre
+        AND cr.segmento             = b.segmento
+        AND cr.centro_transferencia = b.centro_transferencia
     WHERE b.trimestre = p_quarter
       AND (p_segmento = 'todas' OR b.segmento = p_segmento)
     ORDER BY

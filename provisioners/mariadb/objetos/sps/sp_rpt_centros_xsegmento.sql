@@ -5,7 +5,7 @@ FROM DUAL;
 
 /*********************************************************************************************
     Script          : sp_rpt_centros_xsegmento.sql
-    Version         : 2.2.2
+    Version         : 2.3.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
@@ -177,6 +177,31 @@ BEGIN
             PARTITION BY cc.segmento
             ORDER BY cc.total_llamadas DESC
           )                                AS rango_en_segmento
+
+        -- Percentil de actividad dentro del segmento (T4.1 — FASE 4).
+        -- PERCENT_RANK con ORDER BY ASC: el centro de mayor volumen → 1.0000,
+        -- el de menor volumen → 0.0000. Escala [0,1], 4 decimales.
+        -- ORDER BY ASC es diferente al de DENSE_RANK (DESC): ambos coexisten
+        -- en el mismo SELECT sin conflicto — cada window tiene su propia spec.
+        , ROUND(PERCENT_RANK() OVER (
+            PARTITION BY cc.segmento
+            ORDER BY cc.total_llamadas        -- ASC implícito
+          ), 4)                               AS percentil_actividad
+
+        -- Porcentaje del volumen del centro lider en su segmento (T4.1 — FASE 4).
+        -- FIRST_VALUE devuelve el total_llamadas del centro con mayor volumen
+        -- en el segmento (ORDER BY DESC → primera fila = mayor).
+        -- Ejemplo: lider 5,493 llamadas, centro con 4,803 → 87.4%.
+        -- El lider siempre muestra 100.0. El último muestra el porcentaje menor.
+        , ROUND(
+            cc.total_llamadas
+            / NULLIF(
+                FIRST_VALUE(cc.total_llamadas) OVER (
+                    PARTITION BY cc.segmento
+                    ORDER BY cc.total_llamadas DESC
+                ), 0
+              ) * 100, 1
+          )                                   AS pct_del_lider
 
     FROM centros_calendario cc
     INNER JOIN totales_segmento ts
