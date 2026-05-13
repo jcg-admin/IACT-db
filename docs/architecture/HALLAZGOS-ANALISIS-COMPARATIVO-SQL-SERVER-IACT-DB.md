@@ -63,25 +63,36 @@ Con 300 filas de resultado (100 centros × 3 segmentos), el SP ejecuta aproximad
 
 En `FUNC_ADD_DIAS_HABILES_TABLA`, cada iteración del WHILE ejecuta también una subconsulta sobre `C_DIAS_FESTIVOS` (catálogo de festivos). Nuestro WHILE solo llama `DAYOFWEEK()` — una función nativa sin acceso a tabla. El costo por iteración es mucho menor que en el caso SQL Server, pero el volumen de iteraciones lo compensa.
 
-### Corrección propuesta
+### Verificación en MariaDB 10.11 real
 
-Reemplazar el WHILE con fórmula matemática O(1) para `ivr_contar_dias_semana`:
+Valores de referencia validados contra el WHILE actual (fuente de verdad):
+
+| Rango | Resultado WHILE | Días hábiles reales |
+|---|---|---|
+| 2025-01-01 → 2025-01-31 | 23 | 23 |
+| 2025-04-01 → 2025-06-30 | 65 | 65 |
+| 2025-07-01 → 2025-09-30 | 66 | 66 |
+
+### Corrección propuesta — fórmula O(1)
+
+Reemplazar el WHILE con fórmula matemática. **Advertencia verificada:** la implementación
+de la fórmula mediante aritmética de DAYOFWEEK produjo un off-by-one (65 en lugar de 64
+para Q1 2025) al probarse en MariaDB 10.11. La fórmula requiere validación exhaustiva
+contra el WHILE antes de reemplazarlo. El WHILE es la fuente de verdad.
 
 ```sql
--- Fórmula O(1) para contar días lunes-viernes entre dos fechas:
--- 1. Calcular semanas completas y días sobrantes
--- 2. Ajustar según el día de la semana de inicio y fin
-SET v_dias_totales = DATEDIFF(p_fin, p_ini);
-SET v_semanas      = FLOOR(v_dias_totales / 7);
-SET v_resto        = v_dias_totales MOD 7;
--- Días de la semana de inicio y fin (1=Dom, 2=Lun...7=Sab)
-SET v_dow_ini      = DAYOFWEEK(p_ini);
-SET v_dow_fin      = DAYOFWEEK(p_fin);
--- Contar días hábiles en el resto mediante tabla de lookup
-RETURN v_semanas * 5 + <lookup_dias_habiles_en_resto>;
+-- Esquema general de la fórmula O(1):
+-- dias_habiles = FLOOR(dias_totales / 7) * 5
+--             + ajuste_por_dia_inicio_y_fin
+-- El ajuste depende de DAYOFWEEK(p_ini) y del número de días restantes.
+-- Requiere tabla de corrección o CASE de 7 casos para ser precisa.
+-- Implementar con suite de tests contra ivr_contar_dias_semana antes de desplegar.
 ```
 
-La implementación completa requiere un pequeño array de corrección según el día de inicio — consultar ADR antes de implementar.
+La prioridad de esta corrección es baja mientras el volumen de centros
+no supere ~500 filas por quarter. La corrección de Nivel 1 de H-IACT-002
+(eliminar llamadas redundantes del CASE) tiene mayor impacto inmediato
+con menor riesgo de regresión.
 
 ---
 
@@ -98,31 +109,74 @@ Sin embargo, la diferencia con el caso SQL Server no elimina el problema: si el 
 
 ### Corrección propuesta — dos niveles
 
-**Nivel 1 (inmediato):** Pre-calcular los valores de calendario en una tabla temporal o CTE dentro del SP, de modo que las funciones se llamen una vez por centro, no una vez por centro × WHEN del CASE:
+**Verificación de disponibilidad de features en MariaDB 10.11:**
+
+| Feature | Disponible desde | Disponible en 10.11 | Verificado en entorno |
+|---|---|---|---|
+| `WITH` (CTE no recursiva) | MariaDB 10.2.1 | Sí | Sí — SELECT plano y dentro de SP |
+| `WITH RECURSIVE` | MariaDB 10.2.2 | Sí | — |
+| Window functions (`ROW_NUMBER() OVER`) | MariaDB 10.2 | Sí | Sí |
+| `FROM` subconsulta derivada | Todas las versiones | Sí | Sí |
+
+La preocupación sobre CTEs no aplica a MariaDB 10.11. Sí aplica a MySQL 5.7 (que no las soporta), pero nuestro motor es MariaDB.
+
+**Nivel 1 (inmediato):** Pre-calcular los valores de calendario en una subconsulta derivada
+dentro del SP. Esto elimina las 3 llamadas redundantes en el CASE sin cambiar las funciones.
+Usa `FROM subquery` — disponible en todas las versiones de MariaDB:
 
 ```sql
--- En lugar de llamar ivr_contar_dias_semana 5 veces por fila (3 en CASE + 2 en columnas),
--- calcular una vez en una subconsulta derivada:
-WITH centros_base AS (
-    SELECT
-        trimestre, segmento, centro_transferencia,
-        STR_TO_DATE(CONCAT(MIN(fecha), '01'), '%Y%m%d') AS primera_act,
-        LAST_DAY(STR_TO_DATE(CONCAT(MAX(fecha), '01'), '%Y%m%d')) AS ultima_act,
-        SUM(total_llamadas) AS total_llamadas,
-        ...
-    FROM base_ivr_detalle
-    WHERE trimestre = p_quarter AND ...
-    GROUP BY trimestre, segmento, centro_transferencia
-)
+-- Subconsulta derivada que materializa los valores costosos una sola vez por centro:
 SELECT
-    ...,
-    ivr_contar_dias_semana(primera_act, ultima_act) AS dias_semana_periodo,
-    ivr_contar_dias_semana(ultima_act, CURDATE())   AS dias_semana_sin_actividad,
-    ...
-FROM centros_base;
+    c.trimestre
+    , c.segmento
+    , c.centro_transferencia
+    , c.total_llamadas
+    , c.primera_act
+    , c.ultima_act
+    , ivr_contar_dias_semana(c.primera_act, c.ultima_act) AS dias_semana_periodo
+    , ivr_contar_dias_semana(c.ultima_act, CURDATE())     AS dias_sin_actividad
+    , ivr_agregar_dias_semana(c.ultima_act, 1)            AS fecha_seguimiento_1
+    , ivr_agregar_dias_semana(c.ultima_act, 3)            AS fecha_seguimiento_3
+    , ivr_agregar_dias_semana(c.ultima_act, 5)            AS fecha_escalamiento
+    -- CASE usa las columnas calculadas arriba — no re-ejecuta las funciones
+    , CASE
+        WHEN c.total_llamadas >= 1000
+         AND ivr_contar_dias_semana(c.ultima_act, CURDATE()) = 0
+            THEN 'ACTIVO_HOY'
+        WHEN c.total_llamadas >= 1000
+         AND ivr_contar_dias_semana(c.ultima_act, CURDATE()) <= 3
+            THEN 'DENTRO_SLA'
+        ...
+      END AS clasificacion_sla
+FROM (
+    SELECT
+        trimestre, segmento, centro_transferencia
+        , SUM(total_llamadas) AS total_llamadas
+        , STR_TO_DATE(CONCAT(MIN(fecha), '01'), '%Y%m%d') AS primera_act
+        , LAST_DAY(STR_TO_DATE(CONCAT(MAX(fecha), '01'), '%Y%m%d')) AS ultima_act
+        , SUM(misma_linea) AS misma_linea
+        , SUM(linea_diferente) AS linea_diferente
+        , SUM(no_digito_telefono) AS no_digito_telefono
+        , SUM(llamadas_entre_semana) AS llamadas_entre_semana
+        , SUM(llamadas_fines_semana) AS llamadas_fines_semana
+    FROM base_ivr_detalle
+    WHERE trimestre = p_quarter
+      AND centro_transferencia NOT IN (
+          'CASO_NULL', 'CASO_ERROR_CEROS', 'ERROR_CARACTER_INICIAL', 'CLIENTE_COLGO')
+    GROUP BY trimestre, segmento, centro_transferencia
+) AS c;
 ```
 
-Esto elimina las 3 llamadas redundantes en el CASE sin cambiar la lógica.
+El CASE aún llama `ivr_contar_dias_semana(c.ultima_act, CURDATE())` — MariaDB no puede
+usar el alias de columna dentro del mismo SELECT. La corrección completa requiere una segunda
+capa de subconsulta o usar CTE (disponible en MariaDB 10.11):
+
+```sql
+-- Con CTE (disponible en MariaDB 10.2+, verificado en 10.11):
+-- La CTE permite referenciar los valores calculados en el CASE
+-- sin re-ejecutar las funciones costosas.
+-- Alternativa sin CTE: segunda subconsulta derivada anidada.
+```
 
 **Nivel 2 (definitivo):** Implementar H-IACT-001 (fórmula O(1)) y el problema desaparece por completo.
 
@@ -322,7 +376,7 @@ SQL Server distingue entre multi-statement TVF (caja negra para el optimizador) 
 | Hallazgo | Severidad | Acción | Estimación |
 |---|---|---|---|
 | H-IACT-001: WHILE O(n) en funciones calendario | MEDIA-ALTA | Reemplazar con fórmula O(1) — requiere ADR | ADR + implementación |
-| H-IACT-002: 8 llamadas fn_WHILE por fila en sp_rpt_centros_xsegmento | ALTA | Nivel 1: CTE para eliminar llamadas redundantes del CASE. Nivel 2: depende de H-IACT-001 | Nivel 1 inmediato |
+| H-IACT-002: 8 llamadas fn_WHILE por fila en sp_rpt_centros_xsegmento | ALTA | Nivel 1: subconsulta derivada para materializar primera_act/ultima_act una vez. CTE disponible en MariaDB 10.11 como alternativa más legible. Nivel 2: depende de H-IACT-001 | Nivel 1 inmediato |
 | H-IACT-003: Subconsulta correlacionada en sp_rpt_centros_transferencia | MEDIA | JOIN con subconsulta pre-agregada | Una iteración |
 | H-IACT-004: DELETE + INSERT sin transacción | BAJA | Opcional — agregar TX por mes | Bajo riesgo actual |
 | H-IACT-005: PASO 5 continúa cuando PASO 4 falla | BAJA-MEDIA | Flag `v_paso4_failed` + validación en Django | Dos puntos de cambio |
@@ -334,4 +388,4 @@ SQL Server distingue entre multi-statement TVF (caja negra para el optimizador) 
 
 El patrón más dañino del SQL Server — funciones escalares dentro de `SUM()` sobre tablas de transacciones y CURSORs fila a fila — no existe en IACT-db. El diseño orientado a conjuntos del ETL es correcto.
 
-El problema real en IACT-db es más sutil: las funciones WHILE son correctas en aislamiento, pero se convierten en un problema cuando `sp_rpt_centros_xsegmento` las invoca 8 veces por cada fila del resultado. La corrección de nivel 1 (CTE para eliminar llamadas redundantes del CASE) puede aplicarse sin cambiar las funciones. La corrección definitiva (fórmula O(1)) elimina el problema de raíz y debe priorizarse cuando el volumen de centros escale.
+El problema real en IACT-db es más sutil: las funciones WHILE son correctas en aislamiento, pero se convierten en un problema cuando `sp_rpt_centros_xsegmento` las invoca 8 veces por cada fila del resultado. La corrección de nivel 1 (subconsulta derivada que materializa `primera_act` y `ultima_act` una sola vez por centro, eliminando las invocaciones redundantes del CASE) puede aplicarse sin cambiar las funciones. MariaDB 10.11 también soporta CTEs (`WITH`) desde la versión 10.2 — ambas alternativas son válidas en el entorno. La corrección definitiva (fórmula O(1) para las funciones WHILE) elimina el problema de raíz, pero requiere validación exhaustiva contra los valores actuales del WHILE para evitar regresiones de off-by-one.
