@@ -9,7 +9,7 @@ FROM DUAL;
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
-    Prerequisito    : funciones_utilidad.sql — schema_base_ivr.sql
+    Prerequisito    : objetos/funciones/ (7 funciones) — schema_base_ivr.sql
     Despliegue      : mysql --socket=/run/mysqld/mysqld.sock ivr_legacy < sp_etl_base_detalle.sql
     Notas           : v2.1.0: PREPARE etl_stmt movido fuera del WHILE (H-IACT-006). Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
 *********************************************************************************************/

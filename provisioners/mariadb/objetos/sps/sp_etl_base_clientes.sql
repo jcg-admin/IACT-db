@@ -9,7 +9,7 @@ FROM DUAL;
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
-    Prerequisito    : funciones_utilidad.sql — schema_base_ivr.sql
+    Prerequisito    : objetos/funciones/ (7 funciones) — schema_base_ivr.sql
     Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_etl_base_clientes.sql
     Notas           : COUNT DISTINCT no aditivo — scan completo del quarter. Resultado esperado: 3 filas. Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
 *********************************************************************************************/

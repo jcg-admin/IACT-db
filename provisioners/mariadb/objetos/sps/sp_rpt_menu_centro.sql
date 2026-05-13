@@ -9,7 +9,7 @@ FROM DUAL;
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
-    Prerequisito    : funciones_utilidad.sql — schema_base_ivr.sql — sp_etl_pipeline.sql (base_ivr_* con datos)
+    Prerequisito    : objetos/funciones/ (7 funciones) — schema_base_ivr.sql — objetos/sps/sp_etl_*.sql (base_ivr_* con datos)
     Despliegue      : mysql --socket=/var/run/mysqld/mysqld.sock ivr_legacy < sp_rpt_menu_centro.sql
     Notas           : UC_RPT_16 — Perspectiva inversa: centro → menus y opciones que lo alimentan. Despues del despliegue ejecutar provision-mariadb.sh para restaurar GRANT EXECUTE.
 *********************************************************************************************/
