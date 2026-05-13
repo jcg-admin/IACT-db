@@ -4,14 +4,14 @@ SELECT
 FROM DUAL;
 
 /*********************************************************************************************
-    Script          : schema_error_log.sql
+    Script          : schema_pipeline_event_log.sql
     Version         : 1.0.0
     Create          : MAYO/2026
     Engine          : MariaDB 10.11
     Schema          : ivr_legacy
     Prerequisito    : schema_base_ivr.sql (job_execution_log debe existir para la FK)
-    Despliegue      : mysql --socket=/run/mysqld/mysqld.sock ivr_legacy < schema_error_log.sql
-    Notas           : Tabla de auditoría de errores — inspirada en mysql.general_log (append-only).
+    Despliegue      : mysql --socket=/run/mysqld/mysqld.sock ivr_legacy < schema_pipeline_event_log.sql
+    Notas           : Tabla de eventos del pipeline analítico — inspirada en mysql.general_log (append-only).
                       Diseño semi-normalizado: ENUM para vocabulario controlado sin tablas satélite.
                       Las tablas de log son intencionalmente denormalizadas:
                         - Cada fila es autónoma (legible sin JOINs)
@@ -21,10 +21,10 @@ FROM DUAL;
 *********************************************************************************************/
 
 -- ──────────────────────────────────────────────────────────────────────────────
--- TABLA PRINCIPAL: ivr_error_log
+-- TABLA PRINCIPAL: pipeline_event_log
 -- ──────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE IF NOT EXISTS ivr_error_log (
+CREATE TABLE IF NOT EXISTS pipeline_event_log (
 
     -- Identidad
     id              INT          NOT NULL AUTO_INCREMENT,
@@ -120,14 +120,14 @@ CREATE TABLE IF NOT EXISTS ivr_error_log (
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci
-  COMMENT='Auditoría de errores IVR — append-only. Semi-normalizado: ENUM para taxonomía, denormalizado para contexto (cada fila autónoma).';
+  COMMENT='Eventos del pipeline analítico IACT — append-only. Semi-normalizado: ENUM para taxonomía, denormalizado para contexto (cada fila autónoma). Cubre ETL y API de reportes.';
 
 -- ──────────────────────────────────────────────────────────────────────────────
--- VISTA: v_errores_recientes
+-- VISTA: v_eventos_recientes
 -- Consulta operacional — errores de las últimas 48 horas con contexto ETL
 -- ──────────────────────────────────────────────────────────────────────────────
 
-CREATE OR REPLACE VIEW v_errores_recientes AS
+CREATE OR REPLACE VIEW v_eventos_recientes AS
 SELECT
     e.id
     , e.ts
@@ -143,7 +143,7 @@ SELECT
     , j.status                                                  AS job_status
     , j.step_name                                               AS job_step
     , j.start_time                                              AS job_inicio
-FROM ivr_error_log e
+FROM pipeline_event_log e
 LEFT JOIN job_execution_log j ON j.id = e.job_log_id
 WHERE e.ts >= NOW() - INTERVAL 48 HOUR
 ORDER BY e.ts DESC;
@@ -160,12 +160,12 @@ SELECT
     , TABLE_COMMENT                                             AS comentario
 FROM information_schema.TABLES
 WHERE TABLE_SCHEMA = 'ivr_legacy'
-  AND TABLE_NAME   = 'ivr_error_log';
+  AND TABLE_NAME   = 'pipeline_event_log';
 
 -- Confirmar índices
 SELECT INDEX_NAME, COLUMN_NAME, NON_UNIQUE
 FROM information_schema.STATISTICS
-WHERE TABLE_SCHEMA = 'ivr_legacy' AND TABLE_NAME = 'ivr_error_log'
+WHERE TABLE_SCHEMA = 'ivr_legacy' AND TABLE_NAME = 'pipeline_event_log'
 ORDER BY INDEX_NAME, SEQ_IN_INDEX;
 
 -- FINALIZACIÓN
