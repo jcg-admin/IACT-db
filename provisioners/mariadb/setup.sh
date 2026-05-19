@@ -111,14 +111,20 @@ main() {
         # Producción: solo lectura (CNST-003)
         my_root -e \
             "GRANT SELECT ON \`${db_name}\`.* TO '${db_user}'@'${host}';" >/dev/null
-        # Tests: pytest necesita crear y destruir test_ivr_legacy
+        # Tests: pytest crea/destruye la BD test_ivr_legacy y ejecuta DML.
+        # CREATE/DROP/INDEX/ALTER cubre DDL; SELECT/INSERT/UPDATE/DELETE
+        # cubre DML que las pruebas de integracion del pipeline IVR
+        # ejecutan contra tablas test_etl_runs, test_ivr_heartbeats, etc.
+        # Sin DML, pytest aborta con OperationalError (1142): "DELETE
+        # command denied" en setUp/tearDown de fixtures de integracion.
         my_root -e \
-            "GRANT CREATE, DROP, INDEX, ALTER ON \`${test_db_name}\`.* \
-             TO '${db_user}'@'${host}';" >/dev/null
+            "GRANT CREATE, DROP, INDEX, ALTER, \
+             SELECT, INSERT, UPDATE, DELETE \
+             ON \`${test_db_name}\`.* TO '${db_user}'@'${host}';" >/dev/null
     done
 
     my_root -e "FLUSH PRIVILEGES;" >/dev/null
-    log_success "Privilegios aplicados: SELECT en ${db_name} + CREATE/DROP en ${test_db_name}"
+    log_success "Privilegios aplicados: SELECT en ${db_name} + DDL+DML en ${test_db_name}"
 
     # PASO 5 — Verificar conexión con credenciales Django
     log_step 5 5 "Verificando conexión Django"
