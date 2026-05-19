@@ -122,14 +122,21 @@ main() {
         # desde ivr_legacy. Sin EXECUTE, las pruebas de integracion
         # IVR reciben 503 (Could not connect to the IVR database — execute
         # command denied).
+        # CREATE/ALTER ROUTINE necesario para que la fixture
+        # ivr_schema de IACT-api recree los SPs de reporte
+        # (DROP PROCEDURE + CREATE PROCEDURE) al inicio de cada
+        # sesion pytest. Sin estos grants, la fixture falla con
+        # "ERROR 1370 alter routine command denied" al
+        # primer DROP PROCEDURE IF EXISTS.
         my_root -e \
             "GRANT CREATE, DROP, INDEX, ALTER, \
-             SELECT, INSERT, UPDATE, DELETE, EXECUTE \
+             SELECT, INSERT, UPDATE, DELETE, EXECUTE, \
+             CREATE ROUTINE, ALTER ROUTINE \
              ON \`${test_db_name}\`.* TO '${db_user}'@'${host}';" >/dev/null
     done
 
     my_root -e "FLUSH PRIVILEGES;" >/dev/null
-    log_success "Privilegios aplicados: SELECT+EXECUTE en ${db_name} + DDL+DML+EXECUTE en ${test_db_name}"
+    log_success "Privilegios aplicados: SELECT+EXECUTE en ${db_name} + DDL+DML+EXECUTE+ROUTINE en ${test_db_name}"
 
     # PASO 5 — Verificar conexión con credenciales Django
     log_step 5 5 "Verificando conexión Django"
