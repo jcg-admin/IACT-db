@@ -108,23 +108,28 @@ main() {
     log_step 4 5 "Privilegios: ${db_user} en ${db_name} y ${test_db_name}"
 
     for host in "%" "localhost"; do
-        # Producción: solo lectura (CNST-003)
+        # Producción: solo lectura + EXECUTE en SPs (CNST-003).
+        # EXECUTE necesario para que django_user llame sp_rpt_* y sp_etl_*
+        # via Django connections['ivr'].cursor(). Sin EXECUTE, las vistas
+        # de reportes que invocan SPs caen con 503 Service Unavailable.
         my_root -e \
-            "GRANT SELECT ON \`${db_name}\`.* TO '${db_user}'@'${host}';" >/dev/null
+            "GRANT SELECT, EXECUTE ON \`${db_name}\`.* TO '${db_user}'@'${host}';" >/dev/null
         # Tests: pytest crea/destruye la BD test_ivr_legacy y ejecuta DML.
         # CREATE/DROP/INDEX/ALTER cubre DDL; SELECT/INSERT/UPDATE/DELETE
         # cubre DML que las pruebas de integracion del pipeline IVR
         # ejecutan contra tablas test_etl_runs, test_ivr_heartbeats, etc.
-        # Sin DML, pytest aborta con OperationalError (1142): "DELETE
-        # command denied" en setUp/tearDown de fixtures de integracion.
+        # EXECUTE cubre las pruebas que invocan SPs de reporte clonados
+        # desde ivr_legacy. Sin EXECUTE, las pruebas de integracion
+        # IVR reciben 503 (Could not connect to the IVR database — execute
+        # command denied).
         my_root -e \
             "GRANT CREATE, DROP, INDEX, ALTER, \
-             SELECT, INSERT, UPDATE, DELETE \
+             SELECT, INSERT, UPDATE, DELETE, EXECUTE \
              ON \`${test_db_name}\`.* TO '${db_user}'@'${host}';" >/dev/null
     done
 
     my_root -e "FLUSH PRIVILEGES;" >/dev/null
-    log_success "Privilegios aplicados: SELECT en ${db_name} + DDL+DML en ${test_db_name}"
+    log_success "Privilegios aplicados: SELECT+EXECUTE en ${db_name} + DDL+DML+EXECUTE en ${test_db_name}"
 
     # PASO 5 — Verificar conexión con credenciales Django
     log_step 5 5 "Verificando conexión Django"
