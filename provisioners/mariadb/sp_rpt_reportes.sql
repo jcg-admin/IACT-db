@@ -405,6 +405,57 @@ BEGIN
         total_llamadas DESC;
 END$$
 
+-- ============================================================================
+-- sp_rpt_resumen_abandono_rollup
+-- Detalle completo: provisioners/mariadb/objetos/sps/sp_rpt_resumen_abandono_rollup.sql
+-- Consumido por: apps/reports/ivr_services.py (_call_sp + ivr_views.py)
+-- Devuelve jerarquia con ROLLUP: (segmento, menu) detalle + subtotales por
+-- segmento + grand total. Resuelve gap detectado en audit cross-stack
+-- 2026-05-20 (SP definido como archivo standalone, faltaba en bulk loader).
+-- ============================================================================
+
+DROP PROCEDURE IF EXISTS sp_rpt_resumen_abandono_rollup$$
+CREATE PROCEDURE sp_rpt_resumen_abandono_rollup(
+    IN p_quarter VARCHAR(10)
+)
+BEGIN
+    DECLARE v_total BIGINT DEFAULT 0;
+
+    IF p_quarter NOT REGEXP '^Q0[1-4]_[0-9]{2}$' THEN
+        BEGIN
+            DECLARE CONTINUE HANDLER FOR SQLEXCEPTION BEGIN END;
+            INSERT INTO pipeline_event_log
+                (error_type, severity, sp_nombre, sql_state, mysql_errno,
+                 p_quarter, error_message, ejecutado_por)
+            VALUES ('PARAM_INVALIDO', 'MEDIA',
+                    'sp_rpt_resumen_abandono_rollup', '22023', 1644,
+                    p_quarter,
+                    CONCAT('p_quarter invalido: ', p_quarter,
+                           '. Esperado: Q01_25, Q02_25, Q03_25 o Q04_YY'),
+                    'django_api');
+        END;
+        SIGNAL SQLSTATE '22023'
+            SET MESSAGE_TEXT = 'p_quarter: formato invalido. Esperado: Q01_25, Q02_25, Q03_25 o Q04_YY';
+    END IF;
+
+    SELECT SUM(total_llamadas)
+    INTO v_total
+    FROM base_ivr_detalle
+    WHERE trimestre = p_quarter
+      AND menu IN ('VACIO', 'cliente_colgo', 'SinOpcion_Cabecera');
+
+    SELECT
+        p_quarter                                                   AS trimestre
+        , COALESCE(b.segmento, 'TOTAL')                             AS segmento
+        , COALESCE(UPPER(TRIM(b.menu)), '--- SUBTOTAL ---')         AS menu
+        , SUM(b.total_llamadas)                                     AS abandonadas
+        , ROUND(SUM(b.total_llamadas) / NULLIF(v_total, 0) * 100, 2) AS pct_del_quarter
+    FROM base_ivr_detalle b
+    WHERE b.trimestre = p_quarter
+      AND b.menu IN ('VACIO', 'cliente_colgo', 'SinOpcion_Cabecera')
+    GROUP BY b.segmento, b.menu WITH ROLLUP;
+END$$
+
 DELIMITER ;
 
 -- =============================================================================
