@@ -1,3 +1,36 @@
+# IACT-db · docs/ (historico de implementacion + referencia local)
+
+> **Politica:** la documentacion canonica del proyecto IACT vive en
+> [`IACT-docs/source/`](../../IACT-docs/source/). Este directorio
+> contiene:
+>
+> 1. **Guias locales de devbox** (vigentes, mantenidas aqui):
+>    `getting-started/`, `setup/`, `operaciones/`, `troubleshooting/`,
+>    `referencias/`. Son cercanas al provisioner y se actualizan con
+>    los scripts.
+> 2. **Archivos historicos** (`architecture/HALLAZGOS-*.md`,
+>    `architecture/PLAN-*.md`, `architecture/BITACORA-*.md`,
+>    `architecture/ANALISIS-FASE*-*.md`): logs de sesiones de
+>    implementacion. **No se actualizan**; su contenido fue
+>    absorbido en iniciativas en
+>    `IACT-docs/source/gestion/pm/iniciativas/`.
+> 3. **Documentos arquitectonicos portados a IACT-docs**:
+>    `architecture/ANALISIS-ARQUITECTURA-ETL.md`,
+>    `architecture/FLUJO-ETL-COMPLETO.md`,
+>    `architecture/FLUJO-ETL-V2.md`,
+>    `architecture/MAPEO-DID-SEGMENTOS.md`,
+>    `architecture/NOMENCLATURA-TABLAS-BILINGUE.md`,
+>    `troubleshooting/TROUBLESHOOTING.md`,
+>    `getting-started/QUICKSTART.md`. La version canonica vive en
+>    IACT-docs (`source/arquitectura-tecnica/etl/`,
+>    `source/arquitectura-tecnica/databases/`,
+>    `source/devops/runbooks/`, `source/onboarding/`).
+>
+> Cualquier decision arquitectonica nueva del modelo de datos o ETL
+> se documenta **directamente en `IACT-docs/source/databases/`** o
+> `source/arquitectura-tecnica/etl/`. Ver iniciativa
+> `integrar-docs-internos-multi-repo` en IACT-docs.
+
 # Documentación IACT DevBox
 
 Bienvenido a la documentación completa del proyecto IACT DevBox, un entorno de desarrollo multi-base de datos basado en Vagrant y VirtualBox.
